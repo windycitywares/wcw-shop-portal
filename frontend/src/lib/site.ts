@@ -9,6 +9,12 @@ export const site = {
   locale: "en_US",
   currency: "USD",
   social: [{ label: "Etsy", href: "https://www.etsy.com/shop/WindyCityWaresUS" }],
+  /**
+   * Search engines may index the site only when NEXT_PUBLIC_ALLOW_INDEXING=true.
+   * Off by default so the shop.windycitywares.com build-out stays out of Google
+   * until it moves to the main domain.
+   */
+  allowIndexing: process.env.NEXT_PUBLIC_ALLOW_INDEXING === "true",
 } as const;
 
 export function absoluteUrl(path = "/"): string {

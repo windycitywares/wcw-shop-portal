@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   openGraph: { type: "website", siteName: site.name, locale: site.locale, url: site.url },
   twitter: { card: "summary_large_image" },
+  // Pre-launch builds also send noindex on every page (robots.txt alone doesn't remove pages from Google).
+  ...(site.allowIndexing ? {} : { robots: { index: false, follow: false } }),
 };
 
 export const viewport: Viewport = {

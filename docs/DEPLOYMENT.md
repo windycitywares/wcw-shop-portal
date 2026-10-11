@@ -15,15 +15,19 @@
 | SSL | Active on windycitywares.com |
 
 Already on the account — leave alone: `crm.windycitywares.com` (its own folder + MySQL databases),
-WordPress backups, and the current single-page site (`public_html/index.html`). **Back up
-`public_html/index.html` before the storefront takes over the main domain.**
+WordPress backups, and the current single-page site (`public_html/index.html`).
 
-Target layout:
+### Plan: build on a subdomain, then move to the main domain
 
-| URL | App | Folder |
-|---|---|---|
-| `https://windycitywares.com` | Next.js storefront (Node 20) | `~/apps/wcw-storefront` |
-| `https://api.windycitywares.com` | FastAPI (Python 3.11) | `~/repos/wcw-portal/backend` |
+While the store is being built, **windycitywares.com keeps serving the existing `index.html`** and
+the new store runs on `shop.windycitywares.com`, hidden from search engines. When everything is
+ready, follow [Go live on the main domain](#go-live-on-the-main-domain).
+
+| URL | App | Folder | Phase |
+|---|---|---|---|
+| `https://windycitywares.com` | existing `index.html` | `public_html` | unchanged until launch |
+| `https://shop.windycitywares.com` | Next.js storefront (Node 20) | `~/apps/wcw-storefront` | build-out |
+| `https://api.windycitywares.com` | FastAPI (Python 3.11) | `~/repos/wcw-portal/backend` | build-out → stays |
 
 ## 1. Database
 
@@ -63,7 +67,7 @@ Connection string: `postgresql+asyncpg://windycit_wcw:PASSWORD@localhost:5432/wi
    #   DATABASE_URL=postgresql+asyncpg://windycit_wcw:PASSWORD@localhost:5432/windycit_wcw
    #   DB_USE_NULL_POOL=true
    #   JWT_SECRET=<python -c "import secrets; print(secrets.token_urlsafe(48))">
-   #   CORS_ORIGINS=["https://windycitywares.com","https://www.windycitywares.com"]
+   #   CORS_ORIGINS=["https://shop.windycitywares.com"]
    #   ADMIN_EMAIL=...  ADMIN_PASSWORD=...
    alembic upgrade head
    python -m app.seed
@@ -75,10 +79,14 @@ Connection string: `postgresql+asyncpg://windycit_wcw:PASSWORD@localhost:5432/wi
 The 2 GB memory limit is too small for `next build`, so build elsewhere (your PC, or GitHub Actions)
 and upload only the output.
 
+First create the subdomain: cPanel → **Domains** → Create A New Domain → `shop.windycitywares.com`
+(uncheck "share document root"; SSL is issued automatically within a few minutes).
+
 ```bash
 cd frontend
 # .env.production
-#   NEXT_PUBLIC_SITE_URL=https://windycitywares.com
+#   NEXT_PUBLIC_SITE_URL=https://shop.windycitywares.com
+#   NEXT_PUBLIC_ALLOW_INDEXING=false
 #   NEXT_PUBLIC_API_URL=https://api.windycitywares.com/api/v1
 npm ci && npm run build
 ```
@@ -89,13 +97,41 @@ Upload to `~/apps/wcw-storefront/`:
 - `public/` → `~/apps/wcw-storefront/public/`
 
 cPanel → **Setup Node.js App** → Create: Node **20**, mode Production, root `apps/wcw-storefront`,
-URL `windycitywares.com`, startup file `server.js`. Start it.
+URL `shop.windycitywares.com`, startup file `server.js`. Start it.
+
+Check: `https://shop.windycitywares.com/robots.txt` should say `Disallow: /` while building.
 
 ## Updating
 
 - API: `cd ~/repos/wcw-portal && git pull`, activate the venv, `pip install -r backend/requirements.txt`,
   `alembic upgrade head`, then Restart in Setup Python App.
 - Storefront: rebuild, re-upload `standalone` + `static`, Restart in Setup Node.js App.
+
+## Go live on the main domain
+
+When the store is ready to replace the current homepage:
+
+1. **Back up the old page**: File Manager → `public_html/index.html` → rename to `index.old.html`
+   (or download a copy).
+2. **Rebuild the storefront** with the main-domain settings and upload it as in step 4:
+   ```
+   NEXT_PUBLIC_SITE_URL=https://windycitywares.com
+   NEXT_PUBLIC_ALLOW_INDEXING=true
+   NEXT_PUBLIC_API_URL=https://api.windycitywares.com/api/v1
+   ```
+3. **Point the Node app at the main domain**: Setup Node.js App → edit the app → Application URL
+   `windycitywares.com` → Save → Restart. (If cPanel won't change the URL, create a second app on
+   `windycitywares.com` with the same folder, then stop the `shop.` one.)
+4. **Allow the main domain in the API**: in `backend/.env` set
+   `CORS_ORIGINS=["https://windycitywares.com","https://www.windycitywares.com","https://shop.windycitywares.com"]`,
+   then Restart the Python app.
+5. **Keep old links working**: cPanel → Redirects → `shop.windycitywares.com` → permanent (301) to
+   `https://windycitywares.com` — or keep `shop.` serving the store, either is fine. Turn on Domains →
+   **Force HTTPS Redirect** for the main domain.
+6. **Check**: home, a category, a product, cart, `/admin` sign-in; `https://windycitywares.com/robots.txt`
+   now lists the sitemap; submit `https://windycitywares.com/sitemap.xml` in Google Search Console.
+
+The API, database, admin users and products don't change at launch — only the storefront's address.
 
 ## Static-only fallback
 
