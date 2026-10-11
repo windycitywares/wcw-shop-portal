@@ -26,3 +26,4 @@ Thumbs.db
 backend/passenger_wsgi.py
 backend/stderr.log
 backend/.htaccess
+backend/tmp/
