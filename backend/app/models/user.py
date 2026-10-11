@@ -1,4 +1,6 @@
-from sqlalchemy import BigInteger, String, text
+from datetime import datetime
+
+from sqlalchemy import BigInteger, DateTime, String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.enums import UserRole
@@ -18,6 +20,8 @@ class User(TimestampMixin, Base):
         server_default=UserRole.CUSTOMER.value,
     )
     is_active: Mapped[bool] = mapped_column(default=True, server_default=text("true"))
+    # Tokens issued before this moment are rejected (set when the password changes).
+    password_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class NewsletterSubscriber(TimestampMixin, Base):

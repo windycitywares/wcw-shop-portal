@@ -30,6 +30,8 @@ async def get_optional_user(
     user = await session.get(User, user_id)
     if not user or not user.is_active:
         raise AuthenticationError("Account not found or disabled")
+    if user.password_changed_at and int(payload.get("iat", 0)) < int(user.password_changed_at.timestamp()):
+        raise AuthenticationError("Your password was changed — please sign in again")
     return user
 
 

@@ -10,6 +10,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<User>;
   register: (email: string, password: string, fullName?: string) => Promise<User>;
   logout: () => void;
+  changePassword: (current: string, next: string) => Promise<void>;
   refresh: () => Promise<void>;
   can: (permission: string) => boolean;
 }
@@ -62,6 +63,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res.user;
   }, []);
 
+  const changePassword = useCallback(async (current: string, next: string) => {
+    const res = await apiFetch<TokenResponse>("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ current_password: current, new_password: next }),
+    });
+    tokenStore.set(res.access_token); // other devices are signed out; this one stays in
+    setUser(res.user);
+  }, []);
+
   const logout = useCallback(() => {
     tokenStore.set(null);
     setUser(null);
@@ -74,10 +84,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       register,
       logout,
+      changePassword,
       refresh,
       can: (permission) => !!user?.permissions.includes(permission),
     }),
-    [user, loading, login, register, logout, refresh],
+    [user, loading, login, register, logout, changePassword, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -56,7 +56,9 @@ Connection string: `postgresql+asyncpg://windycit_wcw:PASSWORD@localhost:5432/wi
 1. cPanel → **Domains** → create `api.windycitywares.com` (document root e.g. `api.windycitywares.com`).
 2. **Setup Python App** → Create application:
    - Python version **3.11.17** · Application root `repos/wcw-portal/backend`
-   - Application URL `api.windycitywares.com` · Startup file `passenger_wsgi.py` · Entry point `application`
+   - Application URL `api.windycitywares.com` · Startup file **`wsgi.py`** · Entry point `application`
+   - (cPanel writes its own `passenger_wsgi.py` that loads `wsgi.py` — don't name our file `passenger_wsgi.py`,
+     or the generated loader imports itself and every request fails with a RecursionError.)
 3. Copy the "source …/activate" command it shows, then in Terminal:
    ```bash
    source /home2/windycit/virtualenv/repos/wcw-portal/backend/3.11/bin/activate   # path shown by cPanel

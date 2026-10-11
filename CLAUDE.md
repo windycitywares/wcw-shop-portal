@@ -52,6 +52,7 @@ npm run typecheck
 - Frontend: storefront pages are Server Components that call `src/lib/api.ts`; admin pages are client
   components using `apiFetch`. Every control needs a label; keep `focus-visible` styles.
 - Images from hosts other than those in `next.config.ts` are shown unoptimized (see `ProductImage`).
+- Server entry point is `backend/wsgi.py` (cPanel generates `passenger_wsgi.py` to load it — never commit one).
 
 ## Not built yet
 
