@@ -1,7 +1,8 @@
 # CLAUDE.md — working notes for this repo
 
-Windy City Wares e-commerce platform (windycitywares.com). Full spec: `docs/SPEC.md`. Hosting: cPanel
-shared hosting (see `docs/DEPLOYMENT.md`). Product source: Etsy shop WindyCityWaresUS.
+Windy City Wares e-commerce platform (windycitywares.com). Full spec: `docs/SPEC.md`. Hosting: HostItBro
+cPanel shared hosting — Python 3.11, Node 20/22, PostgreSQL 13, no DB extensions (see `docs/DEPLOYMENT.md`).
+Product source: Etsy shop WindyCityWaresUS. Repo: github.com/windycitywares/wcw-portal.
 
 ## Layout
 
@@ -35,8 +36,10 @@ npm run typecheck
 
 - Routes depend on **permissions**, never role names: `Depends(require(Permission.X))`.
 - Authors can create/edit their own drafts; only Publisher/Admin can publish or archive.
-- Categories: `path` is an ltree of ids ("1.4.9"). Never write `path` by hand; use `CategoryService`
-  (`create`, `_move`, `ensure_path`). Reserve ids with `CategoryRepository.next_id()`.
+- Categories: `path` is a plain-text chain of ids ("1.4.9"), matched by prefix via
+  `repositories/paths.subtree_of()`. **Don't use `ltree` or any PostgreSQL extension** — the HostItBro
+  server doesn't have them (spec section 5 adapted for this). Never write `path` by hand; use
+  `CategoryService` (`create`, `_move`, `ensure_path`). Reserve ids with `CategoryRepository.next_id()`.
 - Products: put marketplace-specific data in `attributes` (JSONB), not new columns. List values
   (`["Red","Blue"]`) are options; scalars are details. Variants = child rows with `parent_id`.
 - New import source: add `app/importers/<name>.py` with a `ProductImporter` subclass + `@register`,

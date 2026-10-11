@@ -1,10 +1,9 @@
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import DateTime, MetaData, String, Text, cast, func
+from sqlalchemy import DateTime, MetaData, func
 from sqlalchemy.dialects.postgresql import ENUM as PGEnum
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy.types import UserDefinedType
 
 NAMING_CONVENTION = {
     "ix": "ix_%(column_0_label)s",
@@ -39,22 +38,3 @@ def pg_enum(enum_cls: type[Enum], name: str) -> PGEnum:
         values_callable=lambda e: [m.value for m in e],
         create_type=False,
     )
-
-
-class Ltree(UserDefinedType):
-    """PostgreSQL `ltree` (materialized path) exposed to Python as a dotted string, e.g. "1.4.9".
-
-    Values travel to and from the driver as text (text2ltree / ::text), so no
-    driver-specific codec is required.
-    """
-
-    cache_ok = True
-
-    def get_col_spec(self, **kw) -> str:
-        return "LTREE"
-
-    def bind_expression(self, bindvalue):
-        return func.text2ltree(cast(bindvalue, Text))
-
-    def column_expression(self, col):
-        return cast(col, String)

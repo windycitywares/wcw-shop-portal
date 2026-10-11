@@ -1,4 +1,4 @@
-"""Initial schema: users, categories (ltree), products (JSONB), orders.
+"""Initial schema: users, categories (materialized path), products (JSONB), orders.
 
 Revision ID: 0001_initial
 Revises:

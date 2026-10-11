@@ -4,12 +4,12 @@ Storefront + admin for **windycitywares.com**. Spec: [`docs/SPEC.md`](docs/SPEC.
 
 | Part | Stack | Folder |
 |---|---|---|
-| API | Python 3.11+, FastAPI, async SQLAlchemy 2, PostgreSQL (`ltree` + `JSONB`), JWT | `backend/` |
+| API | Python 3.11+, FastAPI, async SQLAlchemy 2, PostgreSQL 13+ (`JSONB`, no extensions needed), JWT | `backend/` |
 | Storefront & admin | Next.js (App Router), React 19, TypeScript, Tailwind CSS v4, Radix UI | `frontend/` |
 
 ## What's built
 
-- **Catalog**: unlimited-depth categories (adjacency list + `ltree` materialized path), products with flexible
+- **Catalog**: unlimited-depth categories (adjacency list + materialized path of ids), products with flexible
   `attributes` (JSONB, GIN-indexed), parent/child **variants**, draft → review → published workflow.
 - **Roles (RBAC)**: Admin, Publisher, Author, Customer — permission map in `backend/app/core/permissions.py`.
 - **Import / export**: Etsy listings CSV, Amazon Seller Central (All Listings Report or flat file, incl. parent/child
@@ -31,8 +31,6 @@ Storefront + admin for **windycitywares.com**. Spec: [`docs/SPEC.md`](docs/SPEC.
 ```sql
 CREATE USER wcw WITH PASSWORD 'wcw';
 CREATE DATABASE wcw OWNER wcw;
-\c wcw
-CREATE EXTENSION IF NOT EXISTS ltree;   -- needs a superuser once; the migration also tries
 ```
 
 ### 2. API
@@ -70,7 +68,7 @@ Product photos are linked from Etsy's image CDN (`i.etsystatic.com`).
 
 ## Deploying (cPanel shared hosting)
 
-See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — includes the HostItBro server details.
 
 ## Next steps (not built yet)
 

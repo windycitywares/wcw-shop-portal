@@ -1,73 +1,103 @@
-# Deploying to cPanel shared hosting
+# Deploying to HostItBro (cPanel shared hosting)
 
-The app is two pieces: the Python API and the Next.js storefront. Both run on a typical cPanel host
-that offers **Setup Python App** and **Setup Node.js App** (CloudLinux), plus PostgreSQL.
+## The server (checked 2026-10-11)
 
-Suggested layout:
-
-| URL | What |
+| | |
 |---|---|
-| `https://windycitywares.com` | Next.js storefront |
-| `https://api.windycitywares.com` | FastAPI (subdomain) |
+| Plan | HostItBro Managed Web Hosting SSD – Business |
+| Server | `bharat.hostitbro.com` · CloudLinux + LiteSpeed · cPanel 138 |
+| Account / home | `windycit` · `/home2/windycit` |
+| Python | Setup Python App: **3.11.17** (use this), also 2.7, 3.5–3.9 |
+| Node.js | Setup Node.js App: 18, 19, **20** (recommended), 22, 24 |
+| PostgreSQL | **13.23** · created from cPanel → PostgreSQL Databases · **no extensions available** (no `ltree`, no contrib) — the app doesn't need any |
+| Git | Git Version Control in cPanel, git 2.56, SSH + Terminal enabled |
+| Limits | 2 GB RAM, 30 entry processes, 200 processes, unlimited disk/bandwidth |
+| SSL | Active on windycitywares.com |
+
+Already on the account — leave alone: `crm.windycitywares.com` (its own folder + MySQL databases),
+WordPress backups, and the current single-page site (`public_html/index.html`). **Back up
+`public_html/index.html` before the storefront takes over the main domain.**
+
+Target layout:
+
+| URL | App | Folder |
+|---|---|---|
+| `https://windycitywares.com` | Next.js storefront (Node 20) | `~/apps/wcw-storefront` |
+| `https://api.windycitywares.com` | FastAPI (Python 3.11) | `~/repos/wcw-portal/backend` |
 
 ## 1. Database
 
-cPanel → **PostgreSQL Databases**: create a database and user, add the user to the database.
-The `ltree` extension must exist. If `alembic upgrade head` fails with *permission denied to create
-extension "ltree"*, ask the host's support to run `CREATE EXTENSION ltree;` in your database.
+cPanel → **PostgreSQL Databases**: create database `windycit_wcw` and user `windycit_wcw`, then add the
+user to the database with **ALL PRIVILEGES**.
+Connection string: `postgresql+asyncpg://windycit_wcw:PASSWORD@localhost:5432/windycit_wcw`
 
-## 2. API (Setup Python App)
+## 2. Get the code from GitHub (private repo)
 
-1. Upload/clone the repo, e.g. to `~/wcw-portal`.
-2. cPanel → **Setup Python App** → Create:
-   - Python version: **3.11 or newer**
-   - Application root: `wcw-portal/backend`
-   - Application URL: `api.windycitywares.com`
-   - Startup file: `passenger_wsgi.py` · Entry point: `application`
-3. Open the terminal command cPanel shows ("Enter to the virtual environment"), then:
+1. cPanel → **Terminal**: `ssh-keygen -t ed25519 -f ~/.ssh/wcw_deploy -N ""` and `cat ~/.ssh/wcw_deploy.pub`.
+2. GitHub → repo **Settings → Deploy keys → Add deploy key**: paste it, leave *write access* off.
+3. Back in Terminal:
    ```bash
-   cd ~/wcw-portal/backend
+   cat >> ~/.ssh/config <<'CFG'
+   Host github-wcw
+     HostName github.com
+     User git
+     IdentityFile ~/.ssh/wcw_deploy
+   CFG
+   mkdir -p ~/repos && cd ~/repos && git clone git@github-wcw:windycitywares/wcw-portal.git
+   ```
+   (cPanel → Git Version Control will now list the repo too.)
+
+## 3. API (Setup Python App)
+
+1. cPanel → **Domains** → create `api.windycitywares.com` (document root e.g. `api.windycitywares.com`).
+2. **Setup Python App** → Create application:
+   - Python version **3.11.17** · Application root `repos/wcw-portal/backend`
+   - Application URL `api.windycitywares.com` · Startup file `passenger_wsgi.py` · Entry point `application`
+3. Copy the "source …/activate" command it shows, then in Terminal:
+   ```bash
+   source /home2/windycit/virtualenv/repos/wcw-portal/backend/3.11/bin/activate   # path shown by cPanel
+   cd ~/repos/wcw-portal/backend
    pip install -r requirements.txt
    cp .env.example .env && nano .env
    #   ENVIRONMENT=production
-   #   DATABASE_URL=postgresql+asyncpg://USER:PASS@localhost:5432/DBNAME
+   #   DATABASE_URL=postgresql+asyncpg://windycit_wcw:PASSWORD@localhost:5432/windycit_wcw
    #   DB_USE_NULL_POOL=true
-   #   JWT_SECRET=<long random string>
-   #   CORS_ORIGINS=["https://windycitywares.com"]
+   #   JWT_SECRET=<python -c "import secrets; print(secrets.token_urlsafe(48))">
+   #   CORS_ORIGINS=["https://windycitywares.com","https://www.windycitywares.com"]
+   #   ADMIN_EMAIL=...  ADMIN_PASSWORD=...
    alembic upgrade head
    python -m app.seed
    ```
-4. **Restart** the app. Check `https://api.windycitywares.com/health` → `{"status":"ok"}`.
+4. **Restart** the app in Setup Python App. Check `https://api.windycitywares.com/health` → `{"status":"ok"}`.
 
-## 3. Storefront (Setup Node.js App)
+## 4. Storefront (Setup Node.js App)
 
-Build on your computer (shared hosts often lack the memory for `next build`):
+The 2 GB memory limit is too small for `next build`, so build elsewhere (your PC, or GitHub Actions)
+and upload only the output.
 
 ```bash
 cd frontend
 # .env.production
 #   NEXT_PUBLIC_SITE_URL=https://windycitywares.com
 #   NEXT_PUBLIC_API_URL=https://api.windycitywares.com/api/v1
-npm ci
-npm run build
+npm ci && npm run build
 ```
 
-This creates `.next/standalone`. Upload to the server (e.g. `~/wcw-storefront`):
+Upload to `~/apps/wcw-storefront/`:
+- everything inside `.next/standalone/` (includes `server.js`)
+- `.next/static/` → `~/apps/wcw-storefront/.next/static/`
+- `public/` → `~/apps/wcw-storefront/public/`
 
-- the contents of `.next/standalone/` (includes `server.js`)
-- `.next/static/` → `~/wcw-storefront/.next/static/`
-- `public/` → `~/wcw-storefront/public/`
-
-cPanel → **Setup Node.js App** → Create: Node 20+, application root `wcw-storefront`, URL
-`windycitywares.com`, startup file `server.js`. Start it.
-
-### Static-only hosting (no Node)
-
-`NEXT_OUTPUT=export npm run build` writes plain files to `out/`. Upload them to `public_html`.
-Trade-off: pages are generated at build time only. Search/filters, new products and the sitemap won't
-update until you rebuild, and product/category pages need `generateStaticParams` added.
+cPanel → **Setup Node.js App** → Create: Node **20**, mode Production, root `apps/wcw-storefront`,
+URL `windycitywares.com`, startup file `server.js`. Start it.
 
 ## Updating
 
-- API: pull, `pip install -r requirements.txt`, `alembic upgrade head`, restart the Python app.
-- Storefront: rebuild locally, re-upload `standalone` + `static`, restart the Node app.
+- API: `cd ~/repos/wcw-portal && git pull`, activate the venv, `pip install -r backend/requirements.txt`,
+  `alembic upgrade head`, then Restart in Setup Python App.
+- Storefront: rebuild, re-upload `standalone` + `static`, Restart in Setup Node.js App.
+
+## Static-only fallback
+
+`NEXT_OUTPUT=export npm run build` writes plain files to `out/` for `public_html`. Pages are then
+fixed at build time (no live search/filters or new products until you rebuild).
