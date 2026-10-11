@@ -1,5 +1,5 @@
 -- Initial schema for Windy City Wares. Mirrors app/models/*.
-CREATE EXTENSION IF NOT EXISTS ltree;
+-- Plain PostgreSQL (13+): no extensions required, so it runs on shared hosting.
 
 CREATE TYPE user_role AS ENUM ('admin', 'publisher', 'author', 'customer');
 CREATE TYPE content_status AS ENUM ('draft', 'in_review', 'published', 'archived');
@@ -34,7 +34,7 @@ CREATE TABLE categories (
     slug        VARCHAR(220) NOT NULL,
     description TEXT,
     image_url   VARCHAR(1000),
-    path        LTREE NOT NULL,
+    path        VARCHAR(1000) NOT NULL,  -- ids from the root, e.g. '1.4.9'
     sort_order  INTEGER NOT NULL DEFAULT 0,
     is_active   BOOLEAN NOT NULL DEFAULT true,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -42,7 +42,7 @@ CREATE TABLE categories (
     CONSTRAINT uq_categories_slug UNIQUE (slug)
 );
 CREATE INDEX ix_categories_parent_id ON categories (parent_id);
-CREATE INDEX ix_categories_path_gist ON categories USING GIST (path);
+CREATE INDEX ix_categories_path ON categories (path text_pattern_ops);
 
 CREATE TABLE products (
     id               BIGSERIAL PRIMARY KEY,

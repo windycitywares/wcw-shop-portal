@@ -8,6 +8,7 @@ from app.core.enums import ContentStatus, StockStatus
 from app.models.category import Category
 from app.models.product import Product
 from app.repositories.base import BaseRepository
+from app.repositories.paths import subtree_of
 from app.utils.text import escape_like
 
 SORTS = {
@@ -52,7 +53,7 @@ class ProductRepository(BaseRepository[Product]):
             )
         if f.category_path:
             stmt = stmt.join(Category, Product.category_id == Category.id).where(
-                Category.path.op("<@")(f.category_path)
+                subtree_of(Category.path, f.category_path)
             )
         if f.min_price is not None:
             stmt = stmt.where(Product.base_price >= f.min_price)
@@ -114,9 +115,10 @@ class ProductRepository(BaseRepository[Product]):
         if category_path:
             category_filter = (
                 "AND p.category_id IN (SELECT id FROM categories "
-                "WHERE path <@ text2ltree(CAST(:cpath AS TEXT)))"
+                "WHERE path = :cpath OR path LIKE :cpath_like)"
             )
             params["cpath"] = category_path
+            params["cpath_like"] = f"{category_path}.%"
         base_where = f"p.status = 'published' AND p.parent_id IS NULL {category_filter}"
 
         attr_rows = await self.session.execute(
