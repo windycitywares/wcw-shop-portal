@@ -53,6 +53,8 @@ npm run typecheck
   components using `apiFetch`. Every control needs a label; keep `focus-visible` styles.
 - Images from hosts other than those in `next.config.ts` are shown unoptimized (see `ProductImage`).
 - Server entry point is `backend/wsgi.py` (cPanel generates `passenger_wsgi.py` to load it — never commit one).
+- Deploys are automatic: merge to `main` → Actions builds the storefront → server cron (`deploy/auto-deploy.sh`)
+  updates API + storefront within ~10 min. Frontend changes must pass `npm run build` + `tsc` in Actions.
 
 ## Not built yet
 
