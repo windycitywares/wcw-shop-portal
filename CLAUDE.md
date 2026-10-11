@@ -1,0 +1,53 @@
+# CLAUDE.md — working notes for this repo
+
+Windy City Wares e-commerce platform (windycitywares.com). Full spec: `docs/SPEC.md`. Hosting: cPanel
+shared hosting (see `docs/DEPLOYMENT.md`). Product source: Etsy shop WindyCityWaresUS.
+
+## Layout
+
+- `backend/` — FastAPI API (Python 3.11+, async SQLAlchemy 2, asyncpg, PostgreSQL)
+  - `app/core/` config, db engine, enums, **permissions (RBAC map)**, security (JWT/bcrypt), domain exceptions
+  - `app/models/` ORM models · `app/schemas/` Pydantic I/O · `app/repositories/` DB queries only
+  - `app/services/` business rules (permissions, workflow, imports) — routes stay thin
+  - `app/importers/` one class per import source, registered with `@register`; no DB access
+  - `app/api/v1/` routers · `migrations/` Alembic (initial schema is `migrations/sql/0001_initial.sql`)
+- `frontend/` — Next.js App Router + Tailwind v4
+  - `src/app/layout.tsx` = template (Header / main / Footer); theme tokens in `src/app/globals.css`
+  - `src/components/ui/` primitives · `layout/` header, mega-menu, footer · `catalog/` · `cart/` · `admin/`
+  - `src/lib/api.ts` server-side fetches (cached) · `src/lib/client-api.ts` browser fetches with JWT
+
+## Commands
+
+```bash
+# backend (from backend/, venv active)
+uvicorn app.main:app --reload
+alembic upgrade head
+python -m app.seed
+python -m unittest discover tests
+
+# frontend (from frontend/)
+npm run dev
+npm run build
+npm run typecheck
+```
+
+## Conventions
+
+- Routes depend on **permissions**, never role names: `Depends(require(Permission.X))`.
+- Authors can create/edit their own drafts; only Publisher/Admin can publish or archive.
+- Categories: `path` is an ltree of ids ("1.4.9"). Never write `path` by hand; use `CategoryService`
+  (`create`, `_move`, `ensure_path`). Reserve ids with `CategoryRepository.next_id()`.
+- Products: put marketplace-specific data in `attributes` (JSONB), not new columns. List values
+  (`["Red","Blue"]`) are options; scalars are details. Variants = child rows with `parent_id`.
+- New import source: add `app/importers/<name>.py` with a `ProductImporter` subclass + `@register`,
+  import it in `app/importers/__init__.py`, add a parser test in `tests/test_importers.py`.
+- Schema change: edit the model, then `alembic revision --autogenerate -m "..."` and review it.
+- Async ORM relationships are `lazy="raise"`; load with `selectinload(...)` explicitly.
+- Frontend: storefront pages are Server Components that call `src/lib/api.ts`; admin pages are client
+  components using `apiFetch`. Every control needs a label; keep `focus-visible` styles.
+- Images from hosts other than those in `next.config.ts` are shown unoptimized (see `ProductImage`).
+
+## Not built yet
+
+Checkout + payments (Stripe), orders admin, server-side cart, wishlist/addresses, site settings,
+drag-and-drop category UI, marketplace API sync. See README "Next steps".
