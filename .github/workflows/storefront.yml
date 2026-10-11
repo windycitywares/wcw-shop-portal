@@ -1,0 +1,81 @@
+# Builds the Next.js storefront. On `main` it also publishes the ready-to-run bundle to the
+# `storefront-build` branch; the HostItBro server pulls that branch (read-only deploy key)
+# via deploy/update-storefront.sh. No server credentials are stored in GitHub.
+name: Storefront
+
+on:
+  push:
+    branches: [main]
+    paths: ["frontend/**", ".github/workflows/storefront.yml"]
+  pull_request:
+    paths: ["frontend/**", ".github/workflows/storefront.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write # push the storefront-build branch
+
+concurrency:
+  group: storefront-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Public settings baked into the build. Override with repository Variables if needed.
+      NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || 'https://shop.windycitywares.com' }}
+      NEXT_PUBLIC_API_URL: ${{ vars.API_URL || 'https://api.windycitywares.com/api/v1' }}
+      NEXT_PUBLIC_ALLOW_INDEXING: ${{ vars.ALLOW_INDEXING || 'false' }}
+      API_URL: ${{ vars.API_URL || 'https://api.windycitywares.com/api/v1' }}
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20 # same major version as the server
+
+      - name: Install
+        working-directory: frontend
+        run: npm install --no-audit --no-fund
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+      - name: Type check
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: Assemble bundle
+        run: |
+          mkdir -p bundle/.next
+          cp -a frontend/.next/standalone/. bundle/
+          cp -a frontend/.next/static bundle/.next/static
+          cp -a frontend/public bundle/public
+          printf '%s\n' "$GITHUB_SHA" > bundle/BUILD_SHA
+          du -sh bundle bundle/node_modules
+
+      - name: Smoke test the bundle
+        working-directory: bundle
+        env:
+          PORT: "3005"
+          HOSTNAME: 127.0.0.1
+        run: |
+          node server.js > ../server.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3005/robots.txt && break; sleep 1; done
+          curl -sf http://127.0.0.1:3005/robots.txt
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3005/)
+          echo "home page -> $code"; cat ../server.log | tail -20
+          test "$code" = "200"
+
+      - name: Publish to storefront-build branch
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        working-directory: bundle
+        run: |
+          git init -q -b storefront-build
+          git add -A -f .
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Storefront build of ${GITHUB_SHA}"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" storefront-build
