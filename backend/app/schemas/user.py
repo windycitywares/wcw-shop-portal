@@ -41,6 +41,11 @@ class ProfileUpdate(BaseModel):
     full_name: str | None = Field(default=None, max_length=200)
 
 
+class PasswordChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=72)
+    new_password: str = Password
+
+
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"

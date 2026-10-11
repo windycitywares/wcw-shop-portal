@@ -53,10 +53,16 @@ Connection string: `postgresql+asyncpg://windycit_wcw:PASSWORD@localhost:5432/wi
 
 ## 3. API (Setup Python App)
 
+> **Live since 2026-10-11** at `https://api.windycitywares.com` — database `windycit_wcw`, user
+> `windycit_wcwapp`, app root `repos/wcw-portal/backend`, startup file `wsgi.py`. Secrets are in
+> `backend/.env` and `~/.wcw-secrets` (both chmod 600, never committed).
+
 1. cPanel → **Domains** → create `api.windycitywares.com` (document root e.g. `api.windycitywares.com`).
 2. **Setup Python App** → Create application:
    - Python version **3.11.17** · Application root `repos/wcw-portal/backend`
-   - Application URL `api.windycitywares.com` · Startup file `passenger_wsgi.py` · Entry point `application`
+   - Application URL `api.windycitywares.com` · Startup file **`wsgi.py`** · Entry point `application`
+   - (cPanel writes its own `passenger_wsgi.py` that loads `wsgi.py` — don't name our file `passenger_wsgi.py`,
+     or the generated loader imports itself and every request fails with a RecursionError.)
 3. Copy the "source …/activate" command it shows, then in Terminal:
    ```bash
    source /home2/windycit/virtualenv/repos/wcw-portal/backend/3.11/bin/activate   # path shown by cPanel
@@ -103,8 +109,8 @@ Check: `https://shop.windycitywares.com/robots.txt` should say `Disallow: /` whi
 
 ## Updating
 
-- API: `cd ~/repos/wcw-portal && git pull`, activate the venv, `pip install -r backend/requirements.txt`,
-  `alembic upgrade head`, then Restart in Setup Python App.
+- API: in cPanel → Terminal run `bash ~/repos/wcw-portal/deploy/update-api.sh` (pulls `main`, installs
+  packages, runs tests and migrations, restarts the app, checks `/health`).
 - Storefront: rebuild, re-upload `standalone` + `static`, Restart in Setup Node.js App.
 
 ## Go live on the main domain

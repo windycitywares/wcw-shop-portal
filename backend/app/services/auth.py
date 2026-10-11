@@ -1,8 +1,16 @@
+from datetime import datetime, timezone
+
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.enums import UserRole
-from app.core.exceptions import AuthenticationError, ConflictError, NotFoundError, PermissionDeniedError
+from app.core.exceptions import (
+    AuthenticationError,
+    ConflictError,
+    NotFoundError,
+    PermissionDeniedError,
+    ValidationFailedError,
+)
 from app.core.permissions import permissions_for
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models.user import NewsletterSubscriber, User
@@ -80,6 +88,18 @@ class UserService(AuthService):
         await self.session.commit()
         await self.session.refresh(user)
         return user
+
+    async def change_password(self, user: User, current: str, new: str) -> TokenOut:
+        """Verify the current password, store the new one, and invalidate older tokens."""
+        if not verify_password(current, user.hashed_password):
+            raise ValidationFailedError("Current password is incorrect")
+        if current == new:
+            raise ValidationFailedError("Choose a password different from the current one")
+        user.hashed_password = hash_password(new)
+        user.password_changed_at = datetime.now(timezone.utc)
+        await self.session.commit()
+        await self.session.refresh(user)
+        return self.issue_token(user)  # fresh token so this browser stays signed in
 
     async def update_profile(self, user: User, full_name: str | None) -> User:
         user.full_name = full_name

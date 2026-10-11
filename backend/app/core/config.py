@@ -1,13 +1,18 @@
 """Application settings, loaded from environment variables / .env."""
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+
+
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    # Absolute path: the web server may start the app from a different working directory.
+    model_config = SettingsConfigDict(env_file=BACKEND_DIR / ".env", env_file_encoding="utf-8", extra="ignore")
 
     app_name: str = "Windy City Wares API"
     environment: str = "development"
@@ -16,6 +21,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://wcw:wcw@localhost:5432/wcw"
     db_echo: bool = False
     db_use_null_pool: bool = False
+    db_connect_timeout: int = 10  # seconds; fail fast instead of hanging a web worker
 
     jwt_secret: str = "change-me"
     jwt_algorithm: str = "HS256"

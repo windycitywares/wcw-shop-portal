@@ -10,7 +10,11 @@ from app.core.config import get_settings
 
 def _build_engine():
     settings = get_settings()
-    kwargs: dict = {"echo": settings.db_echo, "pool_pre_ping": True}
+    kwargs: dict = {
+        "echo": settings.db_echo,
+        "pool_pre_ping": True,
+        "connect_args": {"timeout": settings.db_connect_timeout},
+    }
     if settings.db_use_null_pool:
         # Passenger may spawn/kill processes freely; don't hold pooled connections.
         kwargs["poolclass"] = NullPool

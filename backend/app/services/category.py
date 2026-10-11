@@ -15,7 +15,8 @@ from app.schemas.category import (
 
 def build_tree(categories: list[Category]) -> list[CategoryNode]:
     """Nest a flat list (ordered parents-first) into a tree."""
-    nodes = {c.id: CategoryNode.model_validate(c) for c in categories}
+    # Build from the plain fields only — the ORM `children` relationship is lazy="raise".
+    nodes = {c.id: CategoryNode(**CategoryOut.model_validate(c).model_dump()) for c in categories}
     roots: list[CategoryNode] = []
     for c in categories:
         node = nodes[c.id]
