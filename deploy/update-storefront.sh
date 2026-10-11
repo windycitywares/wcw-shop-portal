@@ -28,11 +28,16 @@ fi
 git reset -q --hard FETCH_HEAD
 echo "$(date '+%F %T') deploying storefront build $(cat BUILD_SHA 2>/dev/null) (bundle ${NEW:0:7})"
 
-mkdir -p "$DEST" "$MODULES"
-rsync -a --delete "$CACHE/node_modules/" "$MODULES/"
-rsync -a --delete \
-  --exclude '.git' --exclude 'node_modules' --exclude 'tmp/' --exclude '.deployed_build' \
-  "$CACHE/" "$DEST/"
+mkdir -p "$DEST"
+# Dependencies: copy alongside, then swap in (no rsync on the server).
+rm -rf "$MODULES.new" "$MODULES.old"
+cp -a "$CACHE/node_modules" "$MODULES.new"
+[ -d "$MODULES" ] && mv "$MODULES" "$MODULES.old"
+mv "$MODULES.new" "$MODULES"
+rm -rf "$MODULES.old"
+# App files: clear the app root (keeping cPanel's tmp/) and unpack the new build.
+find "$DEST" -mindepth 1 -maxdepth 1 ! -name tmp ! -name .deployed_build -exec rm -rf {} +
+tar -C "$CACHE" --exclude=./.git --exclude=./node_modules -cf - . | tar -C "$DEST" -xf -
 echo "$NEW" > "$DEST/.deployed_build"
 
 cloudlinux-selector restart --json --interpreter=nodejs --app-root="$APP_ROOT" >/dev/null
