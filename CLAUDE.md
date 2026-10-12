@@ -52,11 +52,13 @@ npm run typecheck
 - Frontend: storefront pages are Server Components that call `src/lib/api.ts`; admin pages are client
   components using `apiFetch`. Every control needs a label; keep `focus-visible` styles.
 - Images from hosts other than those in `next.config.ts` are shown unoptimized (see `ProductImage`).
+- Email: `app/core/mailer.py` (`await mailer.send(Mail(...))`); CAPTCHA: `await captcha.verify(token, ip)`.
+  Both skip when unconfigured in development — see docs/DEPLOYMENT.md → "Email and CAPTCHA".
 - Server entry point is `backend/wsgi.py` (cPanel generates `passenger_wsgi.py` to load it — never commit one).
 - Deploys are automatic: merge to `main` → Actions builds the storefront → server cron (`deploy/auto-deploy.sh`)
   updates API + storefront within ~10 min. Frontend changes must pass `npm run build` + `tsc` in Actions.
 
 ## Not built yet
 
-Checkout + payments (Stripe), orders admin, server-side cart, wishlist/addresses, site settings,
+Checkout + payments (Stripe), orders admin, contact-messages admin, server-side cart, wishlist, site settings,
 drag-and-drop category UI, marketplace API sync. See README "Next steps".

@@ -73,7 +73,8 @@ See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — includes the HostItBro server
 ## Next steps (not built yet)
 
 - Checkout: address → shipping → payment review, Stripe payment intents, order creation.
-- Orders admin (status updates, refunds), customer order history, wishlist, saved addresses.
+- Orders admin (status updates, refunds), customer order history, wishlist, contact-messages inbox in admin.
+- Use saved addresses at checkout (the address book and API already exist).
 - Server-side cart for signed-in users.
 - Site settings (shipping rates, tax zones, logo upload).
 - Drag-and-drop category tree (the `/categories/reorder` API is ready).
