@@ -45,3 +45,9 @@ failed_logins_by_email = RateLimiter(max_hits=10, window_seconds=15 * 60)
 failed_logins_by_ip = RateLimiter(max_hits=30, window_seconds=15 * 60)
 # Registrations: 5 per IP per hour.
 registrations_by_ip = RateLimiter(max_hits=5, window_seconds=60 * 60)
+# Password-reset emails: 3 per address and 10 per IP per hour; reset attempts: 20 per IP per 15 min.
+reset_requests_by_email = RateLimiter(max_hits=3, window_seconds=60 * 60)
+reset_requests_by_ip = RateLimiter(max_hits=10, window_seconds=60 * 60)
+reset_attempts_by_ip = RateLimiter(max_hits=20, window_seconds=15 * 60)
+# Contact form: 5 messages per IP per hour.
+contact_by_ip = RateLimiter(max_hits=5, window_seconds=60 * 60)

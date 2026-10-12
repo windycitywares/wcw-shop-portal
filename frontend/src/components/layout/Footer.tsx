@@ -28,10 +28,14 @@ export function Footer({ locale }: { locale: Locale }) {
         { label: t.footer.cart, href: l("/cart") },
       ],
     },
+    {
+      title: t.footer.help,
+      links: [{ label: t.footer.contact, href: l("/contact") }],
+    },
   ];
   return (
     <footer className="mt-28 bg-night text-night-muted [&_*:focus-visible]:outline-white">
-      <Container className="grid gap-12 py-16 md:grid-cols-[1.6fr_1fr_1fr]">
+      <Container className="grid gap-12 py-16 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
         <div className="max-w-sm">
           <Logo tone="reverse" title="WindyCityWares" className="mb-8 h-10 w-auto" />
           <p className="font-serif text-3xl font-light text-white">{t.footer.newsletterTitle}</p>

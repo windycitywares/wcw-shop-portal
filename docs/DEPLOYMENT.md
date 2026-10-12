@@ -118,6 +118,41 @@ A cron job runs every 10 minutes (`crontab -l`):
 
 So the release flow is: **merge a PR into `main` → live within ~10 minutes.**
 
+## Email and CAPTCHA
+
+Password-reset emails and contact-form notifications go out through a HostItBro mailbox; sign-up and
+the contact form are protected by Cloudflare Turnstile. Both are set in `backend/.env` (never in Git),
+then the Python app is restarted (Setup Python App → Restart, or wait for the next deploy).
+
+**Mailbox** — cPanel → Email Accounts → Create `no-reply@windycitywares.com` with a strong password.
+cPanel → Email Deliverability → make sure SPF and DKIM show *Valid* for windycitywares.com (click
+*Repair* if not) so Gmail and Outlook don't treat the emails as spam. Then in `backend/.env`:
+
+```
+SITE_URL=https://shop.windycitywares.com          # links in emails (change at go-live)
+SMTP_HOST=mail.windycitywares.com
+SMTP_PORT=465
+SMTP_SECURITY=ssl
+SMTP_USER=no-reply@windycitywares.com
+SMTP_PASSWORD=<the mailbox password>
+MAIL_FROM=no-reply@windycitywares.com
+MAIL_FROM_NAME=WindyCityWares
+CONTACT_TO=windycitywaresllc@gmail.com            # where contact-form messages are delivered
+```
+
+Contact messages are also saved in the `contact_messages` table, so nothing is lost if an email fails.
+
+**Turnstile** — dash.cloudflare.com (free account) → Turnstile → Add widget → name `WindyCityWares`,
+hostnames `shop.windycitywares.com` and `windycitywares.com`, mode *Managed*. Copy both keys into
+`backend/.env`:
+
+```
+TURNSTILE_SITE_KEY=<site key>       # public; the storefront reads it from /api/v1/site-config
+TURNSTILE_SECRET=<secret key>
+```
+
+Until `TURNSTILE_SECRET` is set the check is skipped (a warning is logged), so sign-up keeps working.
+
 ## Go live on the main domain
 
 When the store is ready to replace the current homepage:
@@ -131,8 +166,8 @@ When the store is ready to replace the current homepage:
    `windycitywares.com` → Save → Restart. (If cPanel won't change the URL, create a second app on
    `windycitywares.com` with the same folder, then stop the `shop.` one.)
 4. **Allow the main domain in the API**: in `backend/.env` set
-   `CORS_ORIGINS=["https://windycitywares.com","https://www.windycitywares.com","https://shop.windycitywares.com"]`,
-   then Restart the Python app.
+   `CORS_ORIGINS=["https://windycitywares.com","https://www.windycitywares.com","https://shop.windycitywares.com"]`
+   and `SITE_URL=https://windycitywares.com` (links in emails), then Restart the Python app.
 5. **Keep old links working**: cPanel → Redirects → `shop.windycitywares.com` → permanent (301) to
    `https://windycitywares.com` — or keep `shop.` serving the store, either is fine. Turn on Domains →
    **Force HTTPS Redirect** for the main domain.

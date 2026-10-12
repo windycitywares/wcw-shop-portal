@@ -8,7 +8,7 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
-  register: (email: string, password: string, fullName?: string) => Promise<User>;
+  register: (email: string, password: string, fullName?: string, captchaToken?: string | null) => Promise<User>;
   logout: () => void;
   changePassword: (current: string, next: string) => Promise<void>;
   refresh: () => Promise<void>;
@@ -53,10 +53,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res.user;
   }, []);
 
-  const register = useCallback(async (email: string, password: string, fullName?: string) => {
+  const register = useCallback(async (email: string, password: string, fullName?: string, captchaToken?: string | null) => {
     const res = await apiFetch<TokenResponse>("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, password, full_name: fullName || null }),
+      body: JSON.stringify({ email, password, full_name: fullName || null, captcha_token: captchaToken || null }),
     });
     tokenStore.set(res.access_token);
     setUser(res.user);

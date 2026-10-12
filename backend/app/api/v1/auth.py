@@ -4,10 +4,20 @@ from fastapi import APIRouter, Depends, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.api.deps import CurrentUser, SessionDep
+from app.core import captcha
 from app.core.exceptions import AuthenticationError, TooManyRequestsError
-from app.core.rate_limit import failed_logins_by_email, failed_logins_by_ip, registrations_by_ip
+from app.core.rate_limit import (
+    failed_logins_by_email,
+    failed_logins_by_ip,
+    registrations_by_ip,
+    reset_attempts_by_ip,
+    reset_requests_by_email,
+    reset_requests_by_ip,
+)
+from app.schemas.account import ForgotPasswordIn, ResetPasswordIn
 from app.schemas.common import Message
-from app.schemas.user import NewsletterIn, PasswordChange, ProfileUpdate, RegisterIn, TokenOut, UserMe
+from app.schemas.user import NewsletterIn, PasswordChange, ProfileUpdate, SignUpIn, TokenOut, UserMe
+from app.services.account import PasswordResetService
 from app.services.auth import AuthService, NewsletterService, UserService, to_me
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -46,13 +56,39 @@ async def login(
 
 
 @router.post("/register", response_model=TokenOut, status_code=status.HTTP_201_CREATED)
-async def register(request: Request, response: Response, session: SessionDep, data: RegisterIn):
+async def register(request: Request, response: Response, session: SessionDep, data: SignUpIn):
     no_store(response)
     ip_key = client_ip(request)
     if registrations_by_ip.is_blocked(ip_key):
         raise TooManyRequestsError("Too many new accounts from this network. Please try again later.")
+    await captcha.verify(data.captcha_token, ip_key)
     registrations_by_ip.hit(ip_key)
     return await AuthService(session).register(data)
+
+
+@router.post("/forgot-password", response_model=Message, status_code=status.HTTP_202_ACCEPTED)
+async def forgot_password(request: Request, session: SessionDep, data: ForgotPasswordIn):
+    """Email a one-time reset link. The answer is the same whether or not the account exists."""
+    email_key, ip_key = str(data.email).strip().lower(), client_ip(request)
+    if reset_requests_by_ip.is_blocked(ip_key):
+        raise TooManyRequestsError("Too many requests. Please wait an hour and try again.")
+    reset_requests_by_ip.hit(ip_key)
+    if not reset_requests_by_email.is_blocked(email_key):
+        reset_requests_by_email.hit(email_key)
+        await PasswordResetService(session).request(email_key, data.locale)
+    return Message(detail="If an account exists for that email, we've sent a link to reset the password.")
+
+
+@router.post("/reset-password", response_model=Message)
+async def reset_password(request: Request, response: Response, session: SessionDep, data: ResetPasswordIn):
+    """Set a new password with the token from the email. Signs out every existing session."""
+    no_store(response)
+    ip_key = client_ip(request)
+    if reset_attempts_by_ip.is_blocked(ip_key):
+        raise TooManyRequestsError("Too many attempts. Please wait 15 minutes and try again.")
+    reset_attempts_by_ip.hit(ip_key)
+    await PasswordResetService(session).reset(data.token, data.new_password)
+    return Message(detail="Your password has been changed. You can sign in now.")
 
 
 @router.get("/me", response_model=UserMe)
