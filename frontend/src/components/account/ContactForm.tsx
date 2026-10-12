@@ -82,7 +82,7 @@ export function ContactForm() {
           Website <input name="website" type="text" tabIndex={-1} autoComplete="off" />
         </label>
       </div>
-      <Turnstile onToken={setCaptcha} resetKey={captchaKey} locale={locale} label={t.auth.captcha} />
+      <Turnstile action="contact" onToken={setCaptcha} resetKey={captchaKey} locale={locale} label={t.auth.captcha} />
       <Button type="submit" size="lg" disabled={busy}>
         {busy ? t.contact.sending : t.contact.send}
       </Button>
