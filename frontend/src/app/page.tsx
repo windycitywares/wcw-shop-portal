@@ -13,6 +13,9 @@ export default async function HomePage() {
     getProducts({ sort: "newest", page_size: "8" }),
   ]);
 
+  // With a single top-level category (e.g. "Cremation Urns"), feature its themes instead.
+  const featured = tree.length === 1 ? tree[0].children : tree;
+
   return (
     <>
       <section className="border-b border-line bg-sand/50">
@@ -20,9 +23,9 @@ export default async function HomePage() {
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">{site.name}</p>
             <h1 className="mt-4 text-5xl leading-[1.05] sm:text-6xl lg:text-7xl">
-              Made with care.
+              A beautiful place
               <br />
-              <span className="italic text-accent">Built to last.</span>
+              <span className="italic text-accent">to keep them close.</span>
             </h1>
             <p className="mt-6 max-w-lg text-lg text-muted">{site.tagline}</p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -46,14 +49,14 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {tree.length > 0 && (
+      {featured.length > 0 && (
         <section aria-labelledby="categories-heading">
           <Container className="py-16">
             <h2 id="categories-heading" className="text-3xl sm:text-4xl">
               Shop by category
             </h2>
             <ul className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-              {tree.slice(0, 8).map((c) => (
+              {featured.slice(0, 12).map((c) => (
                 <li key={c.id}>
                   <Link
                     href={`/category/${c.slug}`}
@@ -61,7 +64,7 @@ export default async function HomePage() {
                   >
                     <span className="font-serif text-2xl group-hover:text-accent">{c.name}</span>
                     <span className="mt-1 text-sm text-muted">
-                      {c.children.length > 0 ? `${c.children.length} collections` : "Browse"}
+                      {c.children.length > 0 ? `${c.children.length} collections` : c.description || "Browse"}
                     </span>
                   </Link>
                 </li>

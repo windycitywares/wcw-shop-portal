@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 // Hosts listed in next.config.ts images.remotePatterns get optimized; any
 // other host (e.g. a URL from an imported spreadsheet) is shown as-is.
-const OPTIMIZED_HOSTS = new Set(["i.etsystatic.com", "m.media-amazon.com", "images-na.ssl-images-amazon.com"]);
+const OPTIMIZED_HOSTS = new Set(["media.windycitywares.com", "i.etsystatic.com", "m.media-amazon.com", "images-na.ssl-images-amazon.com"]);
 
 function canOptimize(src: string) {
   try {
