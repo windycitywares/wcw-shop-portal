@@ -83,9 +83,10 @@ for x in raw:
     attrs = {}
     if feats.get("Material") and norm_material(feats["Material"]): attrs["Material"] = norm_material(feats["Material"])
     if feats.get("Finish"): attrs["Finish"] = norm_finish(feats["Finish"])
-    if feats.get("Closure"): attrs["Closure"] = feats["Closure"]
-    if feats.get("Adult Size"): attrs["Adult urn size"] = feats["Adult Size"]
-    if feats.get("Keepsake Size"): attrs["Keepsake size"] = feats["Keepsake Size"]
+    short = lambda v: re.split(r"\s+[–-]\s+", v)[0].strip()  # "6 × 10 inches – Suitable for…" → "6 × 10 inches"
+    if feats.get("Closure"): attrs["Closure"] = "Threaded screw-top lid" if "screw" in feats["Closure"].lower() else short(feats["Closure"])
+    if feats.get("Adult Size"): attrs["Adult urn size"] = short(feats["Adult Size"])
+    if feats.get("Keepsake Size"): attrs["Keepsake size"] = short(feats["Keepsake Size"])
     variants = []
     SIZE_NAMES = {"3 inch keepsake": "3 inch Keepsake", "10 inch large": "10 inch Large",
                   "1 large 2 keepsake": "1 Large + 2 Keepsakes", "1 large 4 keepsake": "1 Large + 4 Keepsakes",
