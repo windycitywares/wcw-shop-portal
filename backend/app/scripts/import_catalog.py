@@ -18,7 +18,7 @@ import sys
 import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -142,7 +142,10 @@ def _money(v) -> Decimal | None:
 async def upsert_products(session, products: list[dict], categories: dict[str, Category], photo_urls: dict[str, str], owner_id):
     now = datetime.now(timezone.utc)
     created = updated = variants = 0
-    for spec in products:
+    # The file lists products newest-first (Etsy's order); stagger published_at so the
+    # store's "Newest" sort keeps that order.
+    for position, spec in enumerate(products):
+        published_at = now - timedelta(seconds=position)
         images = [
             {"url": photo_urls.get(img["url"], img["url"]), "alt": img.get("alt") or spec["title"]}
             for img in spec.get("images", [])
@@ -168,17 +171,17 @@ async def upsert_products(session, products: list[dict], categories: dict[str, C
             images=images,
             tags=spec.get("tags", []),
             status=ContentStatus.PUBLISHED,
+            published_at=published_at,
             seo_title=spec.get("seo_title"),
             seo_description=spec.get("seo_description"),
         )
         if product is None:
-            product = Product(source=spec["source"], source_ref=spec["source_ref"], created_by_id=owner_id, published_at=now, **fields)
+            product = Product(source=spec["source"], source_ref=spec["source_ref"], created_by_id=owner_id, **fields)
             session.add(product)
             created += 1
         else:
             for k, v in fields.items():
                 setattr(product, k, v)
-            product.published_at = product.published_at or now
             updated += 1
         await session.flush()
 
@@ -205,7 +208,7 @@ async def upsert_products(session, products: list[dict], categories: dict[str, C
                     source=spec["source"],
                     source_ref=f"{spec['source_ref']}-{i}",
                     created_by_id=owner_id,
-                    published_at=now,
+                    published_at=published_at,
                 )
             )
             variants += 1
