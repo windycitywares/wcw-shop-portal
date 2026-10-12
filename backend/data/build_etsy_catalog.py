@@ -101,6 +101,9 @@ for x in raw:
         attrs["Size"] = [v["name"] for v in variants]
     theme = theme_for(x["t"])
     desc = html.unescape(x["d"]).strip()  # Etsy text arrives with &#39; etc.
+    # Drop text pasted into a listing by accident (an AI-tool upsell)
+    JUNK = ("Improve accuracy for writing and career work", "Upgrade to Plus and use increased reasoning", "Get Plus")
+    desc = "\n".join(l for l in desc.split("\n") if not l.strip().startswith(JUNK)).strip()
     first_para = re.split(r"\n\s*\n", desc)[1] if desc.count("\n\n") >= 1 else desc
     products.append({
         "source": "etsy", "source_ref": x["id"], "sku": f"ETSY-{x['id']}", "slug": slug,
