@@ -27,6 +27,12 @@ class RegisterIn(BaseModel):
     full_name: str | None = Field(default=None, max_length=200)
 
 
+class SignUpIn(RegisterIn):
+    """Public sign-up: adds the Turnstile CAPTCHA token."""
+
+    captcha_token: str | None = Field(default=None, max_length=4096)
+
+
 class UserCreate(RegisterIn):
     role: UserRole = UserRole.CUSTOMER
 

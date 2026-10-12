@@ -39,6 +39,28 @@ class Settings(BaseSettings):
     media_root: str = str(BACKEND_DIR / "media")
     media_url: str = "/media"
 
+    # Public storefront URL, used for links in emails (password reset).
+    site_url: str = "http://localhost:3000"
+
+    # Outgoing email (HostItBro mailbox, e.g. no-reply@windycitywares.com). Leave SMTP_HOST empty in
+    # development: emails are then written to the log instead of being sent.
+    smtp_host: str | None = None
+    smtp_port: int = 465
+    smtp_security: str = "ssl"  # "ssl" (port 465), "starttls" (port 587) or "none"
+    smtp_user: str | None = None
+    smtp_password: str | None = None
+    mail_from: str = "no-reply@windycitywares.com"
+    mail_from_name: str = "WindyCityWares"
+    contact_to: str | None = None  # inbox for contact-form messages
+
+    # Cloudflare Turnstile (CAPTCHA). The site key is public; the secret stays on the server.
+    # Without a secret, CAPTCHA checks are skipped (development only — required in production).
+    turnstile_site_key: str | None = None
+    turnstile_secret: str | None = None
+
+    password_reset_minutes: int = 60
+    max_addresses_per_user: int = 10
+
     @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
