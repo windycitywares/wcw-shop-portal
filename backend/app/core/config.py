@@ -81,6 +81,9 @@ class Settings(BaseSettings):
     # Without a secret, CAPTCHA checks are skipped (development only — required in production).
     turnstile_site_key: str | None = None
     turnstile_secret: str | None = None
+    # Hostnames a token may come from (checked against siteverify's `hostname`). Empty = not checked
+    # (development / Cloudflare test keys). Never list localhost in production.
+    turnstile_hostnames: list[str] = []
 
     password_reset_minutes: int = 60
     max_addresses_per_user: int = 10
