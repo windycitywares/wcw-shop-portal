@@ -3,6 +3,7 @@ import { getCategoryTree } from "@/lib/api";
 import { localePath, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { Container } from "@/components/ui/misc";
+import { Logo } from "@/components/ui/Logo";
 import { CartButton } from "@/components/cart/CartButton";
 import { AccountLink } from "./AccountLink";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -18,10 +19,10 @@ export async function Header({ locale }: { locale: Locale }) {
         <MobileNav tree={tree} />
         <Link
           href={localePath(locale, "/")}
-          className="shrink-0 font-serif text-[1.35rem] font-normal tracking-[-0.01em] sm:text-2xl"
+          className="flex shrink-0 items-center rounded-full"
           aria-label={t.nav.homeLabel}
         >
-          Windy City Wares
+          <Logo className="h-8 w-auto sm:h-10" />
         </Link>
         <div className="hidden flex-1 lg:block">
           <MegaMenu tree={tree} />

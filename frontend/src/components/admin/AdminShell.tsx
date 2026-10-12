@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { isStaff, useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Container } from "@/components/ui/misc";
+import { LogoMark } from "@/components/ui/Logo";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", permission: null },
@@ -35,7 +36,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <>
     <header className="border-b border-line bg-surface">
       <Container className="flex h-14 items-center justify-between">
-        <Link href="/admin" className="font-serif text-lg">Windy City Wares admin</Link>
+        <Link href="/admin" className="flex items-center gap-2 font-serif text-lg">
+          <LogoMark className="h-8 w-8" />
+          <span>WindyCityWares admin</span>
+        </Link>
         <Link href="/" className="text-sm text-muted hover:text-ink">View the shop</Link>
       </Container>
     </header>

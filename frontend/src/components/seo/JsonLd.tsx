@@ -19,7 +19,7 @@ export function organizationLd() {
     "@type": "Organization",
     name: site.name,
     url: site.url,
-    logo: absoluteUrl("/icon.svg"),
+    logo: absoluteUrl("/brand/icon-512.png"),
     sameAs: site.social.map((s) => s.href),
   };
 }
