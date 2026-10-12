@@ -40,7 +40,11 @@ find "$DEST" -mindepth 1 -maxdepth 1 ! -name tmp ! -name .deployed_build -exec r
 tar -C "$CACHE" --exclude=./.git --exclude=./node_modules -cf - . | tar -C "$DEST" -xf -
 echo "$NEW" > "$DEST/.deployed_build"
 
-cloudlinux-selector restart --json --interpreter=nodejs --app-root="$APP_ROOT" >/dev/null
+# Cron runs with a minimal PATH (no /usr/sbin): find the selector explicitly, else use Passenger's restart.txt.
+SELECTOR=$(command -v cloudlinux-selector || ls /usr/sbin/cloudlinux-selector /usr/bin/cloudlinux-selector 2>/dev/null | head -1 || true)
+if [ -z "$SELECTOR" ] || ! "$SELECTOR" restart --json --interpreter=nodejs --app-root="$APP_ROOT" >/dev/null; then
+  mkdir -p "$DEST/tmp" && touch "$DEST/tmp/restart.txt"
+fi
 sleep 3
 code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' "$SITE/")
 if [ "$code" = "200" ]; then

@@ -4,6 +4,7 @@
 # - API: when `main` has new commits, run update-api.sh (tests must pass before it restarts).
 # - Storefront: when GitHub Actions has published a new build, run update-storefront.sh.
 set -uo pipefail
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"   # cron's default PATH is minimal
 exec 9>"$HOME/.wcw-deploy.lock"
 flock -n 9 || exit 0   # a previous run is still going
 
