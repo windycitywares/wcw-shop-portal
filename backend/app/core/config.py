@@ -1,5 +1,6 @@
-"""Application settings, loaded from environment variables / .env."""
+"""Application settings, loaded from environment variables and env files (see ENV_FILES)."""
 
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -10,13 +11,32 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 
+def _is_production() -> bool:
+    env = os.environ.get("ENVIRONMENT")
+    if env is None:
+        try:
+            for line in (BACKEND_DIR / ".env").read_text(encoding="utf-8").splitlines():
+                if line.strip().startswith("ENVIRONMENT="):
+                    env = line.split("=", 1)[1].strip().strip("'\"")
+        except OSError:
+            pass
+    return (env or "").lower() == "production"
+
+
+# Later files override earlier ones; real environment variables override all of them.
+#   production.env — non-secret production defaults, in Git (mail server, contact inbox, site URL)
+#   .env           — secrets, on the server only
+#   site.env       — optional non-secret server overrides, not in Git
+ENV_FILES = (
+    *((BACKEND_DIR / "production.env",) if _is_production() else ()),
+    BACKEND_DIR / ".env",
+    BACKEND_DIR / "site.env",
+)
+
+
 class Settings(BaseSettings):
     # Absolute paths: the web server may start the app from a different working directory.
-    # .env holds secrets; site.env (optional, also not in Git) holds non-secret server settings such as
-    # the mail server and contact inbox, and overrides .env. Real environment variables win over both.
-    model_config = SettingsConfigDict(
-        env_file=(BACKEND_DIR / ".env", BACKEND_DIR / "site.env"), env_file_encoding="utf-8", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=ENV_FILES, env_file_encoding="utf-8", extra="ignore")
 
     app_name: str = "Windy City Wares API"
     environment: str = "development"
