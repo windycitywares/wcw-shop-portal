@@ -22,10 +22,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /** A framed piece in the hero, with a museum-style wall label beneath. */
-function HungPiece({ product, locale, delay, sizes }: { product: Product; locale: Locale; delay: number; sizes: string }) {
+function HungPiece({
+  product,
+  locale,
+  sizes,
+  className,
+}: {
+  product: Product;
+  locale: Locale;
+  sizes: string;
+  className?: string;
+}) {
   const image = product.images[0];
   return (
-    <figure className="hang group relative" style={{ animationDelay: `${delay}ms` }}>
+    <figure className={`group relative ${className ?? ""}`}>
       <div className="mat shadow-[0_30px_60px_-30px_rgb(23_35_43/0.35)]">
         <div className="relative aspect-[4/5] overflow-hidden bg-sand">
           <ProductImage src={image?.url} alt={image?.alt || product.title} sizes={sizes} priority />
@@ -34,7 +44,7 @@ function HungPiece({ product, locale, delay, sizes }: { product: Product; locale
       <figcaption className="mt-3 pl-1">
         <Link
           href={localePath(locale, `/product/${product.slug}`)}
-          className="font-serif text-[0.95rem] leading-snug after:absolute after:inset-0 group-hover:underline sm:text-base"
+          className="font-serif text-[0.95rem] leading-snug after:absolute after:inset-0 group-hover:underline"
         >
           {product.title}
         </Link>
@@ -43,7 +53,7 @@ function HungPiece({ product, locale, delay, sizes }: { product: Product; locale
           compareAt={product.compare_at_price}
           currency={product.currency}
           locale={locale}
-          className="block text-xs text-muted sm:text-sm"
+          className="flex text-xs text-muted sm:text-sm"
         />
       </figcaption>
     </figure>
@@ -84,16 +94,20 @@ export default async function HomePage({ params }: Props) {
             </div>
           </div>
           {first && (
-            <div className="grid grid-cols-[1.3fr_1fr] gap-4 sm:gap-6 lg:col-span-7 lg:pl-6">
-              <HungPiece product={first} locale={locale} delay={0} sizes="(min-width: 1024px) 32vw, 55vw" />
-              <div className="flex flex-col gap-4 pt-10 sm:gap-6 sm:pt-16">
-                {second && <HungPiece product={second} locale={locale} delay={140} sizes="(min-width: 1024px) 22vw, 40vw" />}
-                {third && (
-                  <div className="hidden sm:block">
-                    <HungPiece product={third} locale={locale} delay={280} sizes="22vw" />
-                  </div>
-                )}
-              </div>
+            // One entrance for the whole hang (the page's single orchestrated motion)
+            <div className="hang grid grid-cols-2 items-start gap-4 sm:grid-cols-3 sm:gap-5 lg:col-span-7 lg:pl-4">
+              <HungPiece product={first} locale={locale} sizes="(min-width: 1024px) 20vw, (min-width: 640px) 30vw, 46vw" />
+              {second && (
+                <HungPiece
+                  product={second}
+                  locale={locale}
+                  sizes="(min-width: 1024px) 20vw, (min-width: 640px) 30vw, 46vw"
+                  className="mt-12 sm:mt-20"
+                />
+              )}
+              {third && (
+                <HungPiece product={third} locale={locale} sizes="(min-width: 1024px) 20vw, 30vw" className="hidden sm:mt-8 sm:block" />
+              )}
             </div>
           )}
         </Container>
