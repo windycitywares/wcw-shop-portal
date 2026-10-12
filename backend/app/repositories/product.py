@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from decimal import Decimal
 
-from sqlalchemy import Select, func, or_, select, text
+from sqlalchemy import Select, Text, cast, func, or_, select, text
 from sqlalchemy.orm import selectinload
 
 from app.core.enums import ContentStatus, StockStatus
@@ -49,7 +49,12 @@ class ProductRepository(BaseRepository[Product]):
         if f.q:
             like = f"%{escape_like(f.q.strip())}%"
             stmt = stmt.where(
-                or_(Product.title.ilike(like), Product.sku.ilike(like), Product.description.ilike(like))
+                or_(
+                    Product.title.ilike(like),
+                    Product.sku.ilike(like),
+                    Product.description.ilike(like),
+                    cast(Product.translations, Text).ilike(like),
+                )
             )
         if f.category_path:
             stmt = stmt.join(Category, Product.category_id == Category.id).where(

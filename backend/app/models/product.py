@@ -54,6 +54,10 @@ class Product(TimestampMixin, Base):
     attributes: Mapped[dict[str, Any]] = mapped_column(
         JSONB, default=dict, server_default=text("'{}'::jsonb")
     )
+    # {"es": {"title": ..., "description": ..., "seo_title": ..., "seo_description": ...}, "nl": {...}}
+    translations: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, default=dict, server_default=text("'{}'::jsonb")
+    )
     images: Mapped[list[dict[str, Any]]] = mapped_column(
         JSONB, default=list, server_default=text("'[]'::jsonb")
     )

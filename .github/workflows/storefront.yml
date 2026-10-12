@@ -69,6 +69,15 @@ jobs:
           code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3005/)
           echo "home page -> $code"; cat ../server.log | tail -20
           test "$code" = "200"
+          # Languages: Spanish and Dutch pages, browser-language redirect, saved choice wins, admin untouched
+          for path in /es /nl /es/shop /nl/cart /shop /admin; do
+            c=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:3005$path"); echo "$path -> $c"; test "$c" = "200"
+          done
+          loc=$(curl -s -o /dev/null -w '%{redirect_url}' -H 'Accept-Language: nl-BE,nl;q=0.9,en;q=0.8' http://127.0.0.1:3005/shop)
+          echo "nl browser -> $loc"; case "$loc" in */nl/shop) ;; *) exit 1;; esac
+          c=$(curl -s -o /dev/null -w '%{http_code}' -H 'Accept-Language: es' -H 'Cookie: NEXT_LOCALE=en' http://127.0.0.1:3005/shop)
+          echo "es browser, chose English -> $c"; test "$c" = "200"
+          curl -s http://127.0.0.1:3005/es | grep -q '<html lang="es"'
 
       - name: Publish to storefront-build branch
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

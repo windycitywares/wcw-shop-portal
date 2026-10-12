@@ -1,4 +1,5 @@
 import type { Crumb } from "@/components/ui/misc";
+import { localePath, type Locale } from "@/i18n/config";
 import { absoluteUrl, site } from "@/lib/site";
 import type { ProductDetail } from "@/lib/types";
 
@@ -43,14 +44,14 @@ const AVAILABILITY: Record<string, string> = {
   preorder: "https://schema.org/PreOrder",
 };
 
-export function productLd(p: ProductDetail) {
+export function productLd(p: ProductDetail, locale: Locale = "en") {
   const offer = (item: { sku: string; base_price: number; currency: string; stock_status: string }) => ({
     "@type": "Offer",
     sku: item.sku,
     price: item.base_price.toFixed(2),
     priceCurrency: item.currency,
     availability: AVAILABILITY[item.stock_status],
-    url: absoluteUrl(`/product/${p.slug}`),
+    url: absoluteUrl(localePath(locale, `/product/${p.slug}`)),
   });
   const brand = typeof p.attributes.Brand === "string" ? p.attributes.Brand : site.name;
   return {

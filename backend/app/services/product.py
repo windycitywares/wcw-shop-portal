@@ -140,7 +140,7 @@ class ProductService:
         if "images" in changes and changes["images"] is not None:
             changes["images"] = [dict(i) for i in changes["images"]]
 
-        required = {"title", "sku", "slug", "base_price", "currency", "stock_status", "attributes", "images", "tags"}
+        required = {"title", "sku", "slug", "base_price", "currency", "stock_status", "attributes", "images", "tags", "translations"}
         for field, value in changes.items():
             if value is None and field in required:
                 continue

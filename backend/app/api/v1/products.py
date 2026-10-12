@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query, Request, Response, status
 
 from app.api.deps import CurrentUser, OptionalUser, SessionDep, require
 from app.core.enums import ContentStatus
+from app.core.i18n import LANG_PATTERN
 from app.core.exceptions import PermissionDeniedError
 from app.core.permissions import Permission
 from app.models.user import User
@@ -19,11 +20,13 @@ from app.schemas.product import (
     StatusChange,
 )
 from app.services.exporting import XLSX_MIME, ExportService
+from app.services import localize
 from app.services.product import CatalogPolicy, ProductService
 
 router = APIRouter(prefix="/products", tags=["products"])
 ATTR_PARAM_PREFIX = "attr."
 Staff = Annotated[User, Depends(require(Permission.CATALOG_VIEW_UNPUBLISHED))]
+Lang = Annotated[str | None, Query(pattern=LANG_PATTERN, description="Language for titles and descriptions")]
 
 
 def _attribute_filters(request: Request) -> dict[str, list[str]]:
@@ -51,6 +54,7 @@ async def list_products(
     status_filter: Annotated[list[ContentStatus] | None, Query(alias="status")] = None,
     mine: bool = False,
     source: str | None = None,
+    lang: Lang = None,
 ):
     """Storefront search with faceted filters. Use `attr.<Name>=<value>` for attributes.
 
@@ -73,7 +77,8 @@ async def list_products(
         page=page,
         page_size=page_size,
     )
-    return await service.search(query)
+    # Translations are left out of storefront lists (they'd triple the payload).
+    return localize.page(await service.search(query), lang)
 
 
 @router.get("/facets", response_model=Facets)
@@ -104,8 +109,10 @@ async def get_product_by_id(session: SessionDep, user: Staff, product_id: int):
 
 
 @router.get("/{slug}", response_model=ProductDetail)
-async def get_product(session: SessionDep, user: OptionalUser, slug: str):
-    return await ProductService(session).detail(viewer=user, slug=slug)
+async def get_product(session: SessionDep, user: OptionalUser, slug: str, lang: Lang = None):
+    result = await ProductService(session).detail(viewer=user, slug=slug)
+    localize.product(result, lang)
+    return result
 
 
 @router.post("", response_model=ProductDetail, status_code=status.HTTP_201_CREATED)

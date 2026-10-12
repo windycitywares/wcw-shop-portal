@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { fmt, localePath, type Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionaries";
 import { getFacets, getProducts } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { Breadcrumbs, Container, EmptyState, type Crumb } from "@/components/ui/misc";
 import { FilterPanel } from "./FilterPanel";
 import { ProductGrid } from "./ProductCard";
@@ -35,45 +38,59 @@ function pageHref(searchParams: SearchParams, page: number, basePath: string) {
 }
 
 export async function ProductListing({
+  locale,
   title,
   description,
   breadcrumb,
   searchParams,
-  basePath,
+  path,
   categorySlug,
   subcategories,
+  currentSlug,
 }: {
+  locale: Locale;
   title: string;
   description?: string | null;
   breadcrumb?: Crumb[];
   searchParams: SearchParams;
-  basePath: string;
+  /** Unlocalized path of this listing, e.g. "/shop" */
+  path: string;
   categorySlug?: string;
+  /** Sibling or child categories shown as a theme strip */
   subcategories?: { name: string; slug: string }[];
+  currentSlug?: string;
 }) {
+  const t = getDictionary(locale);
+  const basePath = localePath(locale, path);
   const [result, facets] = await Promise.all([
-    getProducts(toApiParams(searchParams, categorySlug)),
+    getProducts(toApiParams(searchParams, categorySlug), locale),
     getFacets(categorySlug),
   ]);
   const page = result.page;
   const pages = Math.max(1, Math.ceil(result.total / result.page_size));
 
   return (
-    <Container className="py-10">
+    <Container className="py-10 sm:py-14">
       {breadcrumb && <Breadcrumbs items={breadcrumb} />}
-      <div className="mt-4 max-w-2xl">
-        <h1 className="text-4xl sm:text-5xl">{title}</h1>
-        {description && <p className="mt-3 text-muted">{description}</p>}
+      <div className="mt-6 max-w-3xl">
+        <h1 className="text-[2.75rem] sm:text-6xl">{title}</h1>
+        {description && <p className="mt-4 max-w-2xl text-lg text-muted">{description}</p>}
       </div>
 
       {subcategories && subcategories.length > 0 && (
-        <nav aria-label="Sub-categories" className="mt-6">
-          <ul className="flex flex-wrap gap-2">
+        <nav aria-label={t.listing.subcategories} className="-mx-4 mt-8 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <ul className="flex w-max gap-2 sm:w-auto sm:flex-wrap">
             {subcategories.map((c) => (
               <li key={c.slug}>
                 <Link
-                  href={`/category/${c.slug}`}
-                  className="inline-block rounded-full border border-line bg-surface px-4 py-1.5 text-sm hover:border-ink/40"
+                  href={localePath(locale, `/category/${c.slug}`)}
+                  aria-current={c.slug === currentSlug ? "page" : undefined}
+                  className={cn(
+                    "inline-block whitespace-nowrap rounded-full border px-4 py-1.5 text-sm",
+                    c.slug === currentSlug
+                      ? "border-ink bg-ink text-white"
+                      : "border-line bg-surface hover:border-ink/40",
+                  )}
                 >
                   {c.name}
                 </Link>
@@ -83,39 +100,49 @@ export async function ProductListing({
         </nav>
       )}
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-[16rem_1fr]">
-        <aside aria-label="Filters">
-          <FilterPanel facets={facets} searchParams={searchParams} basePath={basePath} />
+      <div className="mt-10 grid gap-10 border-t border-line pt-8 lg:grid-cols-[15rem_1fr] lg:gap-14">
+        <aside aria-label={t.listing.filters}>
+          <FilterPanel facets={facets} searchParams={searchParams} basePath={basePath} locale={locale} />
         </aside>
         <section aria-labelledby="results-heading">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <h2 id="results-heading" className="font-sans text-sm text-muted" aria-live="polite">
-              {result.total} {result.total === 1 ? "product" : "products"}
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+            <h2 id="results-heading" className="font-sans text-sm font-normal text-muted" aria-live="polite">
+              {result.total === 1 ? t.listing.productOne : fmt(t.listing.productOther, { count: result.total })}
             </h2>
             <Suspense fallback={null}>
               <SortSelect />
             </Suspense>
           </div>
           {result.items.length === 0 ? (
-            <EmptyState title="Nothing here yet">
-              Try removing a filter, or <Link href="/shop" className="underline">browse everything</Link>.
+            <EmptyState title={t.listing.emptyTitle}>
+              {t.listing.emptyBefore}{" "}
+              <Link href={localePath(locale, "/shop")} className="underline">
+                {t.listing.emptyLink}
+              </Link>
+              .
             </EmptyState>
           ) : (
-            <ProductGrid products={result.items} priorityCount={4} />
+            <ProductGrid products={result.items} locale={locale} priorityCount={3} columns={3} />
           )}
           {pages > 1 && (
-            <nav aria-label="Pagination" className="mt-12 flex items-center justify-center gap-2 text-sm">
+            <nav aria-label={t.listing.pagination} className="mt-16 flex items-center justify-center gap-2 text-sm">
               {page > 1 && (
-                <Link href={pageHref(searchParams, page - 1, basePath)} rel="prev" className="rounded-full border border-line px-4 py-2 hover:border-ink/40">
-                  Previous
+                <Link
+                  href={pageHref(searchParams, page - 1, basePath)}
+                  rel="prev"
+                  className="rounded-[var(--radius-control)] border border-line bg-surface px-4 py-2 hover:border-ink/40"
+                >
+                  {t.listing.previous}
                 </Link>
               )}
-              <span className="px-3 text-muted">
-                Page {page} of {pages}
-              </span>
+              <span className="px-3 text-muted">{fmt(t.listing.pageOf, { page, pages })}</span>
               {page < pages && (
-                <Link href={pageHref(searchParams, page + 1, basePath)} rel="next" className="rounded-full border border-line px-4 py-2 hover:border-ink/40">
-                  Next
+                <Link
+                  href={pageHref(searchParams, page + 1, basePath)}
+                  rel="next"
+                  className="rounded-[var(--radius-control)] border border-line bg-surface px-4 py-2 hover:border-ink/40"
+                >
+                  {t.listing.next}
                 </Link>
               )}
             </nav>

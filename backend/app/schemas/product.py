@@ -5,7 +5,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from app.core.enums import ContentStatus, StockStatus
-from app.schemas.category import CategoryOut
+from app.schemas.category import CategoryOut, Translations
 from app.schemas.common import Money, ORMModel
 
 SLUG_PATTERN = r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
@@ -30,6 +30,7 @@ class ProductFields(BaseModel):
     tags: list[str] = []
     seo_title: str | None = Field(default=None, max_length=300)
     seo_description: str | None = Field(default=None, max_length=500)
+    translations: Translations = {}
 
 
 class ProductCreate(ProductFields):
@@ -58,6 +59,7 @@ class ProductUpdate(BaseModel):
     status: ContentStatus | None = None
     seo_title: str | None = Field(default=None, max_length=300)
     seo_description: str | None = Field(default=None, max_length=500)
+    translations: Translations | None = None
 
 
 class StatusChange(BaseModel):
@@ -84,6 +86,7 @@ class ProductOut(ORMModel):
     source: str
     seo_title: str | None
     seo_description: str | None
+    translations: Translations = {}
     created_by_id: int | None
     published_at: datetime | None
     created_at: datetime
