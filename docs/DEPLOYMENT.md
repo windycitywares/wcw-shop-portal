@@ -142,6 +142,22 @@ CONTACT_TO=windycitywaresllc@gmail.com            # where contact-form messages 
 
 Contact messages are also saved in the `contact_messages` table, so nothing is lost if an email fails.
 
+**Without a mailbox (current setup)** — the server's own mail system accepts mail from the app on
+`localhost` without a password, and cPanel signs it with the domain's DKIM key. The non-secret settings
+live in `backend/site.env` (not in Git; overrides `.env`):
+
+```
+SITE_URL=https://shop.windycitywares.com
+SMTP_HOST=localhost
+SMTP_PORT=25
+SMTP_SECURITY=none
+MAIL_FROM=no-reply@windycitywares.com
+MAIL_FROM_NAME=WindyCityWares
+CONTACT_TO=windycitywaresllc@gmail.com
+```
+
+Switch to the authenticated mailbox settings above if HostItBro ever blocks local relay.
+
 **Turnstile** — dash.cloudflare.com (free account) → Turnstile → Add widget → name `WindyCityWares`,
 hostnames `shop.windycitywares.com` and `windycitywares.com`, mode *Managed*. Copy both keys into
 `backend/.env`:

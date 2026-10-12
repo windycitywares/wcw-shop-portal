@@ -11,8 +11,12 @@ BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
-    # Absolute path: the web server may start the app from a different working directory.
-    model_config = SettingsConfigDict(env_file=BACKEND_DIR / ".env", env_file_encoding="utf-8", extra="ignore")
+    # Absolute paths: the web server may start the app from a different working directory.
+    # .env holds secrets; site.env (optional, also not in Git) holds non-secret server settings such as
+    # the mail server and contact inbox, and overrides .env. Real environment variables win over both.
+    model_config = SettingsConfigDict(
+        env_file=(BACKEND_DIR / ".env", BACKEND_DIR / "site.env"), env_file_encoding="utf-8", extra="ignore"
+    )
 
     app_name: str = "Windy City Wares API"
     environment: str = "development"

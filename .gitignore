@@ -29,3 +29,4 @@ backend/.htaccess
 backend/tmp/
 
 backend/media/
+backend/site.env
