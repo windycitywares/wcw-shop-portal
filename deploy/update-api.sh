@@ -34,7 +34,12 @@ echo "→ Database migrations"
 alembic upgrade head
 echo "→ Restarting the app"
 RESTARTED=1
-cloudlinux-selector restart --json --interpreter=python --app-root="$APP_ROOT" >/dev/null
-sleep 2
+# Cron runs with a minimal PATH (no /usr/sbin), so find the selector explicitly; Passenger's
+# tmp/restart.txt is the fallback and works for both the Python and the Node.js app.
+SELECTOR=$(command -v cloudlinux-selector || ls /usr/sbin/cloudlinux-selector /usr/bin/cloudlinux-selector 2>/dev/null | head -1 || true)
+if [ -z "$SELECTOR" ] || ! "$SELECTOR" restart --json --interpreter=python --app-root="$APP_ROOT" >/dev/null; then
+  mkdir -p "$HOME/$APP_ROOT/tmp" && touch "$HOME/$APP_ROOT/tmp/restart.txt"
+fi
+sleep 3
 code=$(curl -s -m 20 -o /dev/null -w '%{http_code}' https://api.windycitywares.com/health)
 if [ "$code" = "200" ]; then echo "✓ API is up (health 200)"; else echo "✗ health check returned $code — see backend/stderr.log"; exit 1; fi
