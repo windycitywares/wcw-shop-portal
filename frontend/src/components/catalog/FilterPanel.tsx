@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/Button";
 import type { SearchParams } from "./ProductListing";
 
 const MAX_VALUES = 12;
-// Identifiers that make poor filters
-const HIDDEN_KEYS = new Set(["ASIN", "Engraving"]);
+// Identifiers and per-product details that make poor filters
+const HIDDEN_KEYS = new Set(["ASIN", "Engraving", "Size", "Closure", "Adult urn size", "Keepsake size"]);
 
 function selected(searchParams: SearchParams, key: string): string[] {
   const v = searchParams[key];

@@ -21,6 +21,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: isStaticExport,
     remotePatterns: [
+      { protocol: "https", hostname: "media.windycitywares.com" }, // our own product photos
       { protocol: "https", hostname: "i.etsystatic.com" },
       { protocol: "https", hostname: "m.media-amazon.com" },
       { protocol: "https", hostname: "images-na.ssl-images-amazon.com" },

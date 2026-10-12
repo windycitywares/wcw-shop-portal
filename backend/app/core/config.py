@@ -34,6 +34,11 @@ class Settings(BaseSettings):
 
     max_import_bytes: int = 20 * 1024 * 1024
 
+    # Where product photos are stored on disk and the public URL they're served from
+    # (HostItBro: /home2/windycit/media.windycitywares.com → https://media.windycitywares.com).
+    media_root: str = str(BACKEND_DIR / "media")
+    media_url: str = "/media"
+
     @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
