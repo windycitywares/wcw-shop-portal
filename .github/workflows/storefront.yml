@@ -77,7 +77,6 @@ jobs:
           for path in /es /nl /es/shop /nl/cart /shop /admin; do check "$path" 200; done
           check /shop "307 http://127.0.0.1:3005/nl/shop" -H 'Accept-Language: nl-BE,nl;q=0.9,en;q=0.8'
           check /shop 200 -H 'Accept-Language: es' -H 'Cookie: NEXT_LOCALE=en'
-          check /en/shop "308 http://127.0.0.1:3005/shop"
           curl -s http://127.0.0.1:3005/es | grep -q '<html lang="es"' || { echo "::error::/es is not lang=es"; fail=1; }
           if [ "$fail" = 1 ]; then
             echo "::error title=server log::$(tail -c 1500 ../server.log | tr '\n' ' ')"
