@@ -74,7 +74,7 @@ jobs:
             case "$got" in "$want"*) ;; *) fail=1;; esac
           }
           check / 200
-          for path in /es /nl /es/shop /nl/cart /shop /admin; do check "$path" 200; done
+          for path in /es /nl /es/shop /nl/cart /shop /admin /contact /es/contact /nl/contact /forgot-password /reset-password; do check "$path" 200; done
           check /shop "307 http://127.0.0.1:3005/nl/shop" -H 'Accept-Language: nl-BE,nl;q=0.9,en;q=0.8'
           check /shop 200 -H 'Accept-Language: es' -H 'Cookie: NEXT_LOCALE=en'
           curl -s http://127.0.0.1:3005/es | grep -q '<html lang="es"' || { echo "::error::/es is not lang=es"; fail=1; }
@@ -109,6 +109,10 @@ jobs:
           shoot product-mobile "/product/$slug" 390 844
           shoot category-es /es/category/birds-wildlife 1440 900
           shoot home-nl /nl 1440 900
+          shoot contact-desktop /contact 1440 900
+          shoot contact-es-mobile /es/contact 390 844
+          shoot forgot-password /forgot-password 1440 900
+          shoot reset-password-nl "/nl/reset-password?token=preview-token-preview-token" 1440 900
           cd ../shots
           git init -q -b previews
           git add -A

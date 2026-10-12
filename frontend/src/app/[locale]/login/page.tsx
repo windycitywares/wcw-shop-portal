@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useI18n } from "@/i18n/client";
@@ -7,11 +8,14 @@ import { isStaff, useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { Alert, Container } from "@/components/ui/misc";
+import { Turnstile } from "@/components/ui/Turnstile";
 
 export default function LoginPage() {
   const { login, register } = useAuth();
   const router = useRouter();
-  const { t, href } = useI18n();
+  const { t, href, locale } = useI18n();
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const [captchaKey, setCaptchaKey] = useState(0);
   const [mode, setMode] = useState<"signin" | "register">("signin");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -25,11 +29,14 @@ export default function LoginPage() {
     setError("");
     try {
       const user =
-        mode === "signin" ? await login(email, password) : await register(email, password, String(data.get("name") || ""));
+        mode === "signin"
+          ? await login(email, password)
+          : await register(email, password, String(data.get("name") || ""), captcha);
       const next = new URLSearchParams(window.location.search).get("next");
       router.push(next && next.startsWith("/") && !next.startsWith("//") ? next : isStaff(user) ? "/admin" : href("/account"));
     } catch (err) {
       setError(err instanceof Error ? err.message : t.auth.error);
+      if (mode === "register") setCaptchaKey((k) => k + 1); // tokens are single-use
     } finally {
       setBusy(false);
     }
@@ -56,6 +63,15 @@ export default function LoginPage() {
             />
           )}
         </Field>
+        {mode === "signin" ? (
+          <p className="-mt-2 text-right text-sm">
+            <Link href={href("/forgot-password")} className="text-accent underline underline-offset-2">
+              {t.auth.forgot}
+            </Link>
+          </p>
+        ) : (
+          <Turnstile onToken={setCaptcha} resetKey={captchaKey} locale={locale} label={t.auth.captcha} />
+        )}
         <Button type="submit" size="lg" className="w-full" disabled={busy}>
           {busy ? t.auth.wait : mode === "signin" ? t.auth.signIn : t.auth.createAccount}
         </Button>
