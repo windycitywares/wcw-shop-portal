@@ -82,36 +82,41 @@ Connection string: `postgresql+asyncpg://windycit_wcw:PASSWORD@localhost:5432/wi
 
 ## 4. Storefront (Setup Node.js App)
 
-The 2 GB memory limit is too small for `next build`, so build elsewhere (your PC, or GitHub Actions)
-and upload only the output.
+> **Live since 2026-10-11** at `https://shop.windycitywares.com` (hidden from search engines) — Node
+> **20.20.2**, app root `apps/wcw-storefront`, startup file `server.js`. Its dependencies live in
+> `~/apps/node_modules` (cPanel's Node selector doesn't allow a `node_modules` folder in the app root).
 
-First create the subdomain: cPanel → **Domains** → Create A New Domain → `shop.windycitywares.com`
-(uncheck "share document root"; SSL is issued automatically within a few minutes).
+The 2 GB memory limit is too small for `next build`, so **GitHub Actions builds it**
+(`.github/workflows/storefront.yml`): every PR touching `frontend/` is built, type-checked and
+smoke-tested; every merge to `main` also publishes the ready-to-run bundle to the
+`storefront-build` branch. Public build settings (`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_API_URL`,
+`NEXT_PUBLIC_ALLOW_INDEXING`) default to the `shop.` values and can be overridden with repository
+**Variables** `SITE_URL`, `API_URL`, `ALLOW_INDEXING`.
 
-```bash
-cd frontend
-# .env.production
-#   NEXT_PUBLIC_SITE_URL=https://shop.windycitywares.com
-#   NEXT_PUBLIC_ALLOW_INDEXING=false
-#   NEXT_PUBLIC_API_URL=https://api.windycitywares.com/api/v1
-npm ci && npm run build
+One-time server setup (already done):
+1. cPanel → Domains → `shop.windycitywares.com`.
+2. `cloudlinux-selector create --interpreter=nodejs --version=20 --app-root=apps/wcw-storefront
+   --domain=shop.windycitywares.com --app-uri=/ --app-mode=production --startup-file=server.js`
+3. `bash ~/repos/wcw-portal/deploy/update-storefront.sh` — installs the latest build and restarts.
+
+Check: `https://shop.windycitywares.com/robots.txt` says `Disallow: /` while building.
+
+## Updating (automatic)
+
+A cron job runs every 10 minutes (`crontab -l`):
+
+```
+*/10 * * * * bash $HOME/repos/wcw-portal/deploy/auto-deploy.sh >> $HOME/logs/wcw-deploy.log 2>&1
 ```
 
-Upload to `~/apps/wcw-storefront/`:
-- everything inside `.next/standalone/` (includes `server.js`)
-- `.next/static/` → `~/apps/wcw-storefront/.next/static/`
-- `public/` → `~/apps/wcw-storefront/public/`
+- **API** — when `main` has new commits it runs `deploy/update-api.sh`: install packages, run the
+  tests, run migrations, restart, check `/health`. If install or tests fail, the previous code is
+  restored and the running API is untouched.
+- **Storefront** — when Actions has published a new build it runs `deploy/update-storefront.sh`.
+- History: `~/logs/wcw-deploy.log`. Run either script by hand in cPanel → Terminal to deploy
+  immediately.
 
-cPanel → **Setup Node.js App** → Create: Node **20**, mode Production, root `apps/wcw-storefront`,
-URL `shop.windycitywares.com`, startup file `server.js`. Start it.
-
-Check: `https://shop.windycitywares.com/robots.txt` should say `Disallow: /` while building.
-
-## Updating
-
-- API: in cPanel → Terminal run `bash ~/repos/wcw-portal/deploy/update-api.sh` (pulls `main`, installs
-  packages, runs tests and migrations, restarts the app, checks `/health`).
-- Storefront: rebuild, re-upload `standalone` + `static`, Restart in Setup Node.js App.
+So the release flow is: **merge a PR into `main` → live within ~10 minutes.**
 
 ## Go live on the main domain
 
@@ -119,12 +124,9 @@ When the store is ready to replace the current homepage:
 
 1. **Back up the old page**: File Manager → `public_html/index.html` → rename to `index.old.html`
    (or download a copy).
-2. **Rebuild the storefront** with the main-domain settings and upload it as in step 4:
-   ```
-   NEXT_PUBLIC_SITE_URL=https://windycitywares.com
-   NEXT_PUBLIC_ALLOW_INDEXING=true
-   NEXT_PUBLIC_API_URL=https://api.windycitywares.com/api/v1
-   ```
+2. **Rebuild for the main domain**: GitHub → repo Settings → Secrets and variables → Actions →
+   **Variables**: `SITE_URL=https://windycitywares.com`, `ALLOW_INDEXING=true`. Then re-run the
+   Storefront workflow on `main` (Actions → Storefront → Run workflow); the server picks it up.
 3. **Point the Node app at the main domain**: Setup Node.js App → edit the app → Application URL
    `windycitywares.com` → Save → Restart. (If cPanel won't change the URL, create a second app on
    `windycitywares.com` with the same folder, then stop the `shop.` one.)
