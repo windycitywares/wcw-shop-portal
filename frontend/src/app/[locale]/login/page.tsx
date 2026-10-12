@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useI18n } from "@/i18n/client";
 import { isStaff, useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
@@ -10,6 +11,7 @@ import { Alert, Container } from "@/components/ui/misc";
 export default function LoginPage() {
   const { login, register } = useAuth();
   const router = useRouter();
+  const { t, href } = useI18n();
   const [mode, setMode] = useState<"signin" | "register">("signin");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -25,24 +27,24 @@ export default function LoginPage() {
       const user =
         mode === "signin" ? await login(email, password) : await register(email, password, String(data.get("name") || ""));
       const next = new URLSearchParams(window.location.search).get("next");
-      router.push(next && next.startsWith("/") ? next : isStaff(user) ? "/admin" : "/account");
+      router.push(next && next.startsWith("/") && !next.startsWith("//") ? next : isStaff(user) ? "/admin" : href("/account"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t.auth.error);
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <Container className="max-w-md py-16">
-      <h1 className="text-4xl">{mode === "signin" ? "Sign in" : "Create an account"}</h1>
+    <Container className="max-w-md py-16 sm:py-24">
+      <h1 className="text-5xl">{mode === "signin" ? t.auth.signIn : t.auth.createAccountTitle}</h1>
       <form onSubmit={onSubmit} className="mt-8 space-y-5" noValidate={false}>
         {error && <Alert tone="danger">{error}</Alert>}
         {mode === "register" && (
-          <Field label="Name">{(p) => <Input {...p} name="name" autoComplete="name" />}</Field>
+          <Field label={t.auth.name}>{(p) => <Input {...p} name="name" autoComplete="name" />}</Field>
         )}
-        <Field label="Email">{(p) => <Input {...p} name="email" type="email" required autoComplete="email" />}</Field>
-        <Field label="Password" hint={mode === "register" ? "At least 8 characters." : undefined}>
+        <Field label={t.auth.email}>{(p) => <Input {...p} name="email" type="email" required autoComplete="email" />}</Field>
+        <Field label={t.auth.password} hint={mode === "register" ? t.auth.passwordHint : undefined}>
           {(p) => (
             <Input
               {...p}
@@ -55,11 +57,11 @@ export default function LoginPage() {
           )}
         </Field>
         <Button type="submit" size="lg" className="w-full" disabled={busy}>
-          {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
+          {busy ? t.auth.wait : mode === "signin" ? t.auth.signIn : t.auth.createAccount}
         </Button>
       </form>
       <p className="mt-6 text-center text-sm text-muted">
-        {mode === "signin" ? "New here? " : "Already have an account? "}
+        {mode === "signin" ? t.auth.newHere : t.auth.haveAccount}{" "}
         <button
           type="button"
           className="font-medium text-accent underline"
@@ -68,7 +70,7 @@ export default function LoginPage() {
             setError("");
           }}
         >
-          {mode === "signin" ? "Create an account" : "Sign in"}
+          {mode === "signin" ? t.auth.createAccountTitle : t.auth.signIn}
         </button>
       </p>
     </Container>

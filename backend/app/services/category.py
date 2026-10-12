@@ -77,6 +77,7 @@ class CategoryService:
                 image_url=data.image_url,
                 sort_order=data.sort_order,
                 is_active=data.is_active,
+                translations=data.translations,
             )
         )
         await self.session.commit()
@@ -113,7 +114,7 @@ class CategoryService:
             if await self.repo.get_by(slug=changes["slug"]):
                 raise ConflictError(f"Slug '{changes['slug']}' is already used")
         for field, value in changes.items():
-            if value is None and field in ("name", "slug", "sort_order", "is_active"):
+            if value is None and field in ("name", "slug", "sort_order", "is_active", "translations"):
                 continue
             setattr(category, field, value)
         await self.session.commit()

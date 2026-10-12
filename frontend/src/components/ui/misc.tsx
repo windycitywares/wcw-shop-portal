@@ -1,4 +1,6 @@
 import Link from "next/link";
+import type { Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionaries";
 import { cn, formatPrice } from "@/lib/utils";
 
 export function Container({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
@@ -32,24 +34,27 @@ export function Price({
   amount,
   compareAt,
   currency = "USD",
+  locale = "en",
   className,
 }: {
   amount: number;
   compareAt?: number | null;
   currency?: string;
+  locale?: Locale;
   className?: string;
 }) {
+  const t = getDictionary(locale);
   const onSale = compareAt != null && compareAt > amount;
   return (
-    <span className={cn("inline-flex items-baseline gap-2", className)}>
+    <span className={cn("inline-flex flex-wrap items-baseline gap-x-2", className)}>
       <span className={onSale ? "text-sale" : undefined}>
-        {onSale && <span className="sr-only">Sale price </span>}
-        {formatPrice(amount, currency)}
+        {onSale && <span className="sr-only">{t.product.salePrice} </span>}
+        {formatPrice(amount, currency, locale)}
       </span>
       {onSale && (
-        <s className="text-sm text-muted">
-          <span className="sr-only">Original price </span>
-          {formatPrice(compareAt, currency)}
+        <s className="text-[0.85em] text-muted">
+          <span className="sr-only">{t.product.originalPrice} </span>
+          {formatPrice(compareAt, currency, locale)}
         </s>
       )}
     </span>
@@ -61,9 +66,9 @@ export interface Crumb {
   href?: string;
 }
 
-export function Breadcrumbs({ items }: { items: Crumb[] }) {
+export function Breadcrumbs({ items, label = "Breadcrumb" }: { items: Crumb[]; label?: string }) {
   return (
-    <nav aria-label="Breadcrumb" className="text-sm text-muted">
+    <nav aria-label={label} className="text-sm text-muted">
       <ol className="flex flex-wrap items-center gap-1.5">
         {items.map((item, i) => {
           const last = i === items.length - 1;
@@ -89,8 +94,8 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
 
 export function EmptyState({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
-    <div className="rounded-[var(--radius-card)] border border-dashed border-line px-6 py-16 text-center">
-      <p className="font-serif text-xl">{title}</p>
+    <div className="rounded-[var(--radius-card)] border border-line bg-surface px-6 py-16 text-center">
+      <p className="font-serif text-2xl font-light">{title}</p>
       {children && <div className="mt-2 text-sm text-muted">{children}</div>}
     </div>
   );

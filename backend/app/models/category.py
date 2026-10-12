@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Any, Optional
 
 from sqlalchemy import BigInteger, ForeignKey, Index, String, Text, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -25,6 +26,10 @@ class Category(TimestampMixin, Base):
     slug: Mapped[str] = mapped_column(String(220), unique=True)
     description: Mapped[str | None] = mapped_column(Text)
     image_url: Mapped[str | None] = mapped_column(String(1000))
+    # {"es": {"name": ..., "description": ...}, "nl": {...}}
+    translations: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, default=dict, server_default=text("'{}'::jsonb")
+    )
     path: Mapped[str] = mapped_column(String(1000))
     sort_order: Mapped[int] = mapped_column(default=0, server_default=text("0"))
     is_active: Mapped[bool] = mapped_column(default=True, server_default=text("true"))

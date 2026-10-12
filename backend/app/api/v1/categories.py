@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.api.deps import OptionalUser, SessionDep, require
+from app.core.i18n import LANG_PATTERN
 from app.core.permissions import Permission
 from app.models.user import User
 from app.schemas.category import (
@@ -13,23 +14,34 @@ from app.schemas.category import (
     CategoryReorder,
     CategoryUpdate,
 )
+from app.services import localize
 from app.services.category import CategoryService
 from app.services.product import CatalogPolicy
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 Manager = Annotated[User, Depends(require(Permission.CATEGORY_MANAGE))]
+Lang = Annotated[str | None, Query(pattern=LANG_PATTERN, description="Language for names and descriptions")]
 
 
 @router.get("/tree", response_model=list[CategoryNode])
-async def category_tree(session: SessionDep, user: OptionalUser, include_inactive: bool = False):
-    """Nested tree for the mega-menu (staff may include hidden categories)."""
-    active_only = not (include_inactive and CatalogPolicy.can_view_unpublished(user))
-    return await CategoryService(session).tree(active_only=active_only)
+async def category_tree(
+    session: SessionDep, user: OptionalUser, include_inactive: bool = False, lang: Lang = None
+):
+    """Nested tree for the mega-menu (staff may include hidden categories).
+
+    With `include_inactive` (the admin view) each node keeps its `translations` for editing."""
+    staff_view = include_inactive and CatalogPolicy.can_view_unpublished(user)
+    tree = await CategoryService(session).tree(active_only=not staff_view)
+    for node in tree:
+        localize.category(node, lang, keep=staff_view)
+    return tree
 
 
 @router.get("/{slug}", response_model=CategoryDetail)
-async def category_detail(session: SessionDep, slug: str):
-    return await CategoryService(session).detail_by_slug(slug)
+async def category_detail(session: SessionDep, slug: str, lang: Lang = None):
+    result = await CategoryService(session).detail_by_slug(slug)
+    localize.category(result, lang)
+    return result
 
 
 @router.post("", response_model=CategoryOut, status_code=status.HTTP_201_CREATED)

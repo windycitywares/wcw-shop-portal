@@ -1,6 +1,13 @@
+from typing import Annotated
+
 from pydantic import BaseModel, Field
 
+from app.core.i18n import LANGUAGES
+
 from app.schemas.common import ORMModel
+
+# {"es": {"title": "...", "description": "..."}, "nl": {...}} — keys are language codes
+Translations = Annotated[dict[str, dict[str, str | None]], Field(description=f"Per-language overrides ({', '.join(LANGUAGES)})")]
 
 
 class CategoryOut(ORMModel):
@@ -13,6 +20,7 @@ class CategoryOut(ORMModel):
     sort_order: int
     is_active: bool
     depth: int
+    translations: Translations = {}
 
 
 class CategoryNode(CategoryOut):
@@ -32,6 +40,7 @@ class CategoryCreate(BaseModel):
     image_url: str | None = Field(default=None, max_length=1000)
     sort_order: int = 0
     is_active: bool = True
+    translations: Translations = {}
 
 
 class CategoryUpdate(BaseModel):
@@ -44,6 +53,7 @@ class CategoryUpdate(BaseModel):
     image_url: str | None = Field(default=None, max_length=1000)
     sort_order: int | None = None
     is_active: bool | None = None
+    translations: Translations | None = None
 
 
 class CategoryReorderItem(BaseModel):

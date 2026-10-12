@@ -12,6 +12,8 @@ export interface CartLine {
   slug: string;
   sku: string;
   title: string;
+  /** Chosen size/variant as stored (e.g. "10 inch Large"); shown translated in the cart */
+  variant?: string;
   price: number;
   currency: string;
   image?: string;

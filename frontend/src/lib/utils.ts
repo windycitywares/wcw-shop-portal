@@ -1,13 +1,14 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { intlLocale, type Locale } from "@/i18n/config";
 import type { AttributeValue } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatPrice(amount: number, currency = "USD") {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
+export function formatPrice(amount: number, currency = "USD", locale: Locale = "en") {
+  return new Intl.NumberFormat(intlLocale[locale], { style: "currency", currency }).format(amount);
 }
 
 export function attributeList(value: AttributeValue): string[] {

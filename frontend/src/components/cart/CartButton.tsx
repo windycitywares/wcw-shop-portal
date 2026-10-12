@@ -1,16 +1,18 @@
 "use client";
 
+import { useI18n } from "@/i18n/client";
 import { useCart } from "@/lib/cart";
 
 export function CartButton() {
   const { count, setOpen } = useCart();
+  const { t, fmt } = useI18n();
   return (
     <button
       type="button"
       onClick={() => setOpen(true)}
       className="relative grid size-10 place-items-center rounded-full hover:bg-sand"
     >
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path d="M5 8h14l-1.2 11.1a2 2 0 0 1-2 1.9H8.2a2 2 0 0 1-2-1.9L5 8Z" strokeLinejoin="round" />
         <path d="M9 8V6a3 3 0 0 1 6 0v2" />
       </svg>
@@ -22,7 +24,7 @@ export function CartButton() {
           {count}
         </span>
       )}
-      <span className="sr-only">{`Open cart, ${count} ${count === 1 ? "item" : "items"}`}</span>
+      <span className="sr-only">{fmt(t.cart.open, { count })}</span>
     </button>
   );
 }

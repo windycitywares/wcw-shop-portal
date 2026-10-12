@@ -4,6 +4,7 @@
  * Network failures degrade to empty results so pages still render.
  */
 import "server-only";
+import { defaultLocale, type Locale } from "@/i18n/config";
 import type { CategoryDetail, CategoryNode, Facets, Page, Product, ProductDetail } from "./types";
 
 const API_URL = (
@@ -32,37 +33,46 @@ async function get<T>(path: string, revalidate = REVALIDATE_SECONDS): Promise<T>
   return (await res.json()) as T;
 }
 
+/** Adds ?lang= for non-English requests (the API falls back to English per field). */
+function withLang(path: string, lang?: Locale): string {
+  if (!lang || lang === defaultLocale) return path;
+  return `${path}${path.includes("?") ? "&" : "?"}lang=${lang}`;
+}
+
 const EMPTY_PAGE: Page<Product> = { items: [], total: 0, page: 1, page_size: 24 };
 
-export async function getCategoryTree(): Promise<CategoryNode[]> {
+export async function getCategoryTree(lang?: Locale): Promise<CategoryNode[]> {
   try {
-    return await get<CategoryNode[]>("/categories/tree");
+    return await get<CategoryNode[]>(withLang("/categories/tree", lang));
   } catch {
     return [];
   }
 }
 
-export async function getCategory(slug: string): Promise<CategoryDetail | null> {
+export async function getCategory(slug: string, lang?: Locale): Promise<CategoryDetail | null> {
   try {
-    return await get<CategoryDetail>(`/categories/${encodeURIComponent(slug)}`);
+    return await get<CategoryDetail>(withLang(`/categories/${encodeURIComponent(slug)}`, lang));
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) return null;
     throw e;
   }
 }
 
-export async function getProducts(params: URLSearchParams | Record<string, string>): Promise<Page<Product>> {
+export async function getProducts(
+  params: URLSearchParams | Record<string, string>,
+  lang?: Locale,
+): Promise<Page<Product>> {
   const qs = new URLSearchParams(params).toString();
   try {
-    return await get<Page<Product>>(`/products${qs ? `?${qs}` : ""}`, 60);
+    return await get<Page<Product>>(withLang(`/products${qs ? `?${qs}` : ""}`, lang), 60);
   } catch {
     return EMPTY_PAGE;
   }
 }
 
-export async function getProduct(slug: string): Promise<ProductDetail | null> {
+export async function getProduct(slug: string, lang?: Locale): Promise<ProductDetail | null> {
   try {
-    return await get<ProductDetail>(`/products/${encodeURIComponent(slug)}`, 60);
+    return await get<ProductDetail>(withLang(`/products/${encodeURIComponent(slug)}`, lang), 60);
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) return null;
     throw e;
@@ -75,6 +85,12 @@ export async function getFacets(category?: string): Promise<Facets> {
   } catch {
     return { price_min: null, price_max: null, attributes: [] };
   }
+}
+
+/** First photo and design count for a category (home page theme tiles). */
+export async function getCategoryPreview(slug: string): Promise<{ total: number; image: string | null }> {
+  const res = await getProducts({ category: slug, page_size: "1", sort: "newest" });
+  return { total: res.total, image: res.items[0]?.images[0]?.url ?? null };
 }
 
 /** All published products (for the sitemap). */

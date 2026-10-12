@@ -2,91 +2,86 @@
 
 import * as NavigationMenu from "@radix-ui/react-navigation-menu";
 import Link from "next/link";
+import { useI18n } from "@/i18n/client";
 import type { CategoryNode } from "@/lib/types";
 import { Container } from "@/components/ui/misc";
 
 const linkClass =
-  "inline-flex h-11 items-center rounded-md px-3 text-sm font-medium text-ink hover:text-accent data-[state=open]:text-accent";
+  "inline-flex h-10 items-center rounded-full px-3.5 text-[0.9375rem] text-ink hover:bg-sand data-[state=open]:bg-sand";
 
-/** Desktop navigation generated from the category tree (keyboard + screen-reader accessible via Radix). */
+/**
+ * Desktop navigation from the category tree (keyboard + screen-reader accessible via Radix).
+ * The panel spans the whole header: the Root is left unpositioned so the sticky <header> anchors it.
+ */
 export function MegaMenu({ tree }: { tree: CategoryNode[] }) {
+  const { t, href, fmt } = useI18n();
   return (
-    <NavigationMenu.Root aria-label="Shop categories" className="relative hidden md:block">
-      <Container>
-        <NavigationMenu.List className="flex items-center gap-1">
-          <NavigationMenu.Item>
-            <NavigationMenu.Link asChild>
-              <Link href="/shop" className={linkClass}>
-                Shop all
-              </Link>
-            </NavigationMenu.Link>
-          </NavigationMenu.Item>
-          {tree.map((node) =>
-            node.children.length === 0 ? (
-              <NavigationMenu.Item key={node.id}>
-                <NavigationMenu.Link asChild>
-                  <Link href={`/category/${node.slug}`} className={linkClass}>
-                    {node.name}
-                  </Link>
-                </NavigationMenu.Link>
-              </NavigationMenu.Item>
-            ) : (
-              <NavigationMenu.Item key={node.id}>
-                <NavigationMenu.Trigger className={`${linkClass} group gap-1`}>
+    <NavigationMenu.Root aria-label={t.nav.categories} className="static">
+      <NavigationMenu.List className="flex items-center gap-1">
+        <NavigationMenu.Item>
+          <NavigationMenu.Link asChild>
+            <Link href={href("/shop")} className={linkClass}>
+              {t.nav.shopAll}
+            </Link>
+          </NavigationMenu.Link>
+        </NavigationMenu.Item>
+        {tree.map((node) =>
+          node.children.length === 0 ? (
+            <NavigationMenu.Item key={node.id}>
+              <NavigationMenu.Link asChild>
+                <Link href={href(`/category/${node.slug}`)} className={linkClass}>
                   {node.name}
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 12 12"
-                    className="size-3 transition-transform group-data-[state=open]:rotate-180"
-                  >
-                    <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                  </svg>
-                </NavigationMenu.Trigger>
-                <NavigationMenu.Content className="absolute left-0 top-0 w-full">
-                  <Container className="grid grid-cols-4 gap-8 py-8">
-                    <div>
-                      <p className="font-serif text-2xl">{node.name}</p>
-                      {node.description && <p className="mt-2 text-sm text-muted">{node.description}</p>}
-                      <NavigationMenu.Link asChild>
-                        <Link
-                          href={`/category/${node.slug}`}
-                          className="mt-4 inline-block text-sm font-medium text-accent underline-offset-4 hover:underline"
-                        >
-                          Shop all {node.name}
-                        </Link>
-                      </NavigationMenu.Link>
-                    </div>
+                </Link>
+              </NavigationMenu.Link>
+            </NavigationMenu.Item>
+          ) : (
+            <NavigationMenu.Item key={node.id}>
+              <NavigationMenu.Trigger className={`${linkClass} group gap-1.5`}>
+                {node.name}
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 12 12"
+                  className="size-3 transition-transform group-data-[state=open]:rotate-180"
+                >
+                  <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                </svg>
+              </NavigationMenu.Trigger>
+              <NavigationMenu.Content className="w-full">
+                <Container className="grid grid-cols-[18rem_1fr] gap-12 py-10">
+                  <div>
+                    <p className="font-serif text-3xl font-light">{node.name}</p>
+                    {node.description && <p className="mt-3 text-sm text-muted">{node.description}</p>}
+                    <NavigationMenu.Link asChild>
+                      <Link
+                        href={href(`/category/${node.slug}`)}
+                        className="mt-5 inline-block text-sm font-medium text-accent underline underline-offset-4 hover:text-accent-strong"
+                      >
+                        {fmt(t.nav.shopAllIn, { name: node.name })}
+                      </Link>
+                    </NavigationMenu.Link>
+                  </div>
+                  <ul className="grid grid-cols-3 content-start gap-x-8 gap-y-1">
                     {node.children.map((child) => (
-                      <div key={child.id}>
+                      <li key={child.id}>
                         <NavigationMenu.Link asChild>
-                          <Link href={`/category/${child.slug}`} className="font-medium hover:text-accent">
+                          <Link
+                            href={href(`/category/${child.slug}`)}
+                            className="block border-b border-line py-2.5 text-[0.9375rem] hover:text-accent"
+                          >
                             {child.name}
                           </Link>
                         </NavigationMenu.Link>
-                        {child.children.length > 0 && (
-                          <ul className="mt-3 space-y-2">
-                            {child.children.map((leaf) => (
-                              <li key={leaf.id}>
-                                <NavigationMenu.Link asChild>
-                                  <Link href={`/category/${leaf.slug}`} className="text-sm text-muted hover:text-ink">
-                                    {leaf.name}
-                                  </Link>
-                                </NavigationMenu.Link>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
+                      </li>
                     ))}
-                  </Container>
-                </NavigationMenu.Content>
-              </NavigationMenu.Item>
-            ),
-          )}
-        </NavigationMenu.List>
-      </Container>
+                  </ul>
+                </Container>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          ),
+        )}
+      </NavigationMenu.List>
       <div className="absolute left-0 top-full w-full">
-        <NavigationMenu.Viewport className="relative h-[var(--radix-navigation-menu-viewport-height)] w-full overflow-hidden border-b border-line bg-surface shadow-sm transition-[height] duration-200" />
+        <NavigationMenu.Viewport className="relative h-[var(--radix-navigation-menu-viewport-height)] w-full overflow-hidden border-b border-line bg-surface shadow-[0_24px_48px_-24px_rgb(23_35_43/0.25)] transition-[height] duration-200" />
       </div>
     </NavigationMenu.Root>
   );

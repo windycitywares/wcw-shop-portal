@@ -1,63 +1,27 @@
-"use client";
+import type { Metadata, Viewport } from "next";
+import { Providers } from "@/components/Providers";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { site } from "@/lib/site";
+import { body, display } from "../fonts";
+import "../globals.css";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { isStaff, useAuth } from "@/lib/auth";
-import { cn } from "@/lib/utils";
-import { Container } from "@/components/ui/misc";
+export const metadata: Metadata = {
+  metadataBase: new URL(site.url),
+  title: { default: `Admin | ${site.name}`, template: `%s | Admin | ${site.name}` },
+  robots: { index: false, follow: false },
+};
 
-const NAV = [
-  { href: "/admin", label: "Dashboard", permission: null },
-  { href: "/admin/products", label: "Products", permission: "catalog:view_unpublished" },
-  { href: "/admin/import", label: "Import / Export", permission: "catalog:import" },
-  { href: "/admin/categories", label: "Categories", permission: "category:manage" },
-  { href: "/admin/users", label: "Users", permission: "users:manage" },
-];
+export const viewport: Viewport = { themeColor: "#f2f3ef", width: "device-width", initialScale: 1 };
 
-/** Client-side gate for the admin UI. The API enforces every permission independently. */
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, can } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (loading) return;
-    if (!user) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
-    else if (!isStaff(user)) router.replace("/account");
-  }, [loading, user, router, pathname]);
-
-  if (!user || !isStaff(user)) {
-    return <Container className="py-16 text-muted">Checking access…</Container>;
-  }
-
+/** The admin is its own root layout (English only, no storefront header or footer). */
+export default function AdminRootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Container className="grid gap-8 py-10 lg:grid-cols-[13rem_1fr]">
-      <nav aria-label="Admin">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
-          Admin · <span className="capitalize">{user.role}</span>
-        </p>
-        <ul className="flex gap-1 overflow-x-auto lg:flex-col">
-          {NAV.filter((n) => !n.permission || can(n.permission)).map((n) => {
-            const active = n.href === "/admin" ? pathname === "/admin" : pathname.startsWith(n.href);
-            return (
-              <li key={n.href}>
-                <Link
-                  href={n.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "block whitespace-nowrap rounded-lg px-3 py-2 text-sm",
-                    active ? "bg-ink text-white" : "hover:bg-sand",
-                  )}
-                >
-                  {n.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-      <div className="min-w-0">{children}</div>
-    </Container>
+    <html lang="en" className={`${display.variable} ${body.variable}`}>
+      <body className="min-h-dvh font-sans antialiased">
+        <Providers>
+          <AdminShell>{children}</AdminShell>
+        </Providers>
+      </body>
+    </html>
   );
 }

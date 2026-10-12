@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { attrKey, attrValue } from "@/i18n/attributes";
+import type { Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionaries";
 import type { Facets } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import type { SearchParams } from "./ProductListing";
@@ -14,17 +17,20 @@ function selected(searchParams: SearchParams, key: string): string[] {
 
 /**
  * Faceted filters as a plain GET form: works without JavaScript, and every
- * filtered view has a shareable, crawlable URL.
+ * filtered view has a shareable URL. Values are sent as stored (English) and shown translated.
  */
 export function FilterPanel({
   facets,
   searchParams,
   basePath,
+  locale,
 }: {
   facets: Facets;
   searchParams: SearchParams;
   basePath: string;
+  locale: Locale;
 }) {
+  const t = getDictionary(locale);
   const groups = facets.attributes.filter((g) => !HIDDEN_KEYS.has(g.key) && g.values.length > 1);
   const q = selected(searchParams, "q")[0];
   const sort = selected(searchParams, "sort")[0];
@@ -33,22 +39,25 @@ export function FilterPanel({
   );
 
   return (
-    <details className="group rounded-[var(--radius-card)] border border-line bg-surface p-5 lg:border-0 lg:bg-transparent lg:p-0" open>
-      <summary className="flex cursor-pointer list-none items-center justify-between font-medium lg:hidden">
-        Filters
+    <details
+      className="group rounded-[var(--radius-card)] border border-line bg-surface p-5 lg:border-0 lg:bg-transparent lg:p-0"
+      open
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between font-medium lg:hidden [&::-webkit-details-marker]:hidden">
+        {t.listing.filters}
         <span aria-hidden="true" className="text-muted group-open:rotate-45">
           +
         </span>
       </summary>
-      <form action={basePath} method="get" className="mt-4 space-y-7 lg:mt-0">
+      <form action={basePath} method="get" className="mt-4 space-y-8 lg:mt-0">
         {q && <input type="hidden" name="q" value={q} />}
         {sort && <input type="hidden" name="sort" value={sort} />}
 
         <fieldset>
-          <legend className="text-sm font-semibold">Price</legend>
+          <legend className="font-serif text-lg">{t.listing.price}</legend>
           <div className="mt-3 flex items-center gap-2">
             <label className="sr-only" htmlFor="min_price">
-              Minimum price
+              {t.listing.minPrice}
             </label>
             <input
               id="min_price"
@@ -57,15 +66,15 @@ export function FilterPanel({
               min={0}
               step="1"
               inputMode="numeric"
-              placeholder={facets.price_min != null ? `$${Math.floor(facets.price_min)}` : "Min"}
+              placeholder={facets.price_min != null ? `$${Math.floor(facets.price_min)}` : t.listing.min}
               defaultValue={selected(searchParams, "min_price")[0]}
-              className="h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm"
+              className="h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 text-sm"
             />
             <span aria-hidden="true" className="text-muted">
               –
             </span>
             <label className="sr-only" htmlFor="max_price">
-              Maximum price
+              {t.listing.maxPrice}
             </label>
             <input
               id="max_price"
@@ -74,9 +83,9 @@ export function FilterPanel({
               min={0}
               step="1"
               inputMode="numeric"
-              placeholder={facets.price_max != null ? `$${Math.ceil(facets.price_max)}` : "Max"}
+              placeholder={facets.price_max != null ? `$${Math.ceil(facets.price_max)}` : t.listing.max}
               defaultValue={selected(searchParams, "max_price")[0]}
-              className="h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm"
+              className="h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 text-sm"
             />
           </div>
         </fieldset>
@@ -89,7 +98,7 @@ export function FilterPanel({
             defaultChecked={selected(searchParams, "in_stock")[0] === "true"}
             className="size-4 accent-[var(--color-accent)]"
           />
-          In stock only
+          {t.listing.inStockOnly}
         </label>
 
         {groups.map((group) => {
@@ -97,7 +106,7 @@ export function FilterPanel({
           const chosen = selected(searchParams, name);
           return (
             <fieldset key={group.key}>
-              <legend className="text-sm font-semibold">{group.key}</legend>
+              <legend className="font-serif text-lg">{attrKey(t, group.key)}</legend>
               <ul className="mt-3 space-y-2">
                 {group.values.slice(0, MAX_VALUES).map((v) => (
                   <li key={v.value}>
@@ -109,11 +118,8 @@ export function FilterPanel({
                         defaultChecked={chosen.includes(v.value)}
                         className="size-4 accent-[var(--color-accent)]"
                       />
-                      <span className="flex-1">{v.value}</span>
-                      <span className="text-xs text-muted">
-                        {v.count}
-                        <span className="sr-only"> products</span>
-                      </span>
+                      <span className="flex-1">{attrValue(t, v.value)}</span>
+                      <span className="text-xs text-muted">{v.count}</span>
                     </label>
                   </li>
                 ))}
@@ -122,13 +128,13 @@ export function FilterPanel({
           );
         })}
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <Button type="submit" size="sm">
-            Apply filters
+            {t.listing.apply}
           </Button>
           {hasFilters && (
             <Link href={q ? `${basePath}?q=${encodeURIComponent(q)}` : basePath} className="text-sm underline">
-              Clear
+              {t.listing.clear}
             </Link>
           )}
         </div>

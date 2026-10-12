@@ -66,9 +66,55 @@ jobs:
           node server.js > ../server.log 2>&1 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3005/robots.txt && break; sleep 1; done
           curl -sf http://127.0.0.1:3005/robots.txt
-          code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3005/)
-          echo "home page -> $code"; cat ../server.log | tail -20
-          test "$code" = "200"
+          fail=0
+          check() { # path, expected status, [extra curl args...]
+            local path=$1 want=$2; shift 2
+            local got; got=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$@" "http://127.0.0.1:3005$path")
+            echo "::notice title=smoke $path::$got (want $want)"
+            case "$got" in "$want"*) ;; *) fail=1;; esac
+          }
+          check / 200
+          for path in /es /nl /es/shop /nl/cart /shop /admin; do check "$path" 200; done
+          check /shop "307 http://127.0.0.1:3005/nl/shop" -H 'Accept-Language: nl-BE,nl;q=0.9,en;q=0.8'
+          check /shop 200 -H 'Accept-Language: es' -H 'Cookie: NEXT_LOCALE=en'
+          curl -s http://127.0.0.1:3005/es | grep -q '<html lang="es"' || { echo "::error::/es is not lang=es"; fail=1; }
+          if [ "$fail" = 1 ]; then
+            echo "::error title=server log::$(tail -c 1500 ../server.log | tr '\n' ' ')"
+            exit 1
+          fi
+
+      - name: Preview screenshots (pull requests)
+        # Renders key pages against the live catalog and pushes PNGs to the `previews` branch,
+        # so a design change can be reviewed before it is merged.
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        working-directory: bundle
+        env:
+          PORT: "3006"
+          HOSTNAME: 127.0.0.1
+        run: |
+          node server.js > ../preview.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3006/robots.txt && break; sleep 1; done
+          npx -y playwright@1.56.1 install --with-deps chromium > /dev/null
+          slug=$(curl -s "$API_URL/products?page_size=1&sort=newest" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).items[0].slug))')
+          mkdir -p ../shots
+          shoot() { # name, path, width, height
+            npx -y playwright@1.56.1 screenshot --browser chromium --viewport-size="$3,$4" --full-page --wait-for-timeout 2500 \
+              "http://127.0.0.1:3006$2" "../shots/$1.png" || echo "::warning::screenshot $1 failed"
+          }
+          shoot home-desktop / 1440 900
+          shoot home-mobile / 390 844
+          shoot shop-desktop /shop 1440 900
+          shoot product-desktop "/product/$slug" 1440 900
+          shoot product-mobile "/product/$slug" 390 844
+          shoot category-es /es/category/birds-wildlife 1440 900
+          shoot home-nl /nl 1440 900
+          cd ../shots
+          git init -q -b previews
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Previews of ${{ github.head_ref || github.ref_name }} @ ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" previews
 
       - name: Publish to storefront-build branch
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

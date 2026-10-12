@@ -38,3 +38,18 @@ downloads photos that aren't already on disk. `--dry-run` previews the categorie
 
 Categories were assigned by theme from the listing titles (the Etsy shop has no sections).
 Change a product's `"category"` here, or move it in Admin → Products, to recategorise.
+
+## Translations
+
+`translations/es.json` (Spanish) and `translations/nl.json` (Dutch) hold the storefront's product
+and category text in those languages. The import loads them automatically from this folder:
+
+```jsonc
+{
+  "categories": { "<slug>": { "name": "…", "description": "…" } },
+  "products":   { "<Etsy listing id>": { "title": "…", "description": "…" } }
+}
+```
+
+Anything missing falls back to English, field by field. Product details, size names and filter
+labels are translated in the storefront itself (`frontend/src/i18n/dictionaries`).

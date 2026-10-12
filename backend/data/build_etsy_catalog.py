@@ -2,7 +2,7 @@
 
 Input: a JSON list of {id, t(itle), d(escription), p(rice), o(riginal price), q(uantity), sz(sizes), im(ages)}.
 """
-import json, re, unicodedata, collections
+import html, json, re, unicodedata, collections
 from decimal import Decimal, ROUND_HALF_UP
 
 import sys
@@ -100,11 +100,14 @@ for x in raw:
     if variants:
         attrs["Size"] = [v["name"] for v in variants]
     theme = theme_for(x["t"])
-    desc = x["d"].strip()
+    desc = html.unescape(x["d"]).strip()  # Etsy text arrives with &#39; etc.
+    # Drop text pasted into a listing by accident (an AI-tool upsell)
+    JUNK = ("Improve accuracy for writing and career work", "Upgrade to Plus and use increased reasoning", "Get Plus")
+    desc = "\n".join(l for l in desc.split("\n") if not l.strip().startswith(JUNK)).strip()
     first_para = re.split(r"\n\s*\n", desc)[1] if desc.count("\n\n") >= 1 else desc
     products.append({
         "source": "etsy", "source_ref": x["id"], "sku": f"ETSY-{x['id']}", "slug": slug,
-        "title": title, "seo_title": x["t"][:300],
+        "title": html.unescape(title), "seo_title": html.unescape(x["t"])[:300],
         "seo_description": re.sub(r"\s+", " ", first_para)[:300].rsplit(" ", 1)[0] + "…" if len(first_para) > 300 else re.sub(r"\s+", " ", first_para),
         "description": desc, "category": theme,
         "price": str(min([money(v["price"]) for v in variants] or [price])),

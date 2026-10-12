@@ -7,6 +7,9 @@
 * --replace deletes ALL existing products and categories first (sample data included).
 * Re-running without --replace updates products matched by (source, source_ref).
 * --dry-run shows what would happen without changing anything.
+* Translations: every <lang>.json in --translations (default: data/translations next to the
+  catalog file) is merged in — {"categories": {slug: {"name", "description"}},
+  "products": {source_ref: {"title", "description", ...}}}.
 
 Catalog file format: {"categories": [...], "products": [...]} — see data/README.md.
 """
@@ -107,6 +110,23 @@ async def wipe_catalog(session) -> None:
     log(f"removed {n_products} products and {n_categories} categories")
 
 
+def load_translations(folder: Path) -> dict[str, dict]:
+    """{"es": {"categories": {...}, "products": {...}}, ...} from <folder>/<lang>.json."""
+    out: dict[str, dict] = {}
+    if folder.is_dir():
+        for f in sorted(folder.glob("*.json")):
+            out[f.stem] = json.loads(f.read_text(encoding="utf-8"))
+    return out
+
+
+def translations_for(all_tr: dict[str, dict], kind: str, key: str) -> dict[str, dict]:
+    return {
+        lang: {k: v for k, v in entry.items() if v}
+        for lang, data in all_tr.items()
+        if (entry := data.get(kind, {}).get(key))
+    }
+
+
 async def upsert_categories(session, categories: list[dict]) -> dict[str, Category]:
     by_slug: dict[str, Category] = {}
     existing = {c.slug: c for c in (await session.execute(select(Category))).scalars()}
@@ -129,6 +149,7 @@ async def upsert_categories(session, categories: list[dict]) -> dict[str, Catego
         cat.sort_order = spec.get("sort_order", 0)
         cat.image_url = spec.get("image_url")
         cat.is_active = True
+        cat.translations = spec.get("translations", {})
         await session.flush()
         by_slug[spec["slug"]] = cat
     log(f"categories ready: {len(by_slug)}")
@@ -174,6 +195,7 @@ async def upsert_products(session, products: list[dict], categories: dict[str, C
             published_at=published_at,
             seo_title=spec.get("seo_title"),
             seo_description=spec.get("seo_description"),
+            translations=spec.get("translations", {}),
         )
         if product is None:
             product = Product(source=spec["source"], source_ref=spec["source_ref"], created_by_id=owner_id, **fields)
@@ -221,6 +243,16 @@ async def run(args) -> int:
     data = json.loads(Path(args.file).read_text(encoding="utf-8"))
     products, categories = data["products"], data["categories"]
     log(f"catalog file: {len(categories)} categories, {len(products)} products")
+    tr_dir = Path(args.translations) if args.translations else Path(args.file).resolve().parent / "translations"
+    all_tr = load_translations(tr_dir)
+    for c in categories:
+        c["translations"] = translations_for(all_tr, "categories", c["slug"])
+    for p in products:
+        p["translations"] = translations_for(all_tr, "products", p["source_ref"])
+    for lang in all_tr:
+        n = sum(1 for p in products if lang in p["translations"])
+        log(f"translations {lang}: {n}/{len(products)} products, "
+            f"{sum(1 for c in categories if lang in c['translations'])}/{len(categories)} categories")
     if args.dry_run:
         for c in categories:
             log(f"  category {c['slug']} ({sum(1 for p in products if p.get('category') == c['slug'])} products)")
@@ -246,6 +278,7 @@ def main() -> None:
     parser.add_argument("--file", required=True)
     parser.add_argument("--replace", action="store_true", help="delete all existing products and categories first")
     parser.add_argument("--skip-images", action="store_true", help="link the original photo URLs instead of copying")
+    parser.add_argument("--translations", help="folder of <lang>.json files (default: translations/ next to --file)")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
