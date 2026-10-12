@@ -14,12 +14,12 @@ from app.services.account import hash_token, localized_path
 class CaptchaTests(unittest.TestCase):
     def setUp(self):
         self.settings = get_settings()
-        self.saved = self.settings.turnstile_secret
+        self.saved = (self.settings.turnstile_secret, self.settings.turnstile_hostnames)
 
     def tearDown(self):
-        self.settings.turnstile_secret = self.saved
+        self.settings.turnstile_secret, self.settings.turnstile_hostnames = self.saved
 
-    def run_verify(self, token, result):
+    def run_verify(self, token, result, action="signup"):
         calls = []
 
         def post(secret, tok, ip):
@@ -28,7 +28,7 @@ class CaptchaTests(unittest.TestCase):
                 raise result
             return result
 
-        asyncio.run(captcha.verify(token, "1.2.3.4", post=post))
+        asyncio.run(captcha.verify(token, "1.2.3.4", action=action, post=post))
         return calls
 
     def test_skipped_without_secret(self):
@@ -42,9 +42,22 @@ class CaptchaTests(unittest.TestCase):
 
     def test_success_and_failure(self):
         self.settings.turnstile_secret = "secret"
-        self.assertEqual(self.run_verify("tok", {"success": True}), [("secret", "tok", "1.2.3.4")])
+        ok = {"success": True, "action": "signup", "hostname": "shop.windycitywares.com"}
+        self.assertEqual(self.run_verify("tok", ok), [("secret", "tok", "1.2.3.4")])
         with self.assertRaises(ValidationFailedError):
             self.run_verify("tok", {"success": False, "error-codes": ["invalid-input-response"]})
+
+    def test_action_and_hostname_must_match(self):
+        self.settings.turnstile_secret = "secret"
+        self.settings.turnstile_hostnames = ["shop.windycitywares.com"]
+        ok = {"success": True, "action": "signup", "hostname": "shop.windycitywares.com"}
+        self.run_verify("tok", ok)
+        with self.assertRaises(ValidationFailedError):  # token solved on the contact form
+            self.run_verify("tok", {**ok, "action": "contact"})
+        with self.assertRaises(ValidationFailedError):  # token solved on another site
+            self.run_verify("tok", {**ok, "hostname": "evil.example"})
+        with self.assertRaises(ValidationFailedError):  # oversized token
+            self.run_verify("x" * 3000, ok)
 
     def test_network_error_is_a_validation_error(self):
         self.settings.turnstile_secret = "secret"

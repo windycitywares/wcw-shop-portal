@@ -150,14 +150,18 @@ Anything set in `.env` (or an optional, untracked `backend/site.env`) overrides 
 
 Switch to the authenticated mailbox settings above if HostItBro ever blocks local relay.
 
-**Turnstile** — dash.cloudflare.com (free account) → Turnstile → Add widget → name `WindyCityWares`,
-hostnames `shop.windycitywares.com` and `windycitywares.com`, mode *Managed*. Copy both keys into
-`backend/.env`:
+**Turnstile** — the widget exists in Cloudflare (dash.cloudflare.com → Turnstile, hostnames
+`shop.windycitywares.com`, `windycitywares.com`, `www.windycitywares.com`). The public site key and the
+allowed hostnames are in `backend/production.env`. Only the **secret key** goes on the server, in
+`backend/.env` (git-ignored), added by the owner:
 
 ```
-TURNSTILE_SITE_KEY=<site key>       # public; the storefront reads it from /api/v1/site-config
-TURNSTILE_SECRET=<secret key>
+TURNSTILE_SECRET=<secret key from the widget's settings>
 ```
+
+The API checks each token's `success`, its `action` (`signup` or `contact`, matching the form it was
+solved on) and its `hostname`. If the log says `TURNSTILE_SECRET is invalid`, the key in `.env` is wrong.
+To change the secret: Cloudflare → Turnstile → the widget → Rotate secret key, then update `.env`.
 
 Until `TURNSTILE_SECRET` is set the check is skipped (a warning is logged), so sign-up keeps working.
 

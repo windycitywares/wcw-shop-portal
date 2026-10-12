@@ -56,7 +56,10 @@ export function Turnstile({
   resetKey = 0,
   locale = "en",
   label,
+  action,
 }: {
+  /** Names the protected form; the API checks the token was solved for this action. */
+  action: "signup" | "contact";
   onToken: (token: string | null) => void;
   resetKey?: number;
   locale?: string;
@@ -84,6 +87,7 @@ export function Turnstile({
       if (cancelled || !box.current || !window.turnstile) return;
       widget = window.turnstile.render(box.current, {
         sitekey: key,
+        action,
         language: locale,
         theme: "light",
         callback: (t: string) => tokenCb.current(t),
@@ -95,7 +99,7 @@ export function Turnstile({
       cancelled = true;
       if (widget && window.turnstile) window.turnstile.remove(widget);
     };
-  }, [resetKey, locale]);
+  }, [resetKey, locale, action]);
 
   if (enabled === false) return null;
   return <div ref={box} role="group" aria-label={label} className="min-h-[65px]" />;

@@ -61,7 +61,7 @@ async def register(request: Request, response: Response, session: SessionDep, da
     ip_key = client_ip(request)
     if registrations_by_ip.is_blocked(ip_key):
         raise TooManyRequestsError("Too many new accounts from this network. Please try again later.")
-    await captcha.verify(data.captcha_token, ip_key)
+    await captcha.verify(data.captcha_token, ip_key, action="signup")
     registrations_by_ip.hit(ip_key)
     return await AuthService(session).register(data)
 

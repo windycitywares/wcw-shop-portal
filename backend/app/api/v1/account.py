@@ -50,7 +50,7 @@ async def contact(request: Request, session: SessionDep, user: OptionalUser, dat
     ip_key = client_ip(request)
     if contact_by_ip.is_blocked(ip_key):
         raise TooManyRequestsError("You've sent several messages already. Please try again in an hour.")
-    await captcha.verify(data.captcha_token, ip_key)
+    await captcha.verify(data.captcha_token, ip_key, action="contact")
     contact_by_ip.hit(ip_key)
     await ContactService(session).submit(data, user, ip_key)
     return ok

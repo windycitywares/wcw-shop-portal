@@ -70,7 +70,7 @@ export default function LoginPage() {
             </Link>
           </p>
         ) : (
-          <Turnstile onToken={setCaptcha} resetKey={captchaKey} locale={locale} label={t.auth.captcha} />
+          <Turnstile action="signup" onToken={setCaptcha} resetKey={captchaKey} locale={locale} label={t.auth.captcha} />
         )}
         <Button type="submit" size="lg" className="w-full" disabled={busy}>
           {busy ? t.auth.wait : mode === "signin" ? t.auth.signIn : t.auth.createAccount}
