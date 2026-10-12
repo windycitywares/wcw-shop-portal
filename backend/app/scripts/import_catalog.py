@@ -190,7 +190,7 @@ async def upsert_products(session, products: list[dict], categories: dict[str, C
                     parent_id=product.id,
                     category_id=product.category_id,
                     sku=f"{spec['sku']}-{i}",
-                    slug=f"{spec['slug']}-{i}",
+                    slug=f"{spec['slug']}-size-{i}",  # never collides with product slugs
                     title=f"{spec['title'][:250]} — {v['name']}",
                     base_price=_money(v["price"]),
                     compare_at_price=_money(v.get("compare_at_price")),
