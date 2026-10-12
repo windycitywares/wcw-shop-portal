@@ -5,6 +5,7 @@ server, where the deploy script runs the unit tests.
 """
 
 import os
+import time
 import unittest
 import uuid
 
@@ -87,6 +88,7 @@ class AccountFlowTests(unittest.TestCase):
         self.assertEqual(r.status_code, 202)
         self.assertEqual(len(self.sent), 1)
 
+        time.sleep(1.1)  # token "issued at" has 1-second resolution; real resets come much later
         r = self.client.post(f"{self.api}/auth/reset-password", json={"token": token, "new_password": "second-password-2"})
         self.assertEqual(r.status_code, 200, r.text)
         # Link works once.
