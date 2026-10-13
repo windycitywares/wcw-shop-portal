@@ -135,12 +135,14 @@ So: **merge to wcw-main-site `main` → live within ~10–15 minutes.**
 | Build cache | `~/repos/wcw-main-site-build` (clone of the `site-build` branch) |
 | Old static homepage | `public_html/index.static.html` and `index.old.html` (not served) |
 
-One-time server setup (done 2026-10-13):
+One-time server setup (after the first `site-build` exists):
 
 ```bash
+git -C ~/repos/wcw-portal fetch -q origin main
+git -C ~/repos/wcw-portal show origin/main:deploy/update-main-site.sh > ~/.wcw-update-main-site.sh
+bash ~/.wcw-update-main-site.sh                                # installs the build into apps/wcw-main/site
 cloudlinux-selector create --interpreter=nodejs --version=20 --app-root=apps/wcw-main/site \
   --domain=windycitywares.com --app-uri=/ --app-mode=production --startup-file=server.js
-bash ~/repos/wcw-portal/deploy/update-main-site.sh
 mv ~/public_html/index.html ~/public_html/index.static.html   # LiteSpeed would serve it instead of the app
 ```
 
