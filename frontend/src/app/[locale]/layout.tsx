@@ -50,7 +50,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   if (!isLocale(locale)) notFound();
   const t = getDictionary(locale);
   return (
-    <html lang={locale} className={`${display.variable} ${body.variable}`} data-theme="classic" suppressHydrationWarning>
+    <html lang={locale} className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
       <head>
         {/* Applies the shopper's saved colour theme before first paint (no flash). */}
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
