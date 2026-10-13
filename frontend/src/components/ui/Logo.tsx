@@ -13,10 +13,10 @@ function EmblemShapes({ tone = "default" }: { tone?: Tone }) {
   const reverse = tone === "reverse";
   return (
     <>
-      <circle cx="32" cy="32" r="32" fill={reverse ? "#ffffff" : "#1c2f45"} />
+      <circle cx="32" cy="32" r="32" fill={reverse ? "#ffffff" : "var(--logo-emblem)"} />
       <g transform={EMBLEM_T}>
-        <path fill={reverse ? "#1c2f45" : "#ffffff"} d={WCW_LETTERS} />
-        <path fill="#e0a845" d={WCW_C} />
+        <path fill={reverse ? "#1c2f45" : "var(--logo-letters)"} d={WCW_LETTERS} />
+        <path fill="var(--logo-gold, #e0a845)" d={WCW_C} />
       </g>
       <path d="M14 38A19 19 0 0 0 50 38" fill="none" stroke="#e0a845" strokeWidth="4" strokeLinecap="round" />
     </>
@@ -41,8 +41,8 @@ export function Logo({ className, tone = "default", title }: { className?: strin
       aria-hidden={title ? undefined : true} focusable="false">
       <EmblemShapes tone={tone} />
       <g transform="translate(78.4 44.3) scale(0.035200)">
-        <path fill={reverse ? "#ffffff" : "#1c2f45"} d={WORD_A} />
-        <path fill={reverse ? "#e0a845" : "#c9902f"} d={WORD_B} />
+        <path fill={reverse ? "#ffffff" : "var(--logo-word)"} d={WORD_A} />
+        <path fill={reverse ? "#e0a845" : "var(--logo-word-gold)"} d={WORD_B} />
       </g>
     </svg>
   );

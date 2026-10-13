@@ -89,7 +89,7 @@ export function Turnstile({
         sitekey: key,
         action,
         language: locale,
-        theme: "light",
+        theme: document.documentElement.dataset.theme === "midnight" ? "dark" : "light",
         callback: (t: string) => tokenCb.current(t),
         "expired-callback": () => tokenCb.current(null),
         "error-callback": () => tokenCb.current(null),

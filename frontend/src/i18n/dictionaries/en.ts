@@ -161,6 +161,16 @@ const en = {
     text: "It may have moved, or the design is no longer available.",
     cta: "Browse the shop",
   },
+  theme: {
+    label: "Theme",
+    choose: "Colour theme",
+    classic: "Lakefront",
+    linen: "Linen",
+    sage: "Sage",
+    blush: "Blush",
+    midnight: "Midnight",
+    system: "Match my device",
+  },
   auth: {
     signIn: "Sign in",
     createAccountTitle: "Create an account",

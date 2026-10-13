@@ -9,6 +9,7 @@ import { I18nProvider } from "@/i18n/client";
 import { isLocale, locales, ogLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { site } from "@/lib/site";
+import { themeBootScript } from "@/lib/themes";
 import { body, display } from "../fonts";
 import "../globals.css";
 
@@ -42,14 +43,18 @@ export const viewport: Viewport = {
 
 /**
  * Storefront template, one per language: <Header /> + <main> + <Footer />.
- * To re-theme the store, edit the tokens in globals.css and the fonts in app/fonts.ts.
+ * Colour themes: tokens in globals.css (one block per theme), list + switcher in lib/themes.ts. Fonts: app/fonts.ts.
  */
 export default async function LocaleLayout({ children, params }: Props) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const t = getDictionary(locale);
   return (
-    <html lang={locale} className={`${display.variable} ${body.variable}`}>
+    <html lang={locale} className={`${display.variable} ${body.variable}`} data-theme="classic" suppressHydrationWarning>
+      <head>
+        {/* Applies the shopper's saved colour theme before first paint (no flash). */}
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+      </head>
       <body className="flex min-h-dvh flex-col font-sans antialiased">
         <a href="#main" className="skip-link">
           {t.nav.skip}

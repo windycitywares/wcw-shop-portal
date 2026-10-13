@@ -7,6 +7,7 @@ import { Logo } from "@/components/ui/Logo";
 import { CartButton } from "@/components/cart/CartButton";
 import { AccountLink } from "./AccountLink";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 import { MegaMenu } from "./MegaMenu";
 import { MobileNav } from "./MobileNav";
 import { SearchBar } from "./SearchBar";
@@ -30,6 +31,7 @@ export async function Header({ locale }: { locale: Locale }) {
         <div className="ml-auto flex items-center gap-1 lg:ml-0">
           <SearchBar className="mr-2 hidden w-56 xl:block" />
           <LanguageSwitcher className="hidden sm:block" />
+          <ThemeSwitcher className="hidden sm:block" />
           <AccountLink />
           <CartButton />
         </div>
