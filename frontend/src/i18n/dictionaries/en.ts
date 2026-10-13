@@ -162,8 +162,8 @@ const en = {
     cta: "Browse the shop",
   },
   theme: {
-    label: "Theme",
-    choose: "Colour theme",
+    label: "Color theme",
+    choose: "Color theme",
     classic: "Lakefront",
     linen: "Linen",
     sage: "Sage",
