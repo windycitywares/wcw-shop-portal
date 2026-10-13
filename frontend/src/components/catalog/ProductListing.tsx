@@ -88,7 +88,7 @@ export async function ProductListing({
                   className={cn(
                     "inline-block whitespace-nowrap rounded-full border px-4 py-1.5 text-sm",
                     c.slug === currentSlug
-                      ? "border-ink bg-ink text-white"
+                      ? "border-ink bg-ink text-canvas"
                       : "border-line bg-surface hover:border-ink/40",
                   )}
                 >

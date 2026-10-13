@@ -110,6 +110,11 @@ jobs:
           shoot category-es /es/category/birds-wildlife 1440 900
           shoot home-nl /nl 1440 900
           shoot contact-desktop /contact 1440 900
+          shoot theme-midnight "/?theme=midnight" 1440 900
+          shoot theme-linen "/?theme=linen" 1440 900
+          shoot theme-sage-product "/product/$slug?theme=sage" 1440 900
+          shoot theme-blush-mobile "/?theme=blush" 390 844
+          shoot theme-midnight-contact "/contact?theme=midnight" 1440 900
           shoot contact-es-mobile /es/contact 390 844
           shoot forgot-password /forgot-password 1440 900
           shoot reset-password-nl "/nl/reset-password?token=preview-token-preview-token" 1440 900

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useI18n } from "@/i18n/client";
 import type { CategoryNode } from "@/lib/types";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 
 function Branch({ node, onNavigate }: { node: CategoryNode; onNavigate: () => void }) {
   const { t, href, fmt } = useI18n();
@@ -82,6 +83,8 @@ export function MobileNav({ tree }: { tree: CategoryNode[] }) {
           <div className="border-t border-line px-5 py-4">
             <p className="mb-2 text-sm text-muted">{t.nav.language}</p>
             <LanguageSwitcher variant="inline" className="[&_a]:text-ink [&_a[aria-current]]:font-semibold" />
+            <p className="mb-2 mt-5 text-sm text-muted">{t.theme.label}</p>
+            <ThemeSwitcher variant="inline" />
           </div>
         </Dialog.Content>
       </Dialog.Portal>

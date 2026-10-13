@@ -159,6 +159,16 @@ const nl: Dictionary = {
     text: "Misschien is ze verplaatst, of is het ontwerp niet meer beschikbaar.",
     cta: "Naar de winkel",
   },
+  theme: {
+    label: "Thema",
+    choose: "Kleurthema",
+    classic: "Meeroever",
+    linen: "Linnen",
+    sage: "Salie",
+    blush: "Blos",
+    midnight: "Middernacht",
+    system: "Zoals mijn apparaat",
+  },
   auth: {
     signIn: "Inloggen",
     createAccountTitle: "Account aanmaken",

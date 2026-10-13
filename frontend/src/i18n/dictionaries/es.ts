@@ -165,6 +165,16 @@ const es: Dictionary = {
     text: "Es posible que se haya movido o que el diseño ya no esté disponible.",
     cta: "Ir a la tienda",
   },
+  theme: {
+    label: "Tema",
+    choose: "Tema de color",
+    classic: "Lago",
+    linen: "Lino",
+    sage: "Salvia",
+    blush: "Rubor",
+    midnight: "Medianoche",
+    system: "Como mi dispositivo",
+  },
   auth: {
     signIn: "Iniciar sesión",
     createAccountTitle: "Crear una cuenta",
