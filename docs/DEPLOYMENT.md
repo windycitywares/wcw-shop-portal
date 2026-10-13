@@ -113,10 +113,44 @@ A cron job runs every 10 minutes (`crontab -l`):
   tests, run migrations, restart, check `/health`. If install or tests fail, the previous code is
   restored and the running API is untouched.
 - **Storefront** — when Actions has published a new build it runs `deploy/update-storefront.sh`.
-- History: `~/logs/wcw-deploy.log`. Run either script by hand in cPanel → Terminal to deploy
+- **Main site** — when [wcw-main-site](https://github.com/windycitywares/wcw-main-site) has new commits on
+  `main` it runs `deploy/update-main-site.sh`, which copies that repo's files into `public_html`
+  (see [Main site](#main-site-windycitywarescom)).
+- History: `~/logs/wcw-deploy.log`. Run any of these scripts by hand in cPanel → Terminal to deploy
   immediately.
 
 So the release flow is: **merge a PR into `main` → live within ~10 minutes.**
+
+## Main site (windycitywares.com)
+
+Until the store moves to the main domain, `public_html` serves the landing page from the separate
+repo **windycitywares/wcw-main-site** (collections grid linking into `shop.`). The cron job above
+publishes it: merge to that repo's `main` → live within ~10 minutes. `deploy/update-main-site.sh`
+copies every file except `README.md` and dot-files into `public_html` and deletes nothing; on the first
+publish the old homepage is kept as `public_html/index.old.html`.
+
+The server needs read access to that repo, once. Either:
+
+- **Make the repo public** (GitHub → wcw-main-site → Settings → Danger zone → Change visibility). It's
+  only the public web page, and nothing else is needed; or
+- **Keep it private** and give it its own deploy key (a key can be a deploy key on one repo only):
+  ```bash
+  ssh-keygen -t ed25519 -f ~/.ssh/wcw_main_deploy -N "" && cat ~/.ssh/wcw_main_deploy.pub
+  # GitHub → wcw-main-site → Settings → Deploy keys → Add deploy key: paste it, write access off
+  cat >> ~/.ssh/config <<'CFG'
+  Host github-wcw-main
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/wcw_main_deploy
+  CFG
+  ```
+
+Until one of these is done, the log shows "main site: can't read …" once and the current homepage
+stays as it is. Publish right away: `bash ~/repos/wcw-portal/deploy/update-main-site.sh`.
+Roll back: `cp ~/public_html/index.old.html ~/public_html/index.html`.
+
+At go-live the store takes over the main domain: remove the `update-main-site.sh` line from
+`deploy/auto-deploy.sh` at the same time.
 
 ## Email and CAPTCHA
 
