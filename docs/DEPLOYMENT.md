@@ -113,9 +113,8 @@ A cron job runs every 10 minutes (`crontab -l`):
   tests, run migrations, restart, check `/health`. If install or tests fail, the previous code is
   restored and the running API is untouched.
 - **Storefront** — when Actions has published a new build it runs `deploy/update-storefront.sh`.
-- **Main site** — when [wcw-main-site](https://github.com/windycitywares/wcw-main-site) has new commits on
-  `main` it runs `deploy/update-main-site.sh`, which copies that repo's files into `public_html`
-  (see [Main site](#main-site-windycitywarescom)).
+- **Main site** — when [wcw-main-site](https://github.com/windycitywares/wcw-main-site) Actions has
+  published a new build it runs `deploy/update-main-site.sh` (see [Main site](#main-site-windycitywarescom)).
 - History: `~/logs/wcw-deploy.log`. Run any of these scripts by hand in cPanel → Terminal to deploy
   immediately.
 
@@ -123,34 +122,52 @@ So the release flow is: **merge a PR into `main` → live within ~10 minutes.**
 
 ## Main site (windycitywares.com)
 
-Until the store moves to the main domain, `public_html` serves the landing page from the separate
-repo **windycitywares/wcw-main-site** (collections grid linking into `shop.`). The cron job above
-publishes it: merge to that repo's `main` → live within ~10 minutes. `deploy/update-main-site.sh`
-copies every file except `README.md` and dot-files into `public_html` and deletes nothing; on the first
-publish the old homepage is kept as `public_html/index.old.html`.
+windycitywares.com runs the brand site from the separate repo **windycitywares/wcw-main-site**
+(Next.js; product data from this repo's API). It's built like the storefront: GitHub Actions in that
+repo publishes a ready-to-run bundle to its `site-build` branch, and the 10-minute cron job runs
+`deploy/update-main-site.sh`, which installs it into a cPanel Node.js app and restarts it.
+So: **merge to wcw-main-site `main` → live within ~10–15 minutes.**
 
-The server needs read access to that repo, once. Either:
+| | |
+|---|---|
+| Node.js app | Node 20 · app root `apps/wcw-main/site` · URL `windycitywares.com` · startup file `server.js` |
+| Dependencies | `~/apps/wcw-main/node_modules` (one level up, like the storefront) |
+| Build cache | `~/repos/wcw-main-site-build` (clone of the `site-build` branch) |
+| Old static homepage | `public_html/index.static.html` and `index.old.html` (not served) |
 
-- **Make the repo public** (GitHub → wcw-main-site → Settings → Danger zone → Change visibility). It's
-  only the public web page, and nothing else is needed; or
-- **Keep it private** and give it its own deploy key (a key can be a deploy key on one repo only):
-  ```bash
-  ssh-keygen -t ed25519 -f ~/.ssh/wcw_main_deploy -N "" && cat ~/.ssh/wcw_main_deploy.pub
-  # GitHub → wcw-main-site → Settings → Deploy keys → Add deploy key: paste it, write access off
-  cat >> ~/.ssh/config <<'CFG'
-  Host github-wcw-main
-    HostName github.com
-    User git
-    IdentityFile ~/.ssh/wcw_main_deploy
-  CFG
-  ```
+One-time server setup (done 2026-10-13):
 
-Until one of these is done, the log shows "main site: can't read …" once and the current homepage
-stays as it is. Publish right away: `bash ~/repos/wcw-portal/deploy/update-main-site.sh`.
-Roll back: `cp ~/public_html/index.old.html ~/public_html/index.html`.
+```bash
+cloudlinux-selector create --interpreter=nodejs --version=20 --app-root=apps/wcw-main/site \
+  --domain=windycitywares.com --app-uri=/ --app-mode=production --startup-file=server.js
+bash ~/repos/wcw-portal/deploy/update-main-site.sh
+mv ~/public_html/index.html ~/public_html/index.static.html   # LiteSpeed would serve it instead of the app
+```
 
-At go-live the store takes over the main domain: remove the `update-main-site.sh` line from
-`deploy/auto-deploy.sh` at the same time.
+**Access to the repo.** While wcw-main-site is public the server reads it over HTTPS. Before making it
+private, give the server its own deploy key (a key can be a deploy key on one repo only):
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/wcw_main_deploy -N "" && cat ~/.ssh/wcw_main_deploy.pub
+# GitHub → wcw-main-site → Settings → Deploy keys → Add deploy key: paste it, write access off
+cat >> ~/.ssh/config <<'CFG'
+Host github-wcw-main
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/wcw_main_deploy
+CFG
+```
+
+The script uses that alias automatically once it's in `~/.ssh/config`. Without access the log says
+"main site: can't read …" once and the running site stays as it is.
+
+Deploy right away: `bash ~/repos/wcw-portal/deploy/update-main-site.sh`. Log: `~/logs/wcw-deploy.log`;
+app errors: `~/apps/wcw-main/site/stderr.log`.
+Roll back to the old static page: Setup Node.js App → stop the windycitywares.com app, then
+`mv ~/public_html/index.static.html ~/public_html/index.html`.
+
+At go-live the store takes over the main domain: stop this app and remove the `update-main-site.sh`
+line from `deploy/auto-deploy.sh` at the same time.
 
 ## Email and CAPTCHA
 

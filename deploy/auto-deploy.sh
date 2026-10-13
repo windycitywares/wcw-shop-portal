@@ -3,7 +3,7 @@
 #   */10 * * * * bash $HOME/repos/wcw-portal/deploy/auto-deploy.sh >> $HOME/logs/wcw-deploy.log 2>&1
 # - API: when `main` has new commits, run update-api.sh (tests must pass before it restarts).
 # - Storefront: when GitHub Actions has published a new build, run update-storefront.sh.
-# - Main site: when windycitywares/wcw-main-site has new commits on main, run update-main-site.sh.
+# - Main site: when windycitywares/wcw-main-site Actions has published a new build, run update-main-site.sh.
 set -uo pipefail
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"   # cron's default PATH is minimal
 exec 9>"$HOME/.wcw-deploy.lock"
