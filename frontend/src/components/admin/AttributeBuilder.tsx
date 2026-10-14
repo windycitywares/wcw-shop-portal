@@ -36,7 +36,7 @@ export function AttributeBuilder({ rows, onChange }: { rows: AttributeRow[]; onC
     onChange(rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
 
   return (
-    <fieldset>
+    <fieldset className="min-w-0">
       <legend className="text-sm font-medium">Attributes</legend>
       <p className="mt-1 text-xs text-muted">
         Shown as product details and used for shop filters. Separate multiple options with commas (e.g. “Red, Blue”).
@@ -48,7 +48,7 @@ export function AttributeBuilder({ rows, onChange }: { rows: AttributeRow[]; onC
       </datalist>
       <ul className="mt-3 space-y-2">
         {rows.map((row, i) => (
-          <li key={i} className="flex gap-2">
+          <li key={i} className="flex flex-wrap gap-2 sm:flex-nowrap">
             <label className="sr-only" htmlFor={`attr-key-${i}`}>
               Attribute name {i + 1}
             </label>
@@ -58,7 +58,7 @@ export function AttributeBuilder({ rows, onChange }: { rows: AttributeRow[]; onC
               value={row.key}
               onChange={(e) => update(i, { key: e.target.value })}
               placeholder="Name"
-              className="h-10 w-40 rounded-lg border border-line bg-surface px-3 text-sm"
+              className="h-10 w-full min-w-0 rounded-lg border border-line bg-surface px-3 text-sm sm:w-40"
             />
             <label className="sr-only" htmlFor={`attr-value-${i}`}>
               Value for {row.key || `attribute ${i + 1}`}
@@ -68,7 +68,7 @@ export function AttributeBuilder({ rows, onChange }: { rows: AttributeRow[]; onC
               value={row.value}
               onChange={(e) => update(i, { value: e.target.value })}
               placeholder="Value(s)"
-              className="h-10 flex-1 rounded-lg border border-line bg-surface px-3 text-sm"
+              className="h-10 min-w-0 flex-1 basis-40 rounded-lg border border-line bg-surface px-3 text-sm"
             />
             <Button variant="ghost" size="sm" className="h-10" onClick={() => onChange(rows.filter((_, idx) => idx !== i))}>
               Remove<span className="sr-only"> {row.key}</span>

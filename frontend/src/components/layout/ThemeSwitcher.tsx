@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { useI18n } from "@/i18n/client";
+import { useOptionalI18n } from "@/i18n/client";
 import { applyTheme, DEFAULT_THEME, THEME_KEY, THEMES, type ThemeChoice } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 
@@ -50,7 +50,7 @@ const SYSTEM_SWATCH = ["#f2f3ef", "#0f151c", "#c9902f"] as const;
 
 /** Radio group of themes. `variant="menu"`: palette button + popover (header); "inline": row of swatches (mobile menu). */
 export function ThemeSwitcher({ className, variant = "menu" }: { className?: string; variant?: "menu" | "inline" }) {
-  const { t } = useI18n();
+  const { t } = useOptionalI18n();
   const [choice, choose] = useThemeChoice();
   const name = useId();
   const ref = useRef<HTMLDetailsElement>(null);

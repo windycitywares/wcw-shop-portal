@@ -21,6 +21,8 @@
   --color-success: #2f6b4a;
   --color-danger: #a12a1e;
   --color-on-accent: #ffffff; /* text on accent buttons/badges */
+  --color-warning: #7a5000; /* amber text on paper — 6.3:1, 5:1 on its own tint */
+  --color-gold: #c9902f; /* brand gold, for small markers */
 
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-display), ui-serif, Georgia, serif;
@@ -41,6 +43,15 @@
   --logo-word: #1c2f45;
   --logo-gold: #e0a845;
   --logo-word-gold: #c9902f;
+  /* Chart palette (validated for CVD + contrast, see dataviz notes in docs/ADMIN.md) */
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  --viz-3: #1baf7a;
+  --viz-4: #eda100;
+  --viz-5: #e87ba4;
+  --viz-6: #008300;
+  --viz-7: #6250d6;
+  --viz-8: #e34948;
   color-scheme: light;
 }
 html[data-theme="midnight"] {
@@ -63,6 +74,16 @@ html[data-theme="midnight"] {
   --logo-letters: #1c2f45;
   --logo-word: #ffffff;
   --logo-word-gold: #e3ad4f;
+  --color-warning: #f0b95a;
+  --color-gold: #e3ad4f;
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
+  --viz-3: #199e70;
+  --viz-4: #c98500;
+  --viz-5: #d55181;
+  --viz-6: #008300;
+  --viz-7: #9085e9;
+  --viz-8: #e66767;
   color-scheme: dark;
 }
 html[data-theme="linen"] {
@@ -195,5 +216,50 @@ html.theme-switching * {
   }
   .hang {
     animation: hang 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}
+
+/*
+ * Admin: a working tool, so headings use the UI sans (the storefront's light serif is for the shop).
+ * In @layer components so Tailwind utilities (text-lg, font-medium...) still win.
+ */
+@layer components {
+  .admin-root :where(h1, h2, h3, h4) {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    line-height: 1.25;
+  }
+  .admin-root {
+    font-feature-settings: normal;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+  .admin-root .num {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Hover/press feedback for chart marks and list rows */
+  .viz-hit {
+    cursor: crosshair;
+  }
+  /* Content is sized for dense tables but keeps a comfortable reading width for prose */
+  .admin-prose {
+    max-width: 68ch;
+  }
+  @keyframes admin-pulse {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 0.9; }
+  }
+  .skeleton {
+    background: var(--color-sand);
+    border-radius: var(--radius-control);
+    animation: admin-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  .toast-in {
+    animation: toast-in 180ms ease-out both;
   }
 }

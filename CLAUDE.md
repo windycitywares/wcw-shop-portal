@@ -17,7 +17,12 @@ domain keeps its existing `index.html`; move to the main domain at launch (`docs
   - `app/api/v1/` routers · `migrations/` Alembic (initial schema is `migrations/sql/0001_initial.sql`)
 - `frontend/` — Next.js App Router + Tailwind v4
   - `src/app/layout.tsx` = template (Header / main / Footer); theme tokens in `src/app/globals.css`
-  - `src/components/ui/` primitives · `layout/` header, mega-menu, footer · `catalog/` · `cart/` · `admin/`
+  - `src/components/ui/` primitives · `layout/` header, mega-menu, footer · `catalog/` · `cart/`
+  - `src/components/admin/` shell (`AdminShell`, `nav.ts`) · `ui/` kit (Panel, DataTable, Modal, Toast, Tabs…) ·
+    `charts/` SVG charts + `format.ts` — see `docs/ADMIN.md` before building or restyling an admin page
+- `e2e/` — Playwright browser tests + unit tests for pure frontend helpers; CI starts PostgreSQL → API → storefront
+  (`.github/workflows/e2e.yml`) and publishes screenshots to the `e2e-shots` branch. New admin pages go in
+  `e2e/tests/admin-routes.ts`.
   - `src/lib/api.ts` server-side fetches (cached) · `src/lib/client-api.ts` browser fetches with JWT
 
 ## Commands
@@ -28,6 +33,10 @@ uvicorn app.main:app --reload
 alembic upgrade head
 python -m app.seed
 python -m unittest discover tests
+
+# e2e (from e2e/; needs the API and storefront running, see docs/ADMIN.md → Tests)
+npx playwright test
+npm run test:unit
 
 # frontend (from frontend/)
 npm run dev
@@ -51,6 +60,10 @@ npm run typecheck
 - Async ORM relationships are `lazy="raise"`; load with `selectinload(...)` explicitly.
 - Frontend: storefront pages are Server Components that call `src/lib/api.ts`; admin pages are client
   components using `apiFetch`. Every control needs a label; keep `focus-visible` styles.
+- Admin UI: use the kit in `components/admin/ui` and `charts/` and theme tokens (no hex values); sentence-case
+  labels; buttons name the action and the toast repeats the verb; confirm irreversible actions with `ConfirmDialog`.
+  Wrap `overflow-x-auto` tables in a `relative` box (an absolutely positioned `sr-only` child otherwise widens
+  the page) and give grids `grid-cols-[minmax(0,1fr)]` on mobile.
 - Images from hosts other than those in `next.config.ts` are shown unoptimized (see `ProductImage`).
 - Email: `app/core/mailer.py` (`await mailer.send(Mail(...))`); CAPTCHA: `await captcha.verify(token, ip)`.
   Both skip when unconfigured in development — see docs/DEPLOYMENT.md → "Email and CAPTCHA".
