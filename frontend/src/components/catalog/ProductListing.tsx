@@ -5,6 +5,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { getFacets, getProducts } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Breadcrumbs, Container, EmptyState, type Crumb } from "@/components/ui/misc";
+import { TrackOnView } from "@/components/analytics/TrackOnView";
 import { FilterPanel } from "./FilterPanel";
 import { ProductGrid } from "./ProductCard";
 import { SortSelect } from "./SortSelect";
@@ -50,6 +51,7 @@ export async function ProductListing({
   currentSlug,
   fixedParams,
   emptyState,
+  searchTerm,
 }: {
   locale: Locale;
   title: string;
@@ -66,6 +68,8 @@ export async function ProductListing({
   fixedParams?: Record<string, string>;
   /** Shown instead of the grid when nothing matches and no filter was chosen */
   emptyState?: React.ReactNode;
+  /** Set on the search page: records the search and how many results it found (with consent) */
+  searchTerm?: string;
 }) {
   const t = getDictionary(locale);
   const basePath = localePath(locale, path);
@@ -79,6 +83,7 @@ export async function ProductListing({
   return (
     <Container className="py-10 sm:py-14">
       {breadcrumb && <Breadcrumbs items={breadcrumb} />}
+      {searchTerm && result.page === 1 && <TrackOnView type="search" q={searchTerm} results={result.total} />}
       <div className="mt-6 max-w-3xl">
         <h1 className="text-[2.75rem] sm:text-6xl">{title}</h1>
         {description && <p className="mt-4 max-w-2xl text-lg text-muted">{description}</p>}

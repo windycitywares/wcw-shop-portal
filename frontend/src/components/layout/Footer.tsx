@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ConsentSettingsLink } from "@/components/analytics/Analytics";
 import { fmt, localePath, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { site } from "@/lib/site";
@@ -62,7 +63,10 @@ export function Footer({ locale }: { locale: Locale }) {
         ))}
       </Container>
       <Container className="flex flex-col gap-5 border-t border-white/10 py-7 text-sm sm:flex-row sm:items-center sm:justify-between">
-        <p>{fmt(t.footer.rights, { year })}</p>
+        <p>
+          {fmt(t.footer.rights, { year })}{" "}
+          <ConsentSettingsLink className="ml-3 underline hover:text-white" />
+        </p>
         <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
           <LanguageSwitcher variant="inline" />
           <ul className="flex gap-4" aria-label={t.footer.social}>

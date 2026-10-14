@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { useAuth } from "@/lib/auth";
+import { track } from "@/lib/analytics";
 import { wishlistApi } from "@/lib/engagement";
 import { cn } from "@/lib/utils";
 
@@ -50,7 +51,10 @@ export function WishlistButton({ productId, className }: { productId: number; cl
         setBusy(true);
         try {
           if (saved) await wishlistApi.remove(productId);
-          else await wishlistApi.add(productId);
+          else {
+            await wishlistApi.add(productId);
+            track("wishlist_add", { product_id: productId });
+          }
           setSaved(!saved);
         } finally {
           setBusy(false);

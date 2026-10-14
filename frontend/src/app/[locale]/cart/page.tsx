@@ -6,6 +6,7 @@ import { useI18n } from "@/i18n/client";
 import { lineKey, useCart, type CartLine } from "@/lib/cart";
 import { apiFetch } from "@/lib/client-api";
 import type { Quote } from "@/lib/types";
+import { TrackOnView } from "@/components/analytics/TrackOnView";
 import { CartLines } from "@/components/cart/CartLines";
 import { CartMessages, CartTotals, CouponForm, FreeShippingProgress, RewardHint } from "@/components/cart/CartSummary";
 import { ButtonLink } from "@/components/ui/Button";
@@ -65,6 +66,7 @@ export default function CartPage() {
   return (
     <Container className="py-12 sm:py-16">
       <h1 className="text-5xl sm:text-6xl">{t.cart.title}</h1>
+      <TrackOnView type="view_cart" />
       <div className="mt-6 space-y-3" aria-live="polite">
         {recovery === "working" && <p className="text-sm text-muted">{t.cart.restoring}</p>}
         {recovery === "done" && <Alert tone="success">{t.cart.restored}</Alert>}

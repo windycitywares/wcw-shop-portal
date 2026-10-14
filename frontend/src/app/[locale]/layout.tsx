@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { Providers } from "@/components/Providers";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { Analytics } from "@/components/analytics/Analytics";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
@@ -69,6 +70,7 @@ export default async function LocaleLayout({ children, params }: Props) {
             </main>
             <Footer locale={locale} />
             <CartDrawer />
+            <Analytics />
           </Providers>
         </I18nProvider>
         <JsonLd data={organizationLd()} />

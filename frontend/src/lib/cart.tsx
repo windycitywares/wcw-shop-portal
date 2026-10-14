@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useOptionalI18n } from "@/i18n/client";
+import { track } from "./analytics";
 import { apiFetch } from "./client-api";
 import type { Quote } from "./types";
 
@@ -90,6 +91,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [quoting, setQuoting] = useState(false);
   const [quoteError, setQuoteError] = useState(false);
   const request = useRef(0);
+  const trackedCode = useRef<string | null>(null);
 
   useEffect(() => {
     setLines(read<CartLine[]>(STORAGE_KEY, []));
@@ -134,6 +136,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         });
         if (id !== request.current) return;
         setQuote(q);
+        // Count how discount codes fare (once per code), to spot codes that confuse people.
+        if (q.coupon && q.coupon.code !== trackedCode.current) {
+          trackedCode.current = q.coupon.code;
+          track(q.coupon.applied ? "coupon_applied" : "coupon_failed", { data: { reason: q.coupon.reason ?? "ok" } });
+        }
         setQuoteError(false);
         // Keep the remembered unit prices in step with the server (sale started or ended, price changed).
         setLines((prev) => {
@@ -161,6 +168,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const add = useCallback<CartState["add"]>((line, quantity = 1) => {
     const key = lineKey(line.productId, line.options);
+    track("add_to_cart", { product_id: line.productId, value: Math.round(line.price * quantity * 100) / 100, data: { quantity } });
     setLines((prev) => {
       const existing = prev.find((l) => l.key === key);
       if (existing) {
@@ -179,7 +187,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
-  const remove = useCallback((key: string) => setLines((prev) => prev.filter((l) => l.key !== key)), []);
+  const remove = useCallback((key: string) => {
+    setLines((prev) => {
+      const gone = prev.find((l) => l.key === key);
+      if (gone) track("remove_from_cart", { product_id: gone.productId, value: Math.round(gone.price * gone.quantity * 100) / 100 });
+      return prev.filter((l) => l.key !== key);
+    });
+  }, []);
   const clear = useCallback(() => {
     setLines([]);
     setCouponState(null);

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useI18n } from "@/i18n/client";
+import { track } from "@/lib/analytics";
 import { apiFetch } from "@/lib/client-api";
 
 export function NewsletterForm() {
@@ -16,6 +17,7 @@ export function NewsletterForm() {
     try {
       await apiFetch("/newsletter", { method: "POST", body: JSON.stringify({ email, locale }) });
       setMessage(t.footer.subscribed);
+      track("newsletter_signup");
       setState("done");
     } catch (err) {
       setMessage(err instanceof Error ? err.message : t.auth.error);

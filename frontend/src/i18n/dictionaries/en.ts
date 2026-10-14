@@ -279,6 +279,14 @@ const en = {
     recent: "Recently viewed",
     alsoBought: "Customers also bought",
   },
+  consent: {
+    title: "Help us improve the shop",
+    text: "With your permission we count visits and what people look at, privately: no ads, no tracking across other sites, and no IP addresses stored.",
+    accept: "Accept",
+    decline: "No thanks",
+    settings: "Analytics choices",
+    label: "Privacy choice",
+  },
   cart: {
     couponLabel: "Discount code",
     couponApply: "Apply",
@@ -460,9 +468,6 @@ const en = {
     changed: "Password changed. You've been signed out everywhere else.",
     change: "Change password",
     changeFailed: "Could not change the password.",
-    orders: "Orders",
-    ordersEmpty: "Your order history will appear here once online checkout is live.",
-    keepShopping: "Keep shopping",
     signOut: "Sign out",
   },
   /** Product detail names and values from the catalog. Unknown ones are shown as stored. */

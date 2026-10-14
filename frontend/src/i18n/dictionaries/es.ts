@@ -282,6 +282,14 @@ const es: Dictionary = {
     recent: "Vistos recientemente",
     alsoBought: "Otros clientes también compraron",
   },
+  consent: {
+    title: "Ayúdanos a mejorar la tienda",
+    text: "Con tu permiso contamos las visitas y lo que se mira, de forma privada: sin anuncios, sin seguimiento en otros sitios y sin guardar direcciones IP.",
+    accept: "Aceptar",
+    decline: "No, gracias",
+    settings: "Opciones de analítica",
+    label: "Opción de privacidad",
+  },
   cart: {
     couponLabel: "Código de descuento",
     couponApply: "Aplicar",
@@ -464,9 +472,6 @@ const es: Dictionary = {
     changed: "Contraseña cambiada. Se cerró tu sesión en todos los demás dispositivos.",
     change: "Cambiar contraseña",
     changeFailed: "No se pudo cambiar la contraseña.",
-    orders: "Pedidos",
-    ordersEmpty: "Tu historial de pedidos aparecerá aquí cuando el pago en línea esté disponible.",
-    keepShopping: "Seguir comprando",
     signOut: "Cerrar sesión",
   },
   attributes: {
