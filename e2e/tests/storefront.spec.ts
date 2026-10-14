@@ -140,14 +140,14 @@ test.describe("checkout", () => {
     await main.getByLabel("Order number").fill("WCW-999999");
     await main.getByLabel("Email address").fill("nobody@example.com");
     await page.getByRole("button", { name: "Find order" }).click();
-    await expect(page.getByRole("alert")).toContainText("couldn't find");
+    await expect(main.getByRole("alert")).toContainText("couldn't find");
     await a11y(page, { enforce: false });
 
     await page.goto("/unsubscribe");
     await expect(page.getByText("Please open the unsubscribe link from one of our emails.")).toBeVisible();
     await page.goto("/unsubscribe?token=not-a-real-token-123");
     await page.getByRole("button", { name: "Unsubscribe" }).click();
-    await expect(page.getByRole("alert")).toContainText("isn't valid");
+    await expect(page.getByRole("main").getByRole("alert")).toContainText("isn't valid");
   });
 
   test("an empty cart can't check out", async ({ page }) => {
