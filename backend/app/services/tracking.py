@@ -20,11 +20,15 @@ from app.models.product import Product
 from app.schemas.analytics import LandingIn, TrackIn
 from app.services.settings import SettingsService
 
+# Parameters in a SELECT list have no type of their own, so each is cast (asyncpg prepares the statement).
 UPSERT_SESSION = text("""
 INSERT INTO analytics_sessions (id, visitor_id, landing_path, referrer_host, channel, utm_source, utm_medium, utm_campaign,
                                 device, browser, os, locale, is_new_visitor, page_views, event_count)
-SELECT :id, :visitor_id, :landing_path, :referrer_host, :channel, :utm_source, :utm_medium, :utm_campaign,
-       :device, :browser, :os, :locale, NOT EXISTS (SELECT 1 FROM analytics_sessions s WHERE s.visitor_id = :visitor_id), :page_views, :events
+SELECT CAST(:id AS varchar), CAST(:visitor_id AS varchar), CAST(:landing_path AS varchar), CAST(:referrer_host AS varchar),
+       CAST(:channel AS varchar), CAST(:utm_source AS varchar), CAST(:utm_medium AS varchar), CAST(:utm_campaign AS varchar),
+       CAST(:device AS varchar), CAST(:browser AS varchar), CAST(:os AS varchar), CAST(:locale AS varchar),
+       NOT EXISTS (SELECT 1 FROM analytics_sessions s WHERE s.visitor_id = CAST(:visitor_id AS varchar)),
+       CAST(:page_views AS integer), CAST(:events AS integer)
 ON CONFLICT (id) DO UPDATE SET last_seen_at = now(),
     page_views = analytics_sessions.page_views + EXCLUDED.page_views,
     event_count = analytics_sessions.event_count + EXCLUDED.event_count
