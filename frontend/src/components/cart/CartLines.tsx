@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { attrKey, attrValue } from "@/i18n/attributes";
 import { useI18n } from "@/i18n/client";
-import { useCart } from "@/lib/cart";
+import { lineKey, useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/utils";
 import { ProductImage } from "@/components/ui/ProductImage";
 
 export function CartLines({ onNavigate }: { onNavigate?: () => void }) {
-  const { lines, setQuantity, remove } = useCart();
+  const { lines, setQuantity, remove, quote } = useCart();
+  const priced = new Map((quote?.lines ?? []).map((ql) => [lineKey(ql.product_id, ql.options), ql]));
   const { t, href, fmt, locale } = useI18n();
   return (
     <ul className="divide-y divide-line">
@@ -35,7 +36,21 @@ export function CartLines({ onNavigate }: { onNavigate?: () => void }) {
                   .join(", ")}
               </p>
             )}
-            <p className="text-sm text-muted">{formatPrice(line.price, line.currency, locale)}</p>
+            {(() => {
+              const q = priced.get(lineKey(line.productId, line.options ?? {}));
+              return (
+                <p className="text-sm text-muted">
+                  <span className={q?.on_sale ? "text-sale" : undefined}>{formatPrice(line.price, line.currency, locale)}</span>
+                  {q?.on_sale && q.list_price > q.unit_price && (
+                    <s className="ml-2 text-xs">
+                      <span className="sr-only">{t.product.originalPrice} </span>
+                      {formatPrice(q.list_price, line.currency, locale)}
+                    </s>
+                  )}
+                  {q?.stock_left != null && <span className="ml-2 text-xs">· {fmt(t.product.onlyLeft, { count: q.stock_left })}</span>}
+                </p>
+              );
+            })()}
             <div className="mt-auto flex items-center gap-3 pt-2">
               <div
                 className="flex items-center rounded-full border border-line bg-surface"

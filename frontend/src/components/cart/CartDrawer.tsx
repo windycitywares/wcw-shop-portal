@@ -3,13 +3,13 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useI18n } from "@/i18n/client";
 import { useCart } from "@/lib/cart";
-import { formatPrice } from "@/lib/utils";
 import { ButtonLink } from "@/components/ui/Button";
 import { CartLines } from "./CartLines";
+import { CartTotals, FreeShippingProgress, RewardHint } from "./CartSummary";
 
 export function CartDrawer() {
-  const { isOpen, setOpen, lines, subtotal } = useCart();
-  const { t, href, locale } = useI18n();
+  const { isOpen, setOpen, lines } = useCart();
+  const { t, href } = useI18n();
   const close = () => setOpen(false);
   return (
     <Dialog.Root open={isOpen} onOpenChange={setOpen}>
@@ -35,11 +35,9 @@ export function CartDrawer() {
           </div>
           {lines.length > 0 && (
             <div className="space-y-4 border-t border-line bg-surface px-6 py-5">
-              <div className="flex justify-between text-base">
-                <span>{t.cart.subtotal}</span>
-                <span className="font-medium">{formatPrice(subtotal, "USD", locale)}</span>
-              </div>
-              <p className="text-xs text-muted">{t.cart.shippingNote}</p>
+              <FreeShippingProgress />
+              <RewardHint />
+              <CartTotals compact />
               <ButtonLink href={href("/cart")} onClick={close} className="w-full" size="lg">
                 {t.cart.view}
               </ButtonLink>
