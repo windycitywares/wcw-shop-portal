@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { HELP_NAV } from "@/content/help";
 import { useI18n } from "@/i18n/client";
 import { configureAnalytics, flush, getConsent, onConsentChange, setConsent, track, watchPerformance, type Consent } from "@/lib/analytics";
 import { apiFetch } from "@/lib/client-api";
@@ -10,7 +12,7 @@ import { Button } from "@/components/ui/Button";
 
 /** Consent banner + page views, web vitals and script errors (only after the visitor accepts). */
 export function Analytics() {
-  const { t, locale } = useI18n();
+  const { t, locale, href } = useI18n();
   const pathname = usePathname();
   const [consent, setConsentState] = useState<Consent | null | undefined>(undefined); // undefined = not read yet
   const [enabled, setEnabled] = useState(false);
@@ -55,7 +57,12 @@ export function Analytics() {
       className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-xl rounded-[var(--radius-card)] border border-line bg-surface p-5 shadow-xl sm:inset-x-6"
     >
       <p className="font-serif text-lg">{t.consent.title}</p>
-      <p className="mt-1 text-sm text-muted">{t.consent.text}</p>
+      <p className="mt-1 text-sm text-muted">
+        {t.consent.text}{" "}
+        <Link href={href("/help/privacy")} className="underline">
+          {HELP_NAV[locale].privacy}
+        </Link>
+      </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button size="sm" onClick={() => setConsent("accepted")}>
           {t.consent.accept}

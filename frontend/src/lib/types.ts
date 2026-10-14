@@ -81,6 +81,8 @@ export interface ShopConfig {
   international_shipping: boolean;
   shipping_countries: string[];
   delivery_days: [number, number];
+  handling_days?: [number, number];
+  transit_days?: [number, number];
   tax_enabled: boolean;
   tax_label: string;
   announcement: string | null;

@@ -138,6 +138,8 @@ class PublicConfig(BaseModel):
     international_shipping: bool
     shipping_countries: list[str]
     delivery_days: tuple[int, int]
+    handling_days: tuple[int, int] = (1, 3)  # preparing the order (business days)
+    transit_days: tuple[int, int] = (3, 7)  # with the carrier
     tax_enabled: bool
     tax_label: str
     announcement: str | None

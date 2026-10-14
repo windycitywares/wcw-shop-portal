@@ -204,3 +204,19 @@ test.describe("analytics consent", () => {
     expect(ids).toEqual([null, "declined"]); // declining removes the visitor id
   });
 });
+
+test.describe("help pages", () => {
+  test("shipping uses the store's live settings; every help page opens in each language", async ({ page }) => {
+    await page.goto("/help/shipping");
+    await expect(page.getByRole("heading", { level: 1, name: "Shipping" })).toBeVisible();
+    await expect(page.getByText("Standard shipping: $8.95 per order.")).toBeVisible();
+    await expect(page.getByText(/Free shipping on orders of \$100\.00 or more/)).toBeVisible();
+    await a11y(page, { enforce: false });
+    for (const path of ["/help/faq", "/help/returns", "/help/privacy", "/help/terms", "/es/help/faq", "/nl/help/privacy"]) {
+      const res = await page.goto(path);
+      expect(res?.status(), path).toBe(200);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    }
+    expect((await page.goto("/help/not-a-topic"))?.status()).toBe(404);
+  });
+});
