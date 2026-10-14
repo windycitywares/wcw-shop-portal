@@ -43,7 +43,8 @@ fs.mkdirSync(new URL("../shots/", import.meta.url), { recursive: true });
 // What a failed attempt was doing: its error, where it stopped, and the steps with their durations.
 function describe(result) {
   if (!result) return "";
-  const err = (result.error?.message ?? result.errors?.[0]?.message ?? "").replace(/\u001b\[[0-9;]*m/g, "").split("\n").slice(0, 12).join("\n");
+  const clean = (m) => (m ?? "").replace(/\u001b\[[0-9;]*m/g, "").split("\n").slice(0, 12).join("\n");
+  const err = (result.errors?.length ? result.errors.slice(0, 2).map((e) => clean(e.message)) : [clean(result.error?.message)]).filter(Boolean).join("\n---\n");
   const loc = result.error?.location ?? result.errors?.[0]?.location;
   const steps = [];
   const walkSteps = (list, depth) => {

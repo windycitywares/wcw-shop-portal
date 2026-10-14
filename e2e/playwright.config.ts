@@ -20,6 +20,10 @@ export default defineConfig({
     ? [["list"], ["html", { open: "never" }], ["json", { outputFile: "test-results/results.json" }]]
     : [["list"]],
   use: {
+    // A stuck click or fill fails on its own after 10 s with a "waiting for <locator>" log, instead of
+    // running into the 45 s test timeout, which says nothing about where the test was.
+    actionTimeout: 10_000,
+    navigationTimeout: 20_000,
     baseURL: process.env.E2E_BASE_URL || "http://localhost:3000",
     viewport: { width: 1440, height: 900 },
     trace: "retain-on-failure",
