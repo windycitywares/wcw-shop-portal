@@ -68,7 +68,8 @@ type Impact = "minor" | "moderate" | "serious" | "critical";
  * otherwise they are listed on the test report without failing it.
  */
 export async function a11y(page: Page, { enforce = true, include }: { enforce?: boolean; include?: string } = {}) {
-  let builder = new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]);
+  // axe-core/playwright can resolve a different playwright-core than @playwright/test; the runtime API is the same.
+  let builder = new AxeBuilder({ page: page as never }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]);
   if (include) builder = builder.include(include);
   const results = await builder.analyze();
   const bad = results.violations.filter((v) => (["serious", "critical"] as Impact[]).includes(v.impact as Impact));
