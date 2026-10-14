@@ -7,8 +7,8 @@ test.describe("signing in", () => {
   test("a wrong password is refused with a clear message", async ({ page }) => {
     const seen = watch(page, [{ status: 401 }]);
     await page.goto("/login");
-    await page.getByLabel("Email").fill(ADMIN_EMAIL);
-    await page.getByLabel("Password").fill("definitely-not-the-password");
+    await page.getByLabel("Email", { exact: true }).fill(ADMIN_EMAIL);
+    await page.getByLabel("Password", { exact: true }).fill("definitely-not-the-password");
     await page.getByRole("button", { name: "Sign in" }).click();
     await expect(page.locator("main").getByRole("alert")).toBeVisible();
     await expect(page).toHaveURL(/\/login/);
@@ -18,8 +18,8 @@ test.describe("signing in", () => {
   test("the admin signs in, lands on the dashboard and can sign out", async ({ page }) => {
     const seen = watch(page);
     await page.goto("/login");
-    await page.getByLabel("Email").fill(ADMIN_EMAIL);
-    await page.getByLabel("Password").fill(ADMIN_PASSWORD);
+    await page.getByLabel("Email", { exact: true }).fill(ADMIN_EMAIL);
+    await page.getByLabel("Password", { exact: true }).fill(ADMIN_PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
     await expect(page).toHaveURL(/\/admin$/);
     await expect(page.locator("#admin-main h1")).toBeVisible();
@@ -44,8 +44,8 @@ test.describe("signing in", () => {
     const { id } = (await created.json()) as { id: number };
     try {
       await page.goto("/login");
-      await page.getByLabel("Email").fill(email);
-      await page.getByLabel("Password").fill(password);
+      await page.getByLabel("Email", { exact: true }).fill(email);
+      await page.getByLabel("Password", { exact: true }).fill(password);
       await page.getByRole("button", { name: "Sign in" }).click();
       await expect(page).toHaveURL(/\/account/);
       await page.goto("/admin");

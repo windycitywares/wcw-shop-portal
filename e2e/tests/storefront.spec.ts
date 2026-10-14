@@ -73,7 +73,7 @@ test.describe("the cart", () => {
 
     const drawer = page.getByRole("dialog", { name: "Your cart" });
     await expect(drawer).toBeVisible();
-    await expect(drawer.getByText(PRODUCT)).toBeVisible();
+    await expect(drawer.getByRole("link", { name: PRODUCT })).toBeVisible();
     await expect(drawer.getByText("$28.00").first()).toBeVisible();
     await drawer.getByRole("link", { name: "View cart" }).click();
 

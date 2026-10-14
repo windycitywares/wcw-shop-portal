@@ -29,8 +29,10 @@ test("add a team member, change their role and switch the account off", async ({
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
   await expect(row.getByLabel(`Role for ${email}`)).toHaveValue("publisher");
 
-  await row.getByLabel(`Account active for ${email}`).uncheck();
+  // A controlled checkbox: it flips once the API has saved, so click and wait for the result.
+  await row.getByLabel(`Account active for ${email}`).click();
   await expect(row.getByText("Disabled")).toBeVisible();
+  await expect(row.getByLabel(`Account active for ${email}`)).not.toBeChecked();
   seen.expectClean();
 });
 

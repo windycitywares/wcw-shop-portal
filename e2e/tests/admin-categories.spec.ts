@@ -1,7 +1,22 @@
 import { expect, test } from "@playwright/test";
-import { adminReady, adminState, unique, watch } from "./support";
+import { adminApi, adminReady, adminState, unique, watch } from "./support";
 
 test.use({ storageState: adminState });
+
+/** If a test fails half-way, don't leave its categories behind for the next run. */
+test.afterEach(async () => {
+  const api = await adminApi();
+  try {
+    type Node = { id: number; name: string; children: Node[] };
+    const tree = (await (await api.get("categories/tree")).json()) as Node[];
+    const leftovers: Node[] = [];
+    const walk = (nodes: Node[]) => nodes.forEach((n) => (walk(n.children), n.name.startsWith("E2E ") && leftovers.push(n)));
+    walk(tree); // children are pushed before their parents
+    for (const n of leftovers) await api.delete(`categories/${n.id}`);
+  } finally {
+    await api.dispose();
+  }
+});
 
 test("add, edit, reorder and delete a category", async ({ page }) => {
   const seen = watch(page);
@@ -25,7 +40,7 @@ test("add, edit, reorder and delete a category", async ({ page }) => {
   await edit.getByLabel("Visible in the shop").uncheck();
   await edit.getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
-  await expect(tree.getByText("Hidden")).toBeVisible();
+  await expect(tree.getByRole("listitem").filter({ has: names(name) }).getByText("Hidden")).toBeVisible();
 
   // Move up (it was added last among the top-level categories)
   const order = async () => (await tree.getByRole("listitem").allInnerTexts()).map((t) => t.split("\n")[0]);
