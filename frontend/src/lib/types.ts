@@ -148,3 +148,49 @@ export interface ImportSummary {
   errors: { row: number; title: string | null; error: string }[];
   warnings: string[];
 }
+
+/** POST /cart/quote — the cart priced by the server (the same rules checkout uses). */
+export interface QuoteLine {
+  product_id: number;
+  parent_id: number | null;
+  slug: string;
+  sku: string;
+  title: string;
+  variant: string | null;
+  image: string | null;
+  options: Record<string, string>;
+  quantity: number;
+  unit_price: number;
+  list_price: number;
+  line_total: number;
+  line_discount: number;
+  on_sale: boolean;
+  sale_label: string | null;
+  stock_left: number | null;
+}
+
+export interface Quote {
+  currency: string;
+  lines: QuoteLine[];
+  item_count: number;
+  subtotal: number;
+  list_subtotal: number;
+  sale_savings: number;
+  discounts: { type: "rule" | "coupon" | "free_shipping"; label: string; amount: number; code: string | null }[];
+  discount_total: number;
+  shipping: {
+    amount: number;
+    free: boolean;
+    reason: string;
+    free_threshold: number | null;
+    remaining_for_free: number | null;
+    deliverable: boolean;
+  };
+  tax: { label: string; rate_percent: number; amount: number } | null;
+  tax_pending: boolean;
+  total: number;
+  coupon: { code: string; valid: boolean; applied: boolean; message: string | null; reason: string | null } | null;
+  rewards: { name: string; kind: string; value: number; remaining_amount: number | null; remaining_qty: number | null }[];
+  messages: string[];
+  blocking: boolean;
+}
