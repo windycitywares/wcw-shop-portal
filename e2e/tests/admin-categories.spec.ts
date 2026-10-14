@@ -40,7 +40,8 @@ test("add, edit, reorder and delete a category", async ({ page }) => {
   await edit.getByLabel("Visible in the shop").uncheck();
   await edit.getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
-  await expect(tree.getByRole("listitem").filter({ has: names(name) }).getByText("Hidden")).toBeVisible();
+  // `has` must be relative to the list item, so build it from the page rather than from `tree`.
+  await expect(tree.getByRole("listitem").filter({ has: page.getByTestId("category-name").filter({ hasText: name }) }).getByText("Hidden")).toBeVisible();
 
   // Move up (it was added last among the top-level categories)
   const order = async () => (await tree.getByRole("listitem").allInnerTexts()).map((t) => t.split("\n")[0]);
