@@ -9,7 +9,14 @@ export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 
 const root = path.join(__dirname, "..");
 export const adminState = path.join(root, ".auth", "admin.json");
-export const signedOut = { cookies: [], origins: [] };
+export const BASE_URL = (process.env.E2E_BASE_URL || "http://localhost:3000").replace(/\/$/, "");
+/** Signed out, with the analytics banner already answered ("No thanks") so it never covers what a test clicks. */
+export const signedOut = {
+  cookies: [],
+  origins: [{ origin: BASE_URL, localStorage: [{ name: "wcw-consent", value: "declined" }] }],
+};
+/** Signed out and the banner not answered yet (a first visit). */
+export const firstVisit = { cookies: [], origins: [] };
 const shotsDir = path.join(root, "shots");
 
 /** A name that is unique per run, so repeated runs against the same database never collide. */

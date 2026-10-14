@@ -282,6 +282,14 @@ const es: Dictionary = {
     recent: "Vistos recientemente",
     alsoBought: "Otros clientes también compraron",
   },
+  consent: {
+    title: "Ayúdanos a mejorar la tienda",
+    text: "Con tu permiso contamos las visitas y lo que se mira, de forma privada: sin anuncios, sin seguimiento en otros sitios y sin guardar direcciones IP.",
+    accept: "Aceptar",
+    decline: "No, gracias",
+    settings: "Opciones de analítica",
+    label: "Opción de privacidad",
+  },
   cart: {
     couponLabel: "Código de descuento",
     couponApply: "Aplicar",

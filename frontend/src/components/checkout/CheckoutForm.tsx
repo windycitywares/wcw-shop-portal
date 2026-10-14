@@ -11,6 +11,7 @@ import { ApiRequestError, apiFetch } from "@/lib/client-api";
 import { newIdempotencyKey } from "@/lib/orders";
 import type { CheckoutResult, Quote, ShopConfig } from "@/lib/types";
 import { cn, formatPrice } from "@/lib/utils";
+import { track, visitSessionId } from "@/lib/analytics";
 import { CartTotals, CouponForm } from "@/components/cart/CartSummary";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
@@ -99,6 +100,12 @@ export function CheckoutForm() {
   const [problem, setProblem] = useState<string | null>(null);
   const [stage, setStage] = useState<"form" | "placing" | "redirecting">("form");
   const idempotencyKey = useRef(newIdempotencyKey());
+
+  useEffect(() => {
+    track("begin_checkout", { data: { items: lines.length } });
+    // once per visit to the checkout page
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     apiFetch<ShopConfig>(`/shop/config?lang=${locale}`)
@@ -234,6 +241,7 @@ export function CheckoutForm() {
           captcha_token: captcha,
           idempotency_key: idempotencyKey.current,
           cart_token: readToken() ?? undefined,
+          session_id: visitSessionId(),
           marketing_opt_in: marketing,
           reminders_ok: reminders,
           save_address: !!user && savedId === "new" && saveAddress,

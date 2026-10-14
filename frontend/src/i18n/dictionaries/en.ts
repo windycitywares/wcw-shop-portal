@@ -279,6 +279,14 @@ const en = {
     recent: "Recently viewed",
     alsoBought: "Customers also bought",
   },
+  consent: {
+    title: "Help us improve the shop",
+    text: "With your permission we count visits and what people look at, privately: no ads, no tracking across other sites, and no IP addresses stored.",
+    accept: "Accept",
+    decline: "No thanks",
+    settings: "Analytics choices",
+    label: "Privacy choice",
+  },
   cart: {
     couponLabel: "Discount code",
     couponApply: "Apply",

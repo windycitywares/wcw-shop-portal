@@ -277,6 +277,14 @@ const nl: Dictionary = {
     recent: "Onlangs bekeken",
     alsoBought: "Andere klanten kochten ook",
   },
+  consent: {
+    title: "Help ons de winkel te verbeteren",
+    text: "Met je toestemming tellen we bezoeken en wat er bekeken wordt, privacyvriendelijk: geen advertenties, geen volgen op andere sites en we bewaren geen IP-adressen.",
+    accept: "Accepteren",
+    decline: "Nee, bedankt",
+    settings: "Keuzes voor statistieken",
+    label: "Privacykeuze",
+  },
   cart: {
     couponLabel: "Kortingscode",
     couponApply: "Toepassen",

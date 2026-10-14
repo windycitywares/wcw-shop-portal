@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { useAuth } from "@/lib/auth";
 import { ApiRequestError } from "@/lib/client-api";
+import { track } from "@/lib/analytics";
 import { notifyMe } from "@/lib/engagement";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
@@ -48,6 +49,7 @@ export function NotifyMe({ productId }: { productId: number }) {
             setProblem(null);
             try {
               await notifyMe(productId, email.trim(), locale);
+              track("notify_me", { product_id: productId });
               setState("done");
             } catch (err) {
               setProblem(err instanceof ApiRequestError ? err.message : t.auth.error);

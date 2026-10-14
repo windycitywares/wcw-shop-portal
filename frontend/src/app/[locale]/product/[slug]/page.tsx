@@ -10,6 +10,7 @@ import { ProductGrid } from "@/components/catalog/ProductCard";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { PurchasePanel } from "@/components/catalog/PurchasePanel";
 import { JsonLd, breadcrumbLd, productLd } from "@/components/seo/JsonLd";
+import { TrackOnView } from "@/components/analytics/TrackOnView";
 import { MiniCards } from "@/components/product/MiniCards";
 import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { Reviews } from "@/components/product/Reviews";
@@ -130,6 +131,7 @@ export default async function ProductPage({ params }: Props) {
         </section>
       )}
 
+      <TrackOnView type="product_view" productId={product.id} value={displayPrice(product).amount} />
       <Reviews slug={product.slug} />
 
       <MiniCards

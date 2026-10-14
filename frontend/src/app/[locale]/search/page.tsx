@@ -24,6 +24,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
       locale={locale}
       title={q ? fmt(t.listing.resultsFor, { q }) : t.listing.searchTitle}
       searchParams={sp}
+      searchTerm={q || undefined}
       path="/search"
       breadcrumb={[{ label: t.nav.home, href: localePath(locale, "/") }, { label: t.listing.searchTitle }]}
     />

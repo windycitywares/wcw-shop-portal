@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { a11y, expectNoHorizontalScroll, signedOut, watch } from "./support";
+import { a11y, expectNoHorizontalScroll, firstVisit, signedOut, watch } from "./support";
 
 test.use({ storageState: signedOut });
 
@@ -172,5 +172,34 @@ test.describe("contact and account pages", () => {
     const res = await page.goto("/this-page-does-not-exist");
     expect(res?.status()).toBe(404);
     await expect(page.getByText("We couldn’t find that page")).toBeVisible();
+  });
+});
+
+test.describe("analytics consent", () => {
+  test.use({ storageState: firstVisit });
+
+  test("nothing is sent before the visitor chooses; accepting starts counting, the footer link reopens the choice", async ({ page }) => {
+    const sent: string[] = [];
+    page.on("request", (r) => {
+      if (/\/events(\/consent)?$/.test(new URL(r.url()).pathname)) sent.push(new URL(r.url()).pathname);
+    });
+    await page.goto("/");
+    const banner = page.getByRole("region", { name: "Privacy choice" });
+    await expect(banner).toBeVisible();
+    await page.waitForTimeout(500);
+    expect(sent).toEqual([]); // no tracking before a decision
+    await a11y(page, { enforce: false });
+
+    const events = page.waitForRequest((r) => new URL(r.url()).pathname.endsWith("/events"), { timeout: 15000 });
+    await banner.getByRole("button", { name: "Accept" }).click();
+    await expect(banner).toBeHidden();
+    await events; // the page view is sent within a few seconds
+    expect(sent.some((p) => p.endsWith("/events/consent"))).toBe(true);
+
+    await page.getByRole("button", { name: "Analytics choices" }).click();
+    await expect(page.getByRole("region", { name: "Privacy choice" })).toBeVisible();
+    await page.getByRole("button", { name: "No thanks" }).click();
+    const ids = await page.evaluate(() => [localStorage.getItem("wcw-vid"), localStorage.getItem("wcw-consent")]);
+    expect(ids).toEqual([null, "declined"]); // declining removes the visitor id
   });
 });
