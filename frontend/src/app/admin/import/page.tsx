@@ -7,6 +7,11 @@ import { apiFetch, downloadFile } from "@/lib/client-api";
 import type { ImporterInfo, ImportPreview, ImportSummary } from "@/lib/types";
 import { formatAttribute, formatPrice } from "@/lib/utils";
 import { useCategoryTree } from "@/components/admin/useCategoryOptions";
+import { DataTable, type Column } from "@/components/admin/ui/DataTable";
+import { Icon } from "@/components/admin/ui/Icon";
+import { PageHeader } from "@/components/admin/ui/PageHeader";
+import { Panel, PanelBody, PanelHeader } from "@/components/admin/ui/Panel";
+import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Field, Select } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
@@ -32,6 +37,7 @@ export default function ImportPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState<"" | "preview" | "import">("");
   const fileInput = useRef<HTMLInputElement>(null);
+  const { push } = useToast();
 
   useEffect(() => {
     apiFetch<ImporterInfo[]>("/imports/sources").then(setSources, (e) => setError(e.message));
@@ -70,8 +76,10 @@ export default function ImportPage() {
     fd.append("publish", String(publish));
     fd.append("update_existing", String(updateExisting));
     try {
-      setSummary(await apiFetch<ImportSummary>("/imports", { method: "POST", body: fd }));
+      const done = await apiFetch<ImportSummary>("/imports", { method: "POST", body: fd });
+      setSummary(done);
       setPreview(null);
+      push({ title: "Import finished", description: `${done.created} created, ${done.updated} updated` });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Import failed");
     } finally {
@@ -87,19 +95,48 @@ export default function ImportPage() {
     }
   }
 
+  const previewColumns: Column<ImportPreview["rows"][number]>[] = [
+    { key: "row", header: "Row", cell: (r) => <span className="num text-muted">{r.row}</span> },
+    {
+      key: "title",
+      header: "Title",
+      cell: (r) => (
+        <>
+          <span className="block max-w-[22rem] truncate">{r.title}</span>
+          {r.category && <span className="block text-xs text-muted">{r.category}</span>}
+        </>
+      ),
+    },
+    { key: "sku", header: "SKU", hide: "sm", cell: (r) => <span className="font-mono text-xs">{r.sku ?? "—"}</span> },
+    { key: "price", header: "Price", align: "right", cell: (r) => <span className="num">{formatPrice(r.price)}</span> },
+    { key: "qty", header: "Qty", align: "right", hide: "sm", cell: (r) => <span className="num">{r.quantity ?? "—"}</span> },
+    { key: "images", header: "Images", align: "right", hide: "md", cell: (r) => <span className="num">{r.images}</span> },
+    { key: "variants", header: "Variants", align: "right", hide: "md", cell: (r) => <span className="num">{r.variants || "—"}</span> },
+    {
+      key: "attrs",
+      header: "Details",
+      hide: "lg",
+      cell: (r) => (
+        <span className="block max-w-[20rem] truncate text-xs text-muted">
+          {Object.entries(r.attributes)
+            .map(([k, v]) => `${k}: ${formatAttribute(v)}`)
+            .join("; ") || "—"}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <div className="max-w-4xl">
-      <h1 className="text-4xl">Import &amp; export</h1>
-      <p className="mt-2 text-muted">
-        Bring in listings from Etsy, Amazon or a spreadsheet. Re-importing the same file updates products instead of
-        duplicating them.
-      </p>
+      <PageHeader
+        title="Import and export"
+        description="Bring in listings from Etsy, Amazon or a spreadsheet. Re-importing the same file updates products instead of duplicating them."
+      />
 
-      <section aria-labelledby="import-heading" className="mt-8 rounded-[var(--radius-card)] border border-line bg-surface p-6">
-        <h2 id="import-heading" className="text-2xl">
-          Import products
-        </h2>
-        <div className="mt-5 grid gap-5 sm:grid-cols-2">
+      <Panel aria-label="Import products">
+        <PanelHeader title="Import products" />
+        <PanelBody>
+        <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Source">
             {(p) => (
               <Select
@@ -131,7 +168,7 @@ export default function ImportPage() {
                   setPreview(null);
                   setSummary(null);
                 }}
-                className="block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-sand file:px-4 file:py-2 file:text-sm file:font-medium"
+                className="block w-full text-sm file:mr-3 file:rounded-[var(--radius-control)] file:border-0 file:bg-sand file:px-3 file:py-1.5 file:text-sm file:font-medium"
               />
             )}
           </Field>
@@ -153,12 +190,12 @@ export default function ImportPage() {
           </Field>
           <div className="space-y-3 pt-7 text-sm">
             <label className="flex items-center gap-2.5">
-              <input type="checkbox" checked={updateExisting} onChange={(e) => setUpdateExisting(e.target.checked)} className="size-4" />
+              <input type="checkbox" checked={updateExisting} onChange={(e) => setUpdateExisting(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
               Update products that were already imported
             </label>
             {can("catalog:publish") ? (
               <label className="flex items-center gap-2.5">
-                <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} className="size-4" />
+                <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
                 Publish immediately (otherwise imported as drafts)
               </label>
             ) : (
@@ -168,10 +205,10 @@ export default function ImportPage() {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <Button variant="secondary" onClick={onPreview} disabled={!file || !!busy}>
+          <Button variant="secondary" size="sm" className="h-9" onClick={onPreview} disabled={!file || !!busy}>
             {busy === "preview" ? "Reading file…" : "Preview"}
           </Button>
-          <Button onClick={onImport} disabled={!file || !!busy}>
+          <Button size="sm" className="h-9" onClick={onImport} disabled={!file || !!busy}>
             {busy === "import" ? "Importing…" : "Import"}
           </Button>
         </div>
@@ -221,65 +258,26 @@ export default function ImportPage() {
               Found <strong>{preview.total}</strong> products
               {preview.total > preview.rows.length ? ` (showing first ${preview.rows.length})` : ""}. Nothing has been saved yet.
             </p>
-            <div className="mt-3 max-h-[28rem] overflow-auto rounded-lg border border-line">
-              <table className="w-full text-left text-sm">
-                <caption className="sr-only">Import preview</caption>
-                <thead className="sticky top-0 bg-sand text-xs uppercase tracking-wide">
-                  <tr>
-                    <th scope="col" className="px-3 py-2">Row</th>
-                    <th scope="col" className="px-3 py-2">Title</th>
-                    <th scope="col" className="px-3 py-2">SKU</th>
-                    <th scope="col" className="px-3 py-2">Price</th>
-                    <th scope="col" className="px-3 py-2">Qty</th>
-                    <th scope="col" className="px-3 py-2">Images</th>
-                    <th scope="col" className="px-3 py-2">Variants</th>
-                    <th scope="col" className="px-3 py-2">Attributes</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {preview.rows.map((r) => (
-                    <tr key={r.row}>
-                      <td className="px-3 py-2 text-muted">{r.row}</td>
-                      <td className="px-3 py-2">
-                        {r.title}
-                        {r.category && <span className="block text-xs text-muted">{r.category}</span>}
-                      </td>
-                      <td className="px-3 py-2 font-mono text-xs">{r.sku ?? "—"}</td>
-                      <td className="px-3 py-2">{formatPrice(r.price)}</td>
-                      <td className="px-3 py-2">{r.quantity ?? "—"}</td>
-                      <td className="px-3 py-2">{r.images}</td>
-                      <td className="px-3 py-2">{r.variants || "—"}</td>
-                      <td className="px-3 py-2 text-xs text-muted">
-                        {Object.entries(r.attributes)
-                          .map(([k, v]) => `${k}: ${formatAttribute(v)}`)
-                          .join("; ") || "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="mt-3 max-h-[28rem] overflow-auto rounded-[var(--radius-card)] border border-line">
+              <DataTable caption="Import preview" columns={previewColumns} rows={preview.rows} rowKey={(r) => r.row} />
             </div>
           </div>
         )}
-      </section>
+        </PanelBody>
+      </Panel>
 
-      <section aria-labelledby="export-heading" className="mt-6 rounded-[var(--radius-card)] border border-line bg-surface p-6">
-        <h2 id="export-heading" className="text-2xl">
-          Manage in Excel
-        </h2>
-        <p className="mt-2 text-sm text-muted">
-          Download the whole catalog, edit prices, stock or descriptions in Excel, then import the file back with source
-          “Spreadsheet”. Products are matched by SKU.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Button variant="secondary" onClick={() => download("/products/export.xlsx", "wcw-catalog.xlsx")}>
+      <Panel aria-label="Manage in Excel" className="mt-6">
+        <PanelHeader title="Manage in Excel" description="Download the catalog, edit prices, stock or descriptions, then import the file back with source “Spreadsheet”. Products are matched by SKU." />
+        <PanelBody className="flex flex-wrap gap-3">
+          <Button variant="secondary" size="sm" className="h-9" onClick={() => download("/products/export.xlsx", "wcw-catalog.xlsx")}>
+            <Icon name="download" className="size-4" />
             Export catalog (.xlsx)
           </Button>
-          <Button variant="ghost" onClick={() => download("/imports/template.xlsx", "wcw-import-template.xlsx")}>
+          <Button variant="ghost" size="sm" className="h-9" onClick={() => download("/imports/template.xlsx", "wcw-import-template.xlsx")}>
             Download blank template
           </Button>
-        </div>
-      </section>
+        </PanelBody>
+      </Panel>
     </div>
   );
 }

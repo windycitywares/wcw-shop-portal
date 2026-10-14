@@ -1,26 +1,90 @@
 "use client";
 
+import * as Dialog from "@radix-ui/react-dialog";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { isStaff, useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
-import { Container } from "@/components/ui/misc";
-import { LogoMark } from "@/components/ui/Logo";
+import { Logo } from "@/components/ui/Logo";
+import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
+import { NAV, isActive, titleFor } from "./nav";
+import { Icon } from "./ui/Icon";
+import { Popover } from "./ui/Popover";
+import { ToastProvider } from "./ui/Toast";
 
-const NAV = [
-  { href: "/admin", label: "Dashboard", permission: null },
-  { href: "/admin/products", label: "Products", permission: "catalog:view_unpublished" },
-  { href: "/admin/import", label: "Import / Export", permission: "catalog:import" },
-  { href: "/admin/categories", label: "Categories", permission: "category:manage" },
-  { href: "/admin/users", label: "Users", permission: "users:manage" },
-];
+function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+  const { can } = useAuth();
+  const pathname = usePathname();
+  return (
+    <nav aria-label="Admin" className="flex-1 overflow-y-auto px-3 py-2">
+      {NAV.map((group, gi) => {
+        const items = group.items.filter((i) => !i.permission || can(i.permission));
+        if (items.length === 0) return null;
+        return (
+          <div key={group.label ?? gi} className={gi > 0 ? "mt-5" : undefined}>
+            {group.label && <p className="px-3 pb-1.5 text-xs font-medium text-night-muted/80">{group.label}</p>}
+            <ul className="space-y-0.5">
+              {items.map((item) => {
+                const active = isActive(pathname, item.href);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={onNavigate}
+                      aria-current={active ? "page" : undefined}
+                      className={cn(
+                        "relative flex items-center gap-3 rounded-[var(--radius-control)] px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-offset-0",
+                        active ? "bg-white/10 text-white" : "text-night-muted hover:bg-white/5 hover:text-white",
+                      )}
+                    >
+                      {/* gold marker = where you are */}
+                      {active && <span aria-hidden="true" className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-gold" />}
+                      <Icon name={item.icon} className="size-[1.15rem]" />
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      })}
+    </nav>
+  );
+}
 
-/** Client-side gate for the admin UI. The API enforces every permission independently. */
+function Brand() {
+  return (
+    <Link href="/admin" className="flex items-center gap-2.5 rounded-[var(--radius-control)] px-3 py-1" aria-label="WindyCityWares admin home">
+      <Logo tone="reverse" className="h-8 w-auto" />
+    </Link>
+  );
+}
+
+function SidebarFooter() {
+  return (
+    <div className="border-t border-white/10 px-3 py-3">
+      <a
+        href="/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-3 rounded-[var(--radius-control)] px-3 py-2 text-sm font-medium text-night-muted hover:bg-white/5 hover:text-white"
+      >
+        <Icon name="external" className="size-[1.15rem]" />
+        View the shop
+        <span className="sr-only">(opens in a new tab)</span>
+      </a>
+    </div>
+  );
+}
+
+/** Client-side gate and frame for the admin UI. The API enforces every permission independently. */
 export function AdminShell({ children }: { children: React.ReactNode }) {
-  const { user, loading, can } = useAuth();
+  const { user, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [drawer, setDrawer] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -28,48 +92,110 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     else if (!isStaff(user)) router.replace("/account");
   }, [loading, user, router, pathname]);
 
+  useEffect(() => setDrawer(false), [pathname]);
+  useEffect(() => {
+    document.title = `${titleFor(pathname)} | Admin | WindyCityWares`;
+  }, [pathname]);
+
   if (!user || !isStaff(user)) {
-    return <Container className="py-16 text-muted">Checking access…</Container>;
+    return <div className="grid min-h-dvh place-items-center text-sm text-muted">Checking access…</div>;
   }
 
+  const initials = (user.full_name || user.email).trim().slice(0, 1).toUpperCase();
+
   return (
-    <>
-    <header className="border-b border-line bg-surface">
-      <Container className="flex h-14 items-center justify-between">
-        <Link href="/admin" className="flex items-center gap-2 font-serif text-lg">
-          <LogoMark className="h-8 w-8" />
-          <span>WindyCityWares admin</span>
-        </Link>
-        <Link href="/" className="text-sm text-muted hover:text-ink">View the shop</Link>
-      </Container>
-    </header>
-    <Container className="grid gap-8 py-10 lg:grid-cols-[13rem_1fr]">
-      <nav aria-label="Admin">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
-          Admin · <span className="capitalize">{user.role}</span>
-        </p>
-        <ul className="flex gap-1 overflow-x-auto lg:flex-col">
-          {NAV.filter((n) => !n.permission || can(n.permission)).map((n) => {
-            const active = n.href === "/admin" ? pathname === "/admin" : pathname.startsWith(n.href);
-            return (
-              <li key={n.href}>
-                <Link
-                  href={n.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "block whitespace-nowrap rounded-lg px-3 py-2 text-sm",
-                    active ? "bg-ink text-white" : "hover:bg-sand",
-                  )}
-                >
-                  {n.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-      <div className="min-w-0">{children}</div>
-    </Container>
-    </>
+    <ToastProvider>
+      <a href="#admin-main" className="skip-link">
+        Skip to content
+      </a>
+      <div className="min-h-dvh lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
+        {/* Sidebar: always the dark band, whatever the theme */}
+        <aside className="sticky top-0 hidden h-dvh flex-col bg-night text-night-muted lg:flex">
+          <div className="px-3 pb-3 pt-5">
+            <Brand />
+          </div>
+          <SidebarNav />
+          <SidebarFooter />
+        </aside>
+
+        <div className="flex min-w-0 flex-col">
+          <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-canvas/90 px-4 backdrop-blur sm:px-6 lg:px-8">
+            <Dialog.Root open={drawer} onOpenChange={setDrawer}>
+              <Dialog.Trigger className="-ml-2 grid size-10 place-items-center rounded-full hover:bg-sand lg:hidden">
+                <Icon name="menu" />
+                <span className="sr-only">Open admin menu</span>
+              </Dialog.Trigger>
+              <Dialog.Portal>
+                <Dialog.Overlay className="fixed inset-0 z-50 bg-night/55 lg:hidden" />
+                <Dialog.Content className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-night text-night-muted shadow-xl lg:hidden">
+                  <Dialog.Title className="sr-only">Admin menu</Dialog.Title>
+                  <Dialog.Description className="sr-only">Go to a section of the admin.</Dialog.Description>
+                  <div className="flex items-center justify-between px-3 pb-3 pt-5">
+                    <Brand />
+                    <Dialog.Close className="mr-1 grid size-9 place-items-center rounded-full text-night-muted hover:bg-white/10 hover:text-white">
+                      <Icon name="close" />
+                      <span className="sr-only">Close menu</span>
+                    </Dialog.Close>
+                  </div>
+                  <SidebarNav onNavigate={() => setDrawer(false)} />
+                  <SidebarFooter />
+                </Dialog.Content>
+              </Dialog.Portal>
+            </Dialog.Root>
+
+            <p className="text-sm font-medium text-muted lg:hidden">{titleFor(pathname)}</p>
+
+            <div className="ml-auto flex items-center gap-1">
+              <ThemeSwitcher />
+              <Popover
+                label="Account menu"
+                trigger={
+                  <>
+                    <span aria-hidden="true" className="grid size-6 place-items-center rounded-full bg-accent text-xs font-semibold text-on-accent">
+                      {initials}
+                    </span>
+                    <span className="hidden max-w-32 truncate sm:inline">{user.full_name || user.email}</span>
+                    <Icon name="chevronDown" className="size-4 text-muted" />
+                  </>
+                }
+                triggerClassName="border-transparent bg-transparent hover:border-line"
+                panelClassName="w-60"
+              >
+                {(close) => (
+                  <div>
+                    <div className="px-3 py-2">
+                      <p className="truncate text-sm font-medium">{user.full_name || "Signed in"}</p>
+                      <p className="truncate text-xs text-muted">{user.email}</p>
+                      <p className="mt-1 text-xs capitalize text-muted">{user.role} access</p>
+                    </div>
+                    <div className="border-t border-line pt-1">
+                      <Link href="/account" onClick={close} className="flex items-center gap-2.5 rounded-[var(--radius-control)] px-3 py-2 text-sm hover:bg-sand">
+                        <Icon name="customers" className="size-4 text-muted" />
+                        Your account
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          logout();
+                          router.push("/login");
+                        }}
+                        className="flex w-full items-center gap-2.5 rounded-[var(--radius-control)] px-3 py-2 text-left text-sm hover:bg-sand"
+                      >
+                        <Icon name="logout" className="size-4 text-muted" />
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </Popover>
+            </div>
+          </header>
+
+          <main id="admin-main" tabIndex={-1} className="mx-auto w-full max-w-[88rem] flex-1 px-4 py-6 focus:outline-none sm:px-6 lg:px-8 lg:py-8">
+            {children}
+          </main>
+        </div>
+      </div>
+    </ToastProvider>
   );
 }

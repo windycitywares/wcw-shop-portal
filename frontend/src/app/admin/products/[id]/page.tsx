@@ -9,9 +9,18 @@ import type { ContentStatus, ProductDetail, StockStatus } from "@/lib/types";
 import { STATUS_LABEL, STOCK_LABEL, formatPrice } from "@/lib/utils";
 import { AttributeBuilder, fromRows, toRows, type AttributeRow } from "@/components/admin/AttributeBuilder";
 import { useCategoryTree } from "@/components/admin/useCategoryOptions";
+import { Icon } from "@/components/admin/ui/Icon";
+import { ConfirmDialog } from "@/components/admin/ui/Modal";
+import { PageHeader } from "@/components/admin/ui/PageHeader";
+import { Panel, PanelHeader } from "@/components/admin/ui/Panel";
+import { Pill, type Tone } from "@/components/admin/ui/Pill";
+import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
-import { Alert, Badge } from "@/components/ui/misc";
+import { Alert } from "@/components/ui/misc";
+import { ProductImage } from "@/components/ui/ProductImage";
+
+const STATUS_TONE: Record<ContentStatus, Tone> = { draft: "neutral", in_review: "accent", published: "success", archived: "warning" };
 
 interface FormState {
   title: string;
@@ -80,8 +89,9 @@ export default function ProductEditor() {
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [parentId, setParentId] = useState<number | null>(null);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const { push } = useToast();
 
   useEffect(() => {
     if (isNew) {
@@ -111,7 +121,6 @@ export default function ProductEditor() {
     e.preventDefault();
     setBusy(true);
     setError("");
-    setNotice("");
     const body: Record<string, unknown> = {
       title: form.title.trim(),
       sku: form.sku.trim(),
@@ -138,12 +147,13 @@ export default function ProductEditor() {
     try {
       if (isNew) {
         const created = await apiFetch<ProductDetail>("/products", { method: "POST", body: JSON.stringify(body) });
+        push({ title: "Product created", description: created.title });
         router.replace(`/admin/products/${created.id}`);
       } else {
         const updated = await apiFetch<ProductDetail>(`/products/${id}`, { method: "PATCH", body: JSON.stringify(body) });
         setProduct(updated);
         setForm(fromProduct(updated));
-        setNotice("Saved.");
+        push({ title: "Saved", description: updated.title });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
@@ -154,151 +164,229 @@ export default function ProductEditor() {
 
   async function onDelete() {
     if (!product) return;
-    if (!window.confirm(`Delete “${product.title}”${product.variants.length ? " and its variants" : ""}? This can't be undone.`)) return;
+    setConfirmDelete(false);
     try {
       await apiFetch(`/products/${product.id}`, { method: "DELETE" });
+      push({ title: "Deleted", description: product.title });
       router.replace("/admin/products");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Delete failed");
     }
   }
 
+  const imageUrls = form.images.split("\n").map((u) => u.trim()).filter(Boolean);
+  const onSale = form.compare_at_price !== "" && Number(form.compare_at_price) > Number(form.base_price || 0);
+  const title = isNew ? (parentId ? "New variant" : "New product") : form.title || "Product";
+
   return (
-    <div className="max-w-3xl">
-      <Link href="/admin/products" className="text-sm text-muted hover:text-ink">
-        ← All products
-      </Link>
-      <div className="mt-3 flex flex-wrap items-center gap-3">
-        <h1 className="text-4xl">{isNew ? (parentId ? "New variant" : "New product") : form.title || "Product"}</h1>
-        {product && <Badge>{STATUS_LABEL[product.status]}</Badge>}
-      </div>
-      {product?.status === "published" && (
-        <Link href={`/product/${product.slug}`} className="mt-2 inline-block text-sm text-accent underline">
-          View in shop
-        </Link>
-      )}
-
-      <form onSubmit={onSubmit} className="mt-8 space-y-6">
-        {error && <Alert tone="danger">{error}</Alert>}
-        {notice && <Alert tone="success">{notice}</Alert>}
-
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Title" className="sm:col-span-2">
-            {(p) => <Input {...p} required value={form.title} onChange={set("title")} />}
-          </Field>
-          <Field label="SKU">{(p) => <Input {...p} required value={form.sku} onChange={set("sku")} />}</Field>
-          <Field label="URL slug" hint="Leave blank to generate from the title.">
-            {(p) => <Input {...p} value={form.slug} onChange={set("slug")} pattern="[a-z0-9]+(-[a-z0-9]+)*" />}
-          </Field>
-          <Field label="Price (USD)">
-            {(p) => <Input {...p} required type="number" min={0} step="0.01" value={form.base_price} onChange={set("base_price")} />}
-          </Field>
-          <Field label="Compare-at price" hint="Original price, to show a sale.">
-            {(p) => <Input {...p} type="number" min={0} step="0.01" value={form.compare_at_price} onChange={set("compare_at_price")} />}
-          </Field>
-          <Field label="Stock status">
-            {(p) => (
-              <Select {...p} value={form.stock_status} onChange={set("stock_status")}>
-                {Object.entries(STOCK_LABEL).map(([v, l]) => (
-                  <option key={v} value={v}>
-                    {l}
-                  </option>
-                ))}
-              </Select>
+    <div>
+      <PageHeader
+        back={{ href: "/admin/products", label: "All products" }}
+        title={title}
+        description={
+          product ? (
+            <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
+              <Pill tone={STATUS_TONE[product.status]}>{STATUS_LABEL[product.status]}</Pill>
+              <span className="font-mono text-xs">{product.sku}</span>
+              {product.status === "published" && (
+                <Link href={`/product/${product.slug}`} className="inline-flex items-center gap-1 text-accent underline">
+                  View in shop
+                  <Icon name="external" className="size-3.5" />
+                </Link>
+              )}
+            </span>
+          ) : undefined
+        }
+        actions={
+          <>
+            {product && can("catalog:delete") && (
+              <Button variant="ghost" size="sm" className="h-9 text-danger hover:bg-danger/10" onClick={() => setConfirmDelete(true)}>
+                <Icon name="trash" className="size-4" />
+                Delete
+              </Button>
             )}
-          </Field>
-          <Field label="Quantity">
-            {(p) => <Input {...p} type="number" min={0} value={form.stock_quantity} onChange={set("stock_quantity")} />}
-          </Field>
-          <Field label="Category">
-            {(p) => (
-              <Select {...p} value={form.category_id} onChange={set("category_id")}>
-                <option value="">— None —</option>
-                {options.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.label}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
-          <Field label="Status" hint={can("catalog:publish") ? undefined : "A publisher will review and publish it."}>
-            {(p) => (
-              <Select {...p} value={form.status} onChange={set("status")}>
-                {statusOptions.map((s) => (
-                  <option key={s} value={s}>
-                    {STATUS_LABEL[s]}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
-        </div>
-
-        <Field label="Description">
-          {(p) => <Textarea {...p} rows={6} value={form.description} onChange={set("description")} />}
-        </Field>
-        <Field label="Image URLs" hint="One per line. The first image is the main photo.">
-          {(p) => <Textarea {...p} rows={4} value={form.images} onChange={set("images")} className="font-mono text-xs" />}
-        </Field>
-        <Field label="Tags" hint="Comma separated.">
-          {(p) => <Input {...p} value={form.tags} onChange={set("tags")} />}
-        </Field>
-
-        <AttributeBuilder rows={attrs} onChange={setAttrs} />
-
-        <details className="rounded-lg border border-line p-4">
-          <summary className="cursor-pointer text-sm font-medium">Search engine listing</summary>
-          <div className="mt-4 space-y-4">
-            <Field label="SEO title">{(p) => <Input {...p} maxLength={300} value={form.seo_title} onChange={set("seo_title")} />}</Field>
-            <Field label="SEO description" hint="About 150 characters.">
-              {(p) => <Textarea {...p} maxLength={500} value={form.seo_description} onChange={set("seo_description")} />}
-            </Field>
-          </div>
-        </details>
-
-        <div className="flex flex-wrap items-center gap-3 border-t border-line pt-6">
-          <Button type="submit" disabled={busy}>
-            {busy ? "Saving…" : isNew ? "Create product" : "Save changes"}
-          </Button>
-          {product && can("catalog:delete") && (
-            <Button variant="danger" onClick={onDelete}>
-              Delete
+            <Button type="submit" form="product-form" size="sm" className="h-9" disabled={busy}>
+              {busy ? "Saving…" : isNew ? "Create product" : "Save changes"}
             </Button>
-          )}
+          </>
+        }
+      />
+
+      <form id="product-form" onSubmit={onSubmit} className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
+        {error && (
+          <Alert tone="danger" className="lg:col-span-2">
+            {error}
+          </Alert>
+        )}
+
+        <div className="min-w-0 space-y-6">
+          <Panel>
+            <PanelHeader title="Listing" />
+            <div className="space-y-5 p-5">
+              <Field label="Title">{(p) => <Input {...p} required value={form.title} onChange={set("title")} />}</Field>
+              <Field label="Description" hint="Plain text. Say what it is, what it is made of and how big it is.">
+                {(p) => <Textarea {...p} rows={8} value={form.description} onChange={set("description")} />}
+              </Field>
+            </div>
+          </Panel>
+
+          <Panel>
+            <PanelHeader title="Photos" description="Paste one image address per line. The first is the main photo." />
+            <div className="space-y-4 p-5">
+              {imageUrls.length > 0 && (
+                <ul className="flex flex-wrap gap-2" aria-label="Photo preview">
+                  {imageUrls.slice(0, 8).map((u, i) => (
+                    <li key={`${u}-${i}`} className={`relative size-16 overflow-hidden rounded bg-sand ${i === 0 ? "ring-2 ring-accent" : ""}`}>
+                      <ProductImage src={u} alt="" sizes="64px" />
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Field label="Image URLs">
+                {(p) => <Textarea {...p} rows={4} value={form.images} onChange={set("images")} className="font-mono text-xs" />}
+              </Field>
+            </div>
+          </Panel>
+
+          <Panel>
+            <PanelHeader title="Details and options" description="Size, material and similar facts. Lists such as Red, Blue become choices on the product page." />
+            <div className="space-y-5 p-5">
+              <AttributeBuilder rows={attrs} onChange={setAttrs} />
+              <Field label="Tags" hint="Comma separated. Used for search and related products.">
+                {(p) => <Input {...p} value={form.tags} onChange={set("tags")} />}
+              </Field>
+            </div>
+          </Panel>
+
+          <Panel>
+            <details className="group">
+              <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4">
+                <span>
+                  <span className="block text-base font-semibold">Search engine listing</span>
+                  <span className="block text-sm text-muted">How this product appears in Google. Leave blank to use the title and description.</span>
+                </span>
+                <Icon name="chevronDown" className="size-4 text-muted transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="space-y-4 border-t border-line p-5">
+                <Field label="SEO title">{(p) => <Input {...p} maxLength={300} value={form.seo_title} onChange={set("seo_title")} />}</Field>
+                <Field label="SEO description" hint="About 150 characters.">
+                  {(p) => <Textarea {...p} maxLength={500} value={form.seo_description} onChange={set("seo_description")} />}
+                </Field>
+              </div>
+            </details>
+          </Panel>
         </div>
+
+        <aside className="space-y-6 lg:sticky lg:top-20">
+          <Panel>
+            <PanelHeader title="Status" />
+            <div className="p-5">
+              <Field label="Visibility" hint={can("catalog:publish") ? "Only published products appear in the shop." : "A publisher will review and publish it."}>
+                {(p) => (
+                  <Select {...p} value={form.status} onChange={set("status")}>
+                    {statusOptions.map((s) => (
+                      <option key={s} value={s}>
+                        {STATUS_LABEL[s]}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </Field>
+            </div>
+          </Panel>
+
+          <Panel>
+            <PanelHeader title="Price and stock" />
+            <div className="grid gap-4 p-5">
+              <Field label="Price (USD)">
+                {(p) => <Input {...p} required type="number" min={0} step="0.01" value={form.base_price} onChange={set("base_price")} />}
+              </Field>
+              <Field
+                label="Compare-at price"
+                hint={onSale ? `Shown as a sale: ${Math.round((1 - Number(form.base_price || 0) / Number(form.compare_at_price)) * 100)}% off.` : "The original price. Fill in to show a sale."}
+              >
+                {(p) => <Input {...p} type="number" min={0} step="0.01" value={form.compare_at_price} onChange={set("compare_at_price")} />}
+              </Field>
+              <Field label="Stock status">
+                {(p) => (
+                  <Select {...p} value={form.stock_status} onChange={set("stock_status")}>
+                    {Object.entries(STOCK_LABEL).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </Field>
+              <Field label="Quantity">
+                {(p) => <Input {...p} type="number" min={0} value={form.stock_quantity} onChange={set("stock_quantity")} />}
+              </Field>
+            </div>
+          </Panel>
+
+          <Panel>
+            <PanelHeader title="Organise" />
+            <div className="grid gap-4 p-5">
+              <Field label="Category">
+                {(p) => (
+                  <Select {...p} value={form.category_id} onChange={set("category_id")}>
+                    <option value="">— None —</option>
+                    {options.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </Field>
+              <Field label="SKU">{(p) => <Input {...p} required value={form.sku} onChange={set("sku")} />}</Field>
+              <Field label="URL slug" hint="Leave blank to generate from the title.">
+                {(p) => <Input {...p} value={form.slug} onChange={set("slug")} pattern="[a-z0-9]+(-[a-z0-9]+)*" />}
+              </Field>
+            </div>
+          </Panel>
+        </aside>
       </form>
 
       {product && product.parent_id === null && (
-        <section aria-labelledby="variants-heading" className="mt-12">
-          <div className="flex items-center justify-between">
-            <h2 id="variants-heading" className="text-2xl">
-              Variants
-            </h2>
-            {can("catalog:create") && (
-              <Link href={`/admin/products/new?parent=${product.id}`} className="text-sm text-accent underline">
-                Add variant
-              </Link>
-            )}
-          </div>
+        <Panel aria-label="Variants" className="mt-6">
+          <PanelHeader
+            title="Variants"
+            description="Separate SKUs or prices for each option, such as Large in Walnut."
+            actions={
+              can("catalog:create") ? (
+                <Link href={`/admin/products/new?parent=${product.id}`} className="inline-flex h-8 items-center gap-1 rounded-[var(--radius-control)] border border-line px-2.5 text-sm font-medium hover:border-ink/40">
+                  <Icon name="plus" className="size-4" />
+                  Add variant
+                </Link>
+              ) : undefined
+            }
+          />
           {product.variants.length === 0 ? (
-            <p className="mt-3 text-sm text-muted">
-              No variants. Add one for each option with its own SKU or price (e.g. Large / Walnut).
-            </p>
+            <p className="px-5 py-6 text-sm text-muted">No variants yet.</p>
           ) : (
-            <ul className="mt-4 divide-y divide-line rounded-lg border border-line bg-surface">
+            <ul className="divide-y divide-line">
               {product.variants.map((v) => (
-                <li key={v.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                <li key={v.id} className="flex items-center justify-between px-5 py-3 text-sm">
                   <Link href={`/admin/products/${v.id}`} className="hover:underline">
                     {v.title} <span className="font-mono text-xs text-muted">{v.sku}</span>
                   </Link>
-                  <span>{formatPrice(v.base_price, v.currency)}</span>
+                  <span className="num">{formatPrice(v.base_price, v.currency)}</span>
                 </li>
               ))}
             </ul>
           )}
-        </section>
+        </Panel>
       )}
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title={`Delete “${product?.title ?? ""}”?`}
+        message={product?.variants.length ? "Its variants will be deleted too. This can't be undone." : "This can't be undone."}
+        confirmLabel="Delete product"
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={onDelete}
+      />
     </div>
   );
 }
