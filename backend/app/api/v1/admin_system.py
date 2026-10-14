@@ -1,8 +1,8 @@
-"""Store settings and the audit log (the review queue follows with reviews)."""
+"""Store settings, the review queue and the audit log."""
 
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Body, Depends, Query, Response
+from fastapi import APIRouter, Body, Depends, Query, Response, status
 
 from app.api.deps import SessionDep, require
 from app.core import mailer
@@ -10,12 +10,15 @@ from app.core.permissions import Permission
 from app.models.user import User
 from app.schemas.audit import AuditListOut, AuditOut
 from app.schemas.common import Message
+from app.schemas.engagement import ReviewAdminListOut, ReviewAdminOut, ReviewModerateIn
 from app.schemas.settings import AdminSettingsOut
 from app.services import audit
+from app.services.engagement import ReviewService
 from app.services.settings import SettingsService
 
 router = APIRouter(prefix="/admin", tags=["admin: system"])
 SettingsStaff = Annotated[User, Depends(require(Permission.SETTINGS_MANAGE))]
+ReviewStaff = Annotated[User, Depends(require(Permission.REVIEWS_MODERATE))]
 AuditStaff = Annotated[User, Depends(require(Permission.AUDIT_VIEW))]
 
 
@@ -42,6 +45,30 @@ async def send_test_email(session: SessionDep, user: SettingsStaff):
         text="If you can read this, outgoing email from the shop works.\n\nYou can delete this message.",
     ))
     return Message(detail=f"Test email sent to {user.email}")
+
+
+# ---- reviews ----------------------------------------------------------------------------------
+
+
+@router.get("/reviews", response_model=ReviewAdminListOut)
+async def list_reviews(
+    response: Response, session: SessionDep, _: ReviewStaff,
+    status_: str | None = Query(None, alias="status", pattern="^(pending|approved|rejected)$"),
+    q: str | None = Query(None, max_length=100), page: int = Query(1, ge=1, le=10_000), page_size: int = Query(25, ge=1, le=100),
+):
+    response.headers["Cache-Control"] = "no-store"
+    return await ReviewService(session).admin_list(status_, q, page, page_size)
+
+
+@router.put("/reviews/{review_id}", response_model=ReviewAdminOut)
+async def moderate_review(review_id: int, session: SessionDep, user: ReviewStaff, data: ReviewModerateIn):
+    """Approve, reject or move a review back to pending, and optionally answer it publicly."""
+    return await ReviewService(session).moderate(review_id, data, user)
+
+
+@router.delete("/reviews/{review_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_review(review_id: int, session: SessionDep, user: ReviewStaff):
+    await ReviewService(session).delete(review_id, user)
 
 
 # ---- audit log --------------------------------------------------------------------------------
