@@ -25,6 +25,13 @@ export function MegaMenu({ tree }: { tree: CategoryNode[] }) {
             </Link>
           </NavigationMenu.Link>
         </NavigationMenu.Item>
+        <NavigationMenu.Item>
+          <NavigationMenu.Link asChild>
+            <Link href={href("/deals")} className={linkClass}>
+              {t.nav.deals}
+            </Link>
+          </NavigationMenu.Link>
+        </NavigationMenu.Item>
         {tree.map((node) =>
           node.children.length === 0 ? (
             <NavigationMenu.Item key={node.id}>

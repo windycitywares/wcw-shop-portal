@@ -11,6 +11,20 @@ export function formatPrice(amount: number, currency = "USD", locale: Locale = "
   return new Intl.NumberFormat(intlLocale[locale], { style: "currency", currency }).format(amount);
 }
 
+/**
+ * What the shopper pays now and the crossed-out price beside it: a running sale wins over the
+ * stored "compare at" price (the API sets sale_price while a sale is on).
+ */
+export function displayPrice(p: { base_price: number; compare_at_price: number | null; sale_price?: number | null }) {
+  if (p.sale_price != null && p.sale_price < p.base_price) return { amount: p.sale_price, compareAt: p.base_price };
+  return { amount: p.base_price, compareAt: p.compare_at_price };
+}
+
+/** Whole-number percentage saved, or 0. */
+export function percentOff(amount: number, compareAt: number | null | undefined) {
+  return compareAt && compareAt > amount ? Math.round((1 - amount / compareAt) * 100) : 0;
+}
+
 export function attributeList(value: AttributeValue): string[] {
   return Array.isArray(value) ? value.map(String) : [String(value)];
 }

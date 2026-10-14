@@ -62,6 +62,35 @@ export interface Product {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  rating_avg?: number;
+  rating_count?: number;
+  /** Set while a sale is running (computed by the API, not stored). */
+  sale_price?: number | null;
+  sale_label?: string | null;
+  sale_ends_at?: string | null;
+  badges?: ProductBadge[];
+}
+
+export type ProductBadge = "sale" | "best_seller" | "new" | "low_stock";
+
+/** Store settings the storefront needs (GET /shop/config). */
+export interface ShopConfig {
+  currency: string;
+  free_shipping_threshold: number | null;
+  flat_shipping_rate: number;
+  international_shipping: boolean;
+  shipping_countries: string[];
+  delivery_days: [number, number];
+  tax_enabled: boolean;
+  tax_label: string;
+  announcement: string | null;
+  welcome_percent: number | null;
+  payment_methods: string[];
+  guest_checkout: boolean;
+  max_quantity_per_line: number;
+  low_stock_threshold: number;
+  analytics_enabled: boolean;
+  turnstile_site_key: string | null;
 }
 
 export interface ProductDetail extends Product {

@@ -5,7 +5,7 @@
  */
 import "server-only";
 import { defaultLocale, type Locale } from "@/i18n/config";
-import type { CategoryDetail, CategoryNode, Facets, Page, Product, ProductDetail } from "./types";
+import type { CategoryDetail, CategoryNode, Facets, Page, Product, ProductDetail, ShopConfig } from "./types";
 
 const API_URL = (
   process.env.API_URL ||
@@ -102,4 +102,13 @@ export async function getAllProducts(max = 5000): Promise<Product[]> {
     if (res.items.length < 100) break;
   }
   return out;
+}
+
+/** Store settings for the storefront (shipping promise, banner, payment choices). Null when the API is unreachable. */
+export async function getShopConfig(lang?: Locale): Promise<ShopConfig | null> {
+  try {
+    return await get<ShopConfig>(withLang("/shop/config", lang), 60);
+  } catch {
+    return null;
+  }
 }

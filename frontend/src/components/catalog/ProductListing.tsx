@@ -12,10 +12,10 @@ import { SortSelect } from "./SortSelect";
 export type SearchParams = Record<string, string | string[] | undefined>;
 
 const PAGE_SIZE = 24;
-const PASSTHROUGH = ["q", "min_price", "max_price", "in_stock", "sort", "page"];
+const PASSTHROUGH = ["q", "min_price", "max_price", "in_stock", "on_sale", "min_rating", "sort", "page"];
 
 /** Converts Next's searchParams into the API's query string. */
-function toApiParams(searchParams: SearchParams, category?: string): URLSearchParams {
+function toApiParams(searchParams: SearchParams, category?: string, fixed?: Record<string, string>): URLSearchParams {
   const params = new URLSearchParams();
   for (const [key, raw] of Object.entries(searchParams)) {
     const values = Array.isArray(raw) ? raw : raw ? [raw] : [];
@@ -24,6 +24,7 @@ function toApiParams(searchParams: SearchParams, category?: string): URLSearchPa
     }
   }
   if (category) params.set("category", category);
+  for (const [key, value] of Object.entries(fixed ?? {})) params.set(key, value);
   params.set("page_size", String(PAGE_SIZE));
   return params;
 }
@@ -47,6 +48,8 @@ export async function ProductListing({
   categorySlug,
   subcategories,
   currentSlug,
+  fixedParams,
+  emptyState,
 }: {
   locale: Locale;
   title: string;
@@ -59,11 +62,15 @@ export async function ProductListing({
   /** Sibling or child categories shown as a theme strip */
   subcategories?: { name: string; slug: string }[];
   currentSlug?: string;
+  /** Filters this page always applies, e.g. { on_sale: "true" } for Deals */
+  fixedParams?: Record<string, string>;
+  /** Shown instead of the grid when nothing matches and no filter was chosen */
+  emptyState?: React.ReactNode;
 }) {
   const t = getDictionary(locale);
   const basePath = localePath(locale, path);
   const [result, facets] = await Promise.all([
-    getProducts(toApiParams(searchParams, categorySlug), locale),
+    getProducts(toApiParams(searchParams, categorySlug, fixedParams), locale),
     getFacets(categorySlug),
   ]);
   const page = result.page;
@@ -113,7 +120,9 @@ export async function ProductListing({
               <SortSelect />
             </Suspense>
           </div>
-          {result.items.length === 0 ? (
+          {result.items.length === 0 && emptyState && result.page === 1 ? (
+            emptyState
+          ) : result.items.length === 0 ? (
             <EmptyState title={t.listing.emptyTitle}>
               {t.listing.emptyBefore}{" "}
               <Link href={localePath(locale, "/shop")} className="underline">
