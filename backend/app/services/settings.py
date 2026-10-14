@@ -73,6 +73,8 @@ def public_config(s: StoreSettings, lang: str) -> PublicConfig:
         international_shipping=sh.international_rate is not None,
         shipping_countries=sh.allowed_countries,
         delivery_days=(sh.handling_days_min + sh.transit_days_min, sh.handling_days_max + sh.transit_days_max),
+        handling_days=(sh.handling_days_min, sh.handling_days_max),
+        transit_days=(sh.transit_days_min, sh.transit_days_max),
         tax_enabled=s.tax.enabled and s.tax.rate_percent > 0,
         tax_label=s.tax.label,
         announcement=text if s.general.announcement_enabled and text else None,

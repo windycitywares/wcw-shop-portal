@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ConsentSettingsLink } from "@/components/analytics/Analytics";
+import { HELP_NAV } from "@/content/help";
 import { fmt, localePath, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { site } from "@/lib/site";
@@ -34,6 +35,11 @@ export function Footer({ locale }: { locale: Locale }) {
       title: t.footer.help,
       links: [
         { label: t.footer.findOrder, href: l("/track-order") },
+        { label: HELP_NAV[locale].faq, href: l("/help/faq") },
+        { label: HELP_NAV[locale].shipping, href: l("/help/shipping") },
+        { label: HELP_NAV[locale].returns, href: l("/help/returns") },
+        { label: HELP_NAV[locale].privacy, href: l("/help/privacy") },
+        { label: HELP_NAV[locale].terms, href: l("/help/terms") },
         { label: t.footer.contact, href: l("/contact") },
       ],
     },
