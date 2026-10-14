@@ -25,8 +25,12 @@ from app.services.settings import SettingsService
 
 log = logging.getLogger("wcw.orders")
 
-# What a customer sees on their order's timeline (staff notes and payment oddities stay private).
-PUBLIC_EVENT_KINDS = {"placed", "paid", "processing", "shipped", "delivered", "cancelled", "refund"}
+# What a customer sees on their order's timeline, in these words. The staff's own wording (who did it, why,
+# payment oddities) stays private.
+PUBLIC_EVENT_LABELS = {
+    "placed": "Order placed", "paid": "Payment received", "processing": "Being prepared", "shipped": "Shipped",
+    "delivered": "Delivered", "cancelled": "Cancelled", "refund": "Refund issued",
+}
 CANCELLABLE = (OrderStatus.PENDING, OrderStatus.PAID, OrderStatus.PROCESSING)
 UNPAID_CARD_ORDER_MINUTES = 45
 
@@ -49,8 +53,14 @@ class OrderService:
     async def _out(self, order: Order, staff: bool) -> OrderOut:
         out = OrderOut.model_validate(order)
         events = await self.repo.events(order.id)
-        out.events = [OrderEventOut.model_validate(e) for e in events if staff or e.kind in PUBLIC_EVENT_KINDS]
+        out.events = [
+            OrderEventOut.model_validate(e) if staff
+            else OrderEventOut(id=e.id, kind=e.kind, message=PUBLIC_EVENT_LABELS[e.kind], created_at=e.created_at)
+            for e in events if staff or e.kind in PUBLIC_EVENT_LABELS
+        ]
         out.refunds = [RefundOut.model_validate(r) for r in await self.repo.refunds(order.id)]
+        if order.payment_provider == "offline" and order.status == OrderStatus.PENDING:
+            out.payment_instructions = (await SettingsService(self.session).load()).offline_instructions or None
         # The model carries staff-only fields too; customers get them blanked.
         out.id, out.user_id, out.internal_note, out.payment_ref, out.locale = (
             (order.id, order.user_id, order.internal_note, order.payment_intent_id, order.locale) if staff

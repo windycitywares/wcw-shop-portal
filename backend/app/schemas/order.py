@@ -15,9 +15,28 @@ MAX_LINES = 50
 MAX_QTY = 99
 
 
+MAX_OPTIONS = 10
+
+
 class CartItemIn(BaseModel):
     product_id: int = Field(gt=0)
     quantity: int = Field(ge=1, le=MAX_QTY)
+    # Choices such as {"Color": "Red"} for products that offer a list of values. Checked against the product.
+    options: dict[str, str] = Field(default_factory=dict)
+    key: str | None = Field(default=None, max_length=200)  # the browser's name for this cart line, sent back in the quote
+
+    @field_validator("options")
+    @classmethod
+    def _options(cls, v: dict[str, str]) -> dict[str, str]:
+        if len(v) > MAX_OPTIONS:
+            raise ValueError("Too many options")
+        clean: dict[str, str] = {}
+        for name, value in v.items():
+            name, value = " ".join(name.split()), " ".join(value.split())
+            if not name or not value or len(name) > 100 or len(value) > 200:
+                raise ValueError("Each option needs a name and a value")
+            clean[name] = value
+        return clean
 
 
 class QuoteIn(BaseModel):
@@ -32,6 +51,7 @@ class QuoteIn(BaseModel):
 
 
 class QuoteLineOut(BaseModel):
+    key: str | None = None  # whatever the browser called this line in the request
     product_id: int
     quantity: int
     list_price: Money
@@ -164,6 +184,7 @@ class OrderOut(ORMModel):
     carrier: str | None
     tracking_number: str | None
     payment_provider: str | None
+    payment_instructions: str | None = None  # how to pay, for an unpaid pay-by-invoice order
     notes: str | None
     placed_at: datetime | None
     paid_at: datetime | None

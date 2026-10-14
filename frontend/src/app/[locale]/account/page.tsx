@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/i18n/client";
@@ -10,6 +9,7 @@ import { Button, ButtonLink } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { Alert, Container } from "@/components/ui/misc";
 import { Addresses } from "@/components/account/Addresses";
+import { OrderHistory } from "@/components/account/OrderHistory";
 
 export default function AccountPage() {
   const { user, loading, logout, refresh, changePassword } = useAuth();
@@ -92,17 +92,7 @@ export default function AccountPage() {
         </form>
       </section>
 
-      <section aria-labelledby="orders-heading" className="mt-6 rounded-[var(--radius-card)] border border-line bg-surface p-6">
-        <h2 id="orders-heading" className="text-2xl">
-          {t.account.orders}
-        </h2>
-        <p className="mt-2 text-sm text-muted">
-          {t.account.ordersEmpty}{" "}
-          <Link href={href("/shop")} className="underline">
-            {t.account.keepShopping}
-          </Link>
-        </p>
-      </section>
+      <OrderHistory />
 
       <Button
         variant="ghost"

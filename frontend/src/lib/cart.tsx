@@ -24,7 +24,11 @@ export interface CartLine {
 interface CartState {
   lines: CartLine[];
   count: number;
+  /** Add-up of the prices saved with each line. The real prices come from the quote (lib/quote.ts). */
   subtotal: number;
+  /** The discount code the shopper typed in, kept until they remove it or place an order. */
+  coupon: string | null;
+  setCoupon: (code: string | null) => void;
   isOpen: boolean;
   setOpen: (open: boolean) => void;
   add: (line: Omit<CartLine, "key" | "quantity">, quantity?: number) => void;
@@ -34,6 +38,7 @@ interface CartState {
 }
 
 const STORAGE_KEY = "wcw-cart";
+const COUPON_KEY = "wcw-coupon";
 const MAX_QTY = 99;
 const CartContext = createContext<CartState | null>(null);
 
@@ -49,6 +54,7 @@ function lineKey(productId: number, options?: Record<string, string>) {
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
+  const [coupon, setCouponState] = useState<string | null>(null);
   const [isOpen, setOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -56,6 +62,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) setLines(JSON.parse(saved));
+      setCouponState(localStorage.getItem(COUPON_KEY));
     } catch {
       /* ignore corrupt or unavailable storage */
     }
@@ -66,10 +73,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!loaded) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
+      if (coupon) localStorage.setItem(COUPON_KEY, coupon);
+      else localStorage.removeItem(COUPON_KEY);
     } catch {
       /* storage unavailable */
     }
-  }, [lines, loaded]);
+  }, [lines, coupon, loaded]);
+
+  const setCoupon = useCallback((code: string | null) => setCouponState(code?.trim() ? code.trim().toUpperCase() : null), []);
 
   const add = useCallback<CartState["add"]>((line, quantity = 1) => {
     const key = lineKey(line.productId, line.options);
@@ -92,13 +103,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const remove = useCallback((key: string) => setLines((prev) => prev.filter((l) => l.key !== key)), []);
-  const clear = useCallback(() => setLines([]), []);
+  const clear = useCallback(() => {
+    setLines([]);
+    setCouponState(null);
+  }, []);
 
   const value = useMemo<CartState>(
     () => ({
       lines,
       count: lines.reduce((n, l) => n + l.quantity, 0),
       subtotal: lines.reduce((n, l) => n + l.quantity * l.price, 0),
+      coupon,
+      setCoupon,
       isOpen,
       setOpen,
       add,
@@ -106,7 +122,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       remove,
       clear,
     }),
-    [lines, isOpen, add, setQuantity, remove, clear],
+    [lines, coupon, setCoupon, isOpen, add, setQuantity, remove, clear],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

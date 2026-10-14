@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { apiFetch } from "@/lib/client-api";
+import { useShopConfig } from "@/lib/shop";
+import { formatPrice } from "@/lib/utils";
 
 export function NewsletterForm() {
-  const { t } = useI18n();
+  const { t, fmt, locale } = useI18n();
+  const config = useShopConfig();
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -14,11 +17,11 @@ export function NewsletterForm() {
     const email = String(new FormData(e.currentTarget).get("email") || "");
     setState("sending");
     try {
-      const res = await apiFetch<{ detail: string }>("/newsletter", {
+      const res = await apiFetch<{ detail: string; welcome_sent: boolean }>("/newsletter", {
         method: "POST",
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, locale }),
       });
-      setMessage(res.detail);
+      setMessage(res.welcome_sent ? fmt(t.footer.welcomeSent, { email }) : t.footer.thanks);
       setState("done");
     } catch (err) {
       setMessage(err instanceof Error ? err.message : t.auth.error);
@@ -26,8 +29,19 @@ export function NewsletterForm() {
     }
   }
 
+  const offer = config?.welcome_offer;
+  const offerText = offer
+    ? fmt(t.footer.newsletterOffer, {
+        offer:
+          offer.kind === "percent"
+            ? fmt(t.footer.offerPercent, { value: offer.value })
+            : fmt(t.footer.offerFixed, { amount: formatPrice(offer.value, config?.currency ?? "USD", locale) }),
+      })
+    : null;
+
   return (
     <div className="mt-6">
+      {offerText && <p className="mb-3 text-sm text-white">{offerText}</p>}
       <form onSubmit={onSubmit} className="flex gap-2">
         <label htmlFor="newsletter-email" className="sr-only">
           {t.footer.email}

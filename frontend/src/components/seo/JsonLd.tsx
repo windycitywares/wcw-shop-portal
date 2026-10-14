@@ -44,11 +44,15 @@ const AVAILABILITY: Record<string, string> = {
   preorder: "https://schema.org/PreOrder",
 };
 
+/** The price people pay right now: the sale price while a sale is on. */
+const payable = (i: { base_price: number; sale_price?: number | null }) =>
+  i.sale_price != null && i.sale_price < i.base_price ? i.sale_price : i.base_price;
+
 export function productLd(p: ProductDetail, locale: Locale = "en") {
-  const offer = (item: { sku: string; base_price: number; currency: string; stock_status: string }) => ({
+  const offer = (item: { sku: string; base_price: number; sale_price?: number | null; currency: string; stock_status: string }) => ({
     "@type": "Offer",
     sku: item.sku,
-    price: item.base_price.toFixed(2),
+    price: payable(item).toFixed(2),
     priceCurrency: item.currency,
     availability: AVAILABILITY[item.stock_status],
     url: absoluteUrl(localePath(locale, `/product/${p.slug}`)),
@@ -67,8 +71,8 @@ export function productLd(p: ProductDetail, locale: Locale = "en") {
       ? {
           "@type": "AggregateOffer",
           priceCurrency: p.currency,
-          lowPrice: Math.min(...p.variants.map((v) => v.base_price)).toFixed(2),
-          highPrice: Math.max(...p.variants.map((v) => v.base_price)).toFixed(2),
+          lowPrice: Math.min(...p.variants.map(payable)).toFixed(2),
+          highPrice: Math.max(...p.variants.map(payable)).toFixed(2),
           offerCount: p.variants.length,
           offers: p.variants.map(offer),
         }

@@ -59,7 +59,7 @@ export function Turnstile({
   action,
 }: {
   /** Names the protected form; the API checks the token was solved for this action. */
-  action: "signup" | "contact";
+  action: "signup" | "contact" | "checkout";
   onToken: (token: string | null) => void;
   resetKey?: number;
   locale?: string;

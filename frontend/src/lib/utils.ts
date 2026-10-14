@@ -11,6 +11,20 @@ export function formatPrice(amount: number, currency = "USD", locale: Locale = "
   return new Intl.NumberFormat(intlLocale[locale], { style: "currency", currency }).format(amount);
 }
 
+/**
+ * What to show as a product's price: the sale price with the usual price struck through while a sale is live,
+ * otherwise the price (with the "compare at" price struck through if the shop set one).
+ */
+export function displayPrice(p: { base_price: number; compare_at_price: number | null; sale_price?: number | null }) {
+  if (p.sale_price != null && p.sale_price < p.base_price) {
+    return { amount: p.sale_price, compareAt: Math.max(p.base_price, p.compare_at_price ?? 0) as number | null, onSale: true };
+  }
+  const onSale = p.compare_at_price != null && p.compare_at_price > p.base_price;
+  return { amount: p.base_price, compareAt: p.compare_at_price, onSale };
+}
+
+export const percentOff = (amount: number, compareAt: number) => Math.round((1 - amount / compareAt) * 100);
+
 export function attributeList(value: AttributeValue): string[] {
   return Array.isArray(value) ? value.map(String) : [String(value)];
 }

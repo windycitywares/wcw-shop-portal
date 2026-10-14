@@ -1,15 +1,20 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
+import { useMemo } from "react";
 import { useI18n } from "@/i18n/client";
 import { useCart } from "@/lib/cart";
+import { useQuote } from "@/lib/quote";
 import { formatPrice } from "@/lib/utils";
 import { ButtonLink } from "@/components/ui/Button";
 import { CartLines } from "./CartLines";
+import { FreeShippingMeter } from "./FreeShippingMeter";
 
 export function CartDrawer() {
-  const { isOpen, setOpen, lines, subtotal } = useCart();
+  const { isOpen, setOpen, lines, subtotal, coupon } = useCart();
   const { t, href, locale } = useI18n();
+  const input = useMemo(() => ({ lines, coupon }), [lines, coupon]);
+  const { quote } = useQuote(input, isOpen);
   const close = () => setOpen(false);
   return (
     <Dialog.Root open={isOpen} onOpenChange={setOpen}>
@@ -30,14 +35,15 @@ export function CartDrawer() {
             {lines.length === 0 ? (
               <p className="py-16 text-center text-muted">{t.cart.empty}</p>
             ) : (
-              <CartLines onNavigate={close} />
+              <CartLines quote={quote} onNavigate={close} />
             )}
           </div>
           {lines.length > 0 && (
             <div className="space-y-4 border-t border-line bg-surface px-6 py-5">
+              {quote && <FreeShippingMeter quote={quote} />}
               <div className="flex justify-between text-base">
                 <span>{t.cart.subtotal}</span>
-                <span className="font-medium">{formatPrice(subtotal, "USD", locale)}</span>
+                <span className="font-medium">{formatPrice(quote ? quote.subtotal : subtotal, quote?.currency ?? "USD", locale)}</span>
               </div>
               <p className="text-xs text-muted">{t.cart.shippingNote}</p>
               <ButtonLink href={href("/cart")} onClick={close} className="w-full" size="lg">

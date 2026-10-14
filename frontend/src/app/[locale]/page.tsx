@@ -7,6 +7,7 @@ import { getCategoryPreview, getCategoryTree, getProducts } from "@/lib/api";
 import { alternates } from "@/lib/seo";
 import { site } from "@/lib/site";
 import type { Product } from "@/lib/types";
+import { displayPrice } from "@/lib/utils";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container, EmptyState, Price } from "@/components/ui/misc";
 import { ProductImage } from "@/components/ui/ProductImage";
@@ -34,6 +35,7 @@ function HungPiece({
   className?: string;
 }) {
   const image = product.images[0];
+  const shown = displayPrice(product);
   return (
     <figure className={`group relative ${className ?? ""}`}>
       <div className="mat shadow-[0_30px_60px_-30px_rgb(23_35_43/0.35)]">
@@ -49,8 +51,8 @@ function HungPiece({
           {product.title}
         </Link>
         <Price
-          amount={product.base_price}
-          compareAt={product.compare_at_price}
+          amount={shown.amount}
+          compareAt={shown.compareAt}
           currency={product.currency}
           locale={locale}
           className="flex text-xs text-muted sm:text-sm"

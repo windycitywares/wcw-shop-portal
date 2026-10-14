@@ -16,6 +16,14 @@ export interface NavGroup {
 export const NAV: NavGroup[] = [
   { label: null, items: [{ href: "/admin", label: "Dashboard", icon: "dashboard", permission: null }] },
   {
+    label: "Sales",
+    items: [
+      { href: "/admin/orders", label: "Orders", icon: "orders", permission: "orders:manage" },
+      { href: "/admin/promotions", label: "Promotions", icon: "tag", permission: "promotions:manage" },
+      { href: "/admin/messages", label: "Messages", icon: "mail", permission: "orders:manage" },
+    ],
+  },
+  {
     label: "Catalog",
     items: [
       { href: "/admin/products", label: "Products", icon: "products", permission: "catalog:view_unpublished" },
@@ -24,8 +32,11 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
-    label: "Settings",
-    items: [{ href: "/admin/users", label: "Team and customers", icon: "users", permission: "users:manage" }],
+    label: "Store",
+    items: [
+      { href: "/admin/settings", label: "Settings", icon: "sliders", permission: "settings:manage" },
+      { href: "/admin/users", label: "Team and customers", icon: "users", permission: "users:manage" },
+    ],
   },
 ];
 

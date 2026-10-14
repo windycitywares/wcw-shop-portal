@@ -114,6 +114,7 @@ class ResolvedItem:
     category_id: int | None
     title: str
     attributes: dict
+    key: str | None = None  # the browser's name for the cart line
 
     @property
     def stock_limit(self) -> int | None:
@@ -134,10 +135,29 @@ class Priced:
 
 
 def merge_items(items: list[CartItemIn]) -> list[CartItemIn]:
-    merged: dict[int, int] = {}
+    """Same product with the same choices becomes one line; different choices stay separate."""
+    merged: dict[tuple, CartItemIn] = {}
     for item in items:
-        merged[item.product_id] = min(MAX_QTY, merged.get(item.product_id, 0) + item.quantity)
-    return [CartItemIn(product_id=pid, quantity=q) for pid, q in merged.items()]
+        slot = (item.product_id, tuple(sorted(item.options.items())))
+        if slot in merged:
+            merged[slot].quantity = min(MAX_QTY, merged[slot].quantity + item.quantity)
+        else:
+            merged[slot] = item.model_copy()
+    return list(merged.values())
+
+
+def option_values(product: Product, name: str) -> list[str]:
+    """What a customer may choose for `name`: the product's list of values (empty if it offers no such choice)."""
+    value = (product.attributes or {}).get(name)
+    return [str(v) for v in value] if isinstance(value, list) else []
+
+
+def options_ok(product: Product, options: dict[str, str]) -> bool:
+    return all(choice in option_values(product, name) for name, choice in options.items())
+
+
+def with_options(title: str, options: dict[str, str]) -> str:
+    return f"{title} ({', '.join(f'{k}: {v}' for k, v in options.items())})" if options else title
 
 
 def variant_title(parent: Product, variant: Product) -> str:
@@ -172,15 +192,19 @@ class CartPricer:
                 and product.status == ContentStatus.PUBLISHED
                 and product.stock_status != StockStatus.OUT_OF_STOCK
                 and (product.parent_id is None or (parent is not None and parent.status == ContentStatus.PUBLISHED))
+                and options_ok(product, item.options)
             )
             if not ok:
                 unavailable.append(item.product_id)
                 continue
+            base = variant_title(parent, product) if parent else product.title
             resolved.append(ResolvedItem(
                 product=product, parent=parent, quantity=item.quantity,
                 category_id=(parent.category_id if parent else product.category_id),
-                title=variant_title(parent, product) if parent else product.title,
-                attributes=dict(product.attributes or {}),
+                title=with_options(base, item.options),
+                # The order keeps what was chosen (Color: Red) instead of the whole list (Red, Blue).
+                attributes={**(product.attributes or {}), **item.options},
+                key=item.key,
             ))
         return resolved, unavailable
 
@@ -240,10 +264,14 @@ class CartPricer:
         if code and coupon_row is None:
             quote.coupon_problem = engine.Problem("invalid", "That code isn't valid.")
 
+        # Several lines can be the same product with different choices, so stock is checked on the total.
+        wanted: dict[int, int] = {}
+        for r in resolved:
+            wanted[r.product.id] = wanted.get(r.product.id, 0) + r.quantity
         issues = {
             r.product.id: r.stock_limit
             for r in resolved
-            if r.stock_limit is not None and r.quantity > r.stock_limit
+            if r.stock_limit is not None and wanted[r.product.id] > r.stock_limit
         }
         return Priced(quote=quote, items=resolved, unavailable=unavailable, coupon=coupon_row if quote.coupon_code else None,
                       shipping=methods, issues=issues)

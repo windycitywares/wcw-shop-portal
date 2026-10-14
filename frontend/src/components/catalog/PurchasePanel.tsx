@@ -3,9 +3,10 @@
 import { useMemo, useState } from "react";
 import { attrKey, attrValue } from "@/i18n/attributes";
 import { useI18n } from "@/i18n/client";
+import { intlLocale } from "@/i18n/config";
 import { useCart } from "@/lib/cart";
 import type { Product, ProductDetail } from "@/lib/types";
-import { attributeList, cn, formatPrice } from "@/lib/utils";
+import { attributeList, cn, displayPrice, formatPrice, percentOff } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Price } from "@/components/ui/misc";
 
@@ -37,10 +38,9 @@ export function PurchasePanel({ product }: { product: ProductDetail }) {
   const variant: Product | undefined = product.variants.find((v) => v.id === variantId);
   const active: Product = variant ?? product;
   const soldOut = active.stock_status === "out_of_stock";
-  const saving =
-    active.compare_at_price && active.compare_at_price > active.base_price
-      ? Math.round((1 - active.base_price / active.compare_at_price) * 100)
-      : 0;
+  const shown = displayPrice(active);
+  const saving = shown.compareAt && shown.compareAt > shown.amount ? percentOff(shown.amount, shown.compareAt) : 0;
+  const saleEnds = active.sale_price != null && active.sale_ends_at ? active.sale_ends_at : null;
 
   /** Stored name of a variant, e.g. "10 inch Large" (from its attributes, else its title). */
   function variantName(v: Product) {
@@ -59,7 +59,7 @@ export function PurchasePanel({ product }: { product: ProductDetail }) {
         sku: active.sku,
         title: product.title,
         variant: variant ? variantName(variant) : undefined,
-        price: active.base_price,
+        price: shown.amount,
         currency: active.currency,
         image: (active.images[0] ?? product.images[0])?.url,
         options: optionGroups.length ? options : undefined,
@@ -72,8 +72,8 @@ export function PurchasePanel({ product }: { product: ProductDetail }) {
     <div className="space-y-7">
       <div>
         <Price
-          amount={active.base_price}
-          compareAt={active.compare_at_price}
+          amount={shown.amount}
+          compareAt={shown.compareAt}
           currency={active.currency}
           locale={locale}
           className="text-2xl"
@@ -87,6 +87,13 @@ export function PurchasePanel({ product }: { product: ProductDetail }) {
           </span>
           {saving > 0 && <span className="text-sale">{fmt(t.product.save, { percent: saving })}</span>}
         </p>
+        {saleEnds && (
+          <p className="mt-1 text-sm text-muted">
+            {fmt(t.product.saleEnds, {
+              date: new Intl.DateTimeFormat(intlLocale[locale], { dateStyle: "long" }).format(new Date(saleEnds)),
+            })}
+          </p>
+        )}
       </div>
 
       {hasVariants && (
@@ -116,7 +123,7 @@ export function PurchasePanel({ product }: { product: ProductDetail }) {
                   />
                   <span className="flex-1">{attrValue(t, variantName(v))}</span>
                   <span className={cn("tabular-nums", checked ? "font-medium" : "text-muted")}>
-                    {formatPrice(v.base_price, v.currency, locale)}
+                    {formatPrice(displayPrice(v).amount, v.currency, locale)}
                   </span>
                 </label>
               );

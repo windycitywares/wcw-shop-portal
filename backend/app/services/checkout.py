@@ -47,7 +47,7 @@ def quote_out(priced: Priced) -> QuoteOut:
     for item, line in zip(priced.items, q.lines):
         limit = priced.issues.get(item.product.id)
         lines.append(QuoteLineOut(
-            product_id=item.product.id, quantity=line.quantity, list_price=line.list_price, unit_price=line.unit_price,
+            key=item.key, product_id=item.product.id, quantity=line.quantity, list_price=line.list_price, unit_price=line.unit_price,
             line_total=line.line_total, discount=line.coupon_discount, sale_label=line.sale_label,
             issue="limited" if item.product.id in priced.issues else None, max_quantity=limit,
         ))

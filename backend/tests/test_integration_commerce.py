@@ -95,9 +95,17 @@ class CommerceTests(unittest.TestCase):
         self.assertEqual(r.status_code, 200, r.text)
         self.addCleanup(lambda: self.client.patch(f"{self.api}/settings", json={k: before[k] for k in changes}, headers=self.admin))
 
-    def product(self, price="40.00", stock=5, status="published", stock_status="in_stock"):
+    @staticmethod
+    def lines(items):
+        """[(product, quantity)] or [(product, quantity, {"Color": "Red"})] -> request items."""
+        out = []
+        for i, (product, quantity, *rest) in enumerate(items):
+            out.append({"product_id": product["id"], "quantity": quantity, "options": rest[0] if rest else {}, "key": f"line-{i}"})
+        return out
+
+    def product(self, price="40.00", stock=5, status="published", stock_status="in_stock", **extra):
         sku = f"T-{uuid.uuid4().hex[:10]}"
-        body = {"sku": sku, "title": f"Test urn {sku}", "base_price": price, "status": status, "stock_quantity": stock, "stock_status": stock_status}
+        body = {"sku": sku, "title": f"Test urn {sku}", "base_price": price, "status": status, "stock_quantity": stock, "stock_status": stock_status, **extra}
         r = self.client.post(f"{self.api}/products", json=body, headers=self.admin)
         self.assertEqual(r.status_code, 201, r.text)
         return r.json()
@@ -106,14 +114,14 @@ class CommerceTests(unittest.TestCase):
         return self.client.get(f"{self.api}/products/by-id/{product['id']}", headers=self.admin).json()["stock_quantity"]
 
     def quote(self, items, **kw):
-        body = {"items": [{"product_id": p["id"], "quantity": q} for p, q in items], "country": "US", "region": "IL", **kw}
+        body = {"items": self.lines(items), "country": "US", "region": "IL", **kw}
         r = self.client.post(f"{self.api}/checkout/quote", json=body)
         self.assertEqual(r.status_code, 200, r.text)
         return r.json()
 
     def place(self, items, headers=None, **over):
         body = {
-            "items": [{"product_id": p["id"], "quantity": q} for p, q in items],
+            "items": self.lines(items),
             "shipping_method": "standard", "email": "buyer@example.com", "shipping_address": ADDRESS,
             "payment_provider": "test", **over,
         }
@@ -306,6 +314,34 @@ class CommerceTests(unittest.TestCase):
         self.assertEqual(sorted(q["unavailable"]), sorted([draft["id"], sold_out["id"]]))
         self.assertEqual(q["lines"][0]["issue"], "limited")
         self.assertEqual(q["lines"][0]["max_quantity"], 2)
+
+    def test_choices_travel_with_the_order(self):
+        p = self.product("20.00", stock=None, attributes={"Color": ["Red", "Blue"], "Material": "Oak"})
+        q = self.quote([(p, 1, {"Color": "Red"}), (p, 2, {"Color": "Blue"})])
+        self.assertEqual([(line["key"], line["quantity"]) for line in q["lines"]], [("line-0", 1), ("line-1", 2)])
+        self.assertEqual(q["subtotal"], 60.0)
+        merged = self.quote([(p, 1, {"Color": "Red"}), (p, 2, {"Color": "Red"})])
+        self.assertEqual([line["quantity"] for line in merged["lines"]], [3])
+        wrong = self.quote([(p, 1, {"Color": "Green"}), (p, 1, {"Size": "L"})])
+        self.assertEqual((wrong["lines"], wrong["unavailable"]), ([], [p["id"], p["id"]]))
+        self.assertEqual(self.place([(p, 1, {"Color": "Green"})]).status_code, 409)
+
+        placed = self.place([(p, 1, {"Color": "Red"}), (p, 2, {"Color": "Blue"})])
+        self.assertEqual(placed.status_code, 201, placed.text)
+        order = self.order(placed.json()["number"], placed.json()["access_token"]).json()
+        self.assertEqual([i["title"] for i in order["items"]], [f"{p['title']} (Color: Red)", f"{p['title']} (Color: Blue)"])
+        self.assertEqual(order["items"][0]["attributes"], {"Color": "Red", "Material": "Oak"})
+        self.assertEqual(order["items"][1]["attributes"]["Color"], "Blue")
+
+    def test_stock_is_checked_on_the_total_across_choices(self):
+        p = self.product("20.00", stock=2, attributes={"Color": ["Red", "Blue"]})
+        items = [(p, 2, {"Color": "Red"}), (p, 1, {"Color": "Blue"})]
+        q = self.quote(items)
+        self.assertEqual([(line["issue"], line["max_quantity"]) for line in q["lines"]], [("limited", 2), ("limited", 2)])
+        self.assertEqual(self.place(items).status_code, 409)
+        self.assertEqual(self.stock_of(p), 2)
+        self.assertEqual(self.place([(p, 1, {"Color": "Red"}), (p, 1, {"Color": "Blue"})]).status_code, 201)
+        self.assertEqual(self.stock_of(p), 0)
 
     # -- placing an order --------------------------------------------------------------------
     def test_order_with_test_payment_and_coupon(self):
@@ -502,10 +538,16 @@ class CommerceTests(unittest.TestCase):
         mail = next(m for m in self.sent if m.to == "buyer@example.com")
         self.assertIn("Zelle to pay@example.com", mail.text)
         n = placed["number"]
+        waiting = self.order(n, placed["access_token"]).json()
+        self.assertEqual(waiting["payment_instructions"], "Zelle to pay@example.com")
         self.assertEqual(self.client.post(f"{self.api}/orders/{n}/ship", json={}, headers=self.admin).status_code, 409)  # not paid yet
         self.assertEqual(self.client.post(f"{self.api}/orders/{n}/refund", json={"amount": "1"}, headers=self.admin).status_code, 409)
         paid = self.client.post(f"{self.api}/orders/{n}/status", json={"status": "paid"}, headers=self.admin)
         self.assertEqual(paid.json()["status"], "paid")
+        self.assertIsNone(paid.json()["payment_instructions"])  # nothing left to pay
+        self.assertIn("@", " ".join(e["message"] for e in paid.json()["events"]))  # staff see who marked it paid
+        public = self.order(n, placed["access_token"]).json()["events"]
+        self.assertEqual([e["message"] for e in public], ["Order placed", "Payment received"])  # customers see neither names nor emails
         self.assertEqual(self.client.post(f"{self.api}/orders/{n}/status", json={"status": "paid"}, headers=self.admin).status_code, 409)
         listing = self.client.get(f"{self.api}/orders?q={n}&status=paid", headers=self.admin).json()
         self.assertEqual([o["number"] for o in listing["items"]], [n])
