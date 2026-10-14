@@ -51,3 +51,8 @@ reset_requests_by_ip = RateLimiter(max_hits=10, window_seconds=60 * 60)
 reset_attempts_by_ip = RateLimiter(max_hits=20, window_seconds=15 * 60)
 # Contact form: 5 messages per IP per hour.
 contact_by_ip = RateLimiter(max_hits=5, window_seconds=60 * 60)
+# Coupon codes that don't work: 15 per IP per 15 minutes (stops code guessing).
+coupon_misses_by_ip = RateLimiter(max_hits=15, window_seconds=15 * 60)
+# Orders: 10 per IP per hour. Newsletter sign-ups: 5 per IP per hour.
+checkouts_by_ip = RateLimiter(max_hits=10, window_seconds=60 * 60)
+newsletter_by_ip = RateLimiter(max_hits=5, window_seconds=60 * 60)

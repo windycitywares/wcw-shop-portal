@@ -85,6 +85,11 @@ class Settings(BaseSettings):
     # (development / Cloudflare test keys). Never list localhost in production.
     turnstile_hostnames: list[str] = []
 
+    # Stripe (hosted Checkout). Both come from the Stripe dashboard and stay in backend/.env.
+    # Card payments are offered only when both are set.
+    stripe_secret_key: str | None = None
+    stripe_webhook_secret: str | None = None
+
     password_reset_minutes: int = 60
     max_addresses_per_user: int = 10
 

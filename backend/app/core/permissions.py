@@ -19,6 +19,7 @@ class Permission(StrEnum):
     CATALOG_IMPORT = "catalog:import"
     CATEGORY_MANAGE = "category:manage"
     ORDERS_MANAGE = "orders:manage"
+    PROMOTIONS_MANAGE = "promotions:manage"
     FINANCE_VIEW = "finance:view"
     USERS_MANAGE = "users:manage"
     SETTINGS_MANAGE = "settings:manage"

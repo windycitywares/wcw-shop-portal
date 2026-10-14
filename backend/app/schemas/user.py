@@ -60,3 +60,9 @@ class TokenOut(BaseModel):
 
 class NewsletterIn(BaseModel):
     email: EmailStr
+    locale: str = Field(default="en", pattern=r"^(en|es|nl)$")
+
+
+class NewsletterOut(BaseModel):
+    detail: str
+    welcome_sent: bool = False  # a welcome code was emailed

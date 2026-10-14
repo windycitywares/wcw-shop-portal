@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Numeric, String, Text, text
+from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Index, Numeric, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -43,11 +43,31 @@ class Order(TimestampMixin, Base):
     tracking_number: Mapped[str | None] = mapped_column(String(100))
     payment_provider: Mapped[str | None] = mapped_column(String(30))
     payment_intent_id: Mapped[str | None] = mapped_column(String(255), index=True)
-    notes: Mapped[str | None] = mapped_column(Text)
+    notes: Mapped[str | None] = mapped_column(Text)  # the customer's note at checkout
+    internal_note: Mapped[str | None] = mapped_column(Text)  # staff only
     placed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Lets a guest open their order page from the emailed link without signing in.
+    access_token: Mapped[str | None] = mapped_column(String(64), unique=True)
+    coupon_code: Mapped[str | None] = mapped_column(String(40))
+    locale: Mapped[str | None] = mapped_column(String(5))
+    sale_savings: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=0, server_default=_ZERO)
+    shipping_discount: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=0, server_default=_ZERO)
+    refunded_total: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=0, server_default=_ZERO)
+    carrier: Mapped[str | None] = mapped_column(String(50))
+    tax_lines: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list, server_default=text("'[]'::jsonb"))
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    shipped_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     items: Mapped[list["OrderItem"]] = relationship(
-        back_populates="order", cascade="all, delete-orphan", lazy="selectin"
+        back_populates="order", cascade="all, delete-orphan", lazy="selectin", order_by="OrderItem.id"
+    )
+
+    __table_args__ = (
+        Index("ix_orders_status", "status"),
+        Index("ix_orders_placed_at", "placed_at"),
+        Index("ix_orders_email", "email"),
     )
 
 
@@ -67,6 +87,8 @@ class OrderItem(Base):
     unit_price: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     quantity: Mapped[int]
     line_total: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    list_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))  # before any sale
+    discount: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=0, server_default=_ZERO)  # coupon share
     attributes: Mapped[dict[str, Any]] = mapped_column(
         JSONB, default=dict, server_default=text("'{}'::jsonb")
     )

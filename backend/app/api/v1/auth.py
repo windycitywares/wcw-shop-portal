@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response, status
@@ -9,6 +10,7 @@ from app.core.exceptions import AuthenticationError, TooManyRequestsError
 from app.core.rate_limit import (
     failed_logins_by_email,
     failed_logins_by_ip,
+    newsletter_by_ip,
     registrations_by_ip,
     reset_attempts_by_ip,
     reset_requests_by_email,
@@ -16,10 +18,12 @@ from app.core.rate_limit import (
 )
 from app.schemas.account import ForgotPasswordIn, ResetPasswordIn
 from app.schemas.common import Message
-from app.schemas.user import NewsletterIn, PasswordChange, ProfileUpdate, SignUpIn, TokenOut, UserMe
+from app.schemas.user import NewsletterIn, NewsletterOut, PasswordChange, ProfileUpdate, SignUpIn, TokenOut, UserMe
 from app.services.account import PasswordResetService
 from app.services.auth import AuthService, NewsletterService, UserService, to_me
+from app.services.promotions import PromotionService
 
+log = logging.getLogger("wcw.auth")
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
@@ -112,7 +116,16 @@ async def change_password(response: Response, session: SessionDep, user: Current
 newsletter_router = APIRouter(prefix="/newsletter", tags=["newsletter"])
 
 
-@newsletter_router.post("", response_model=Message, status_code=status.HTTP_202_ACCEPTED)
-async def subscribe(session: SessionDep, data: NewsletterIn):
+@newsletter_router.post("", response_model=NewsletterOut, status_code=status.HTTP_202_ACCEPTED)
+async def subscribe(request: Request, session: SessionDep, data: NewsletterIn):
+    ip_key = client_ip(request)
+    if newsletter_by_ip.is_blocked(ip_key):
+        raise TooManyRequestsError("Too many sign-ups from this network. Please try again later.")
+    newsletter_by_ip.hit(ip_key)
     await NewsletterService(session).subscribe(data.email)
-    return Message(detail="Thanks for subscribing!")
+    welcome = False
+    try:  # the welcome code is a nicety; it must never make a sign-up fail
+        welcome = await PromotionService(session).issue_welcome(str(data.email), data.locale)
+    except Exception:  # noqa: BLE001
+        log.exception("Could not issue a welcome code")
+    return NewsletterOut(detail="Thanks for subscribing!", welcome_sent=welcome)

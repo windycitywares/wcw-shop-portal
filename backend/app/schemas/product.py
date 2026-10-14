@@ -91,6 +91,10 @@ class ProductOut(ORMModel):
     published_at: datetime | None
     created_at: datetime
     updated_at: datetime
+    # Filled in by the pricing service while a sale is live: the price to charge instead of base_price.
+    sale_price: Money | None = None
+    sale_label: str | None = None
+    sale_ends_at: datetime | None = None
 
 
 class ProductDetail(ProductOut):

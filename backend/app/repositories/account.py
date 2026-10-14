@@ -1,9 +1,10 @@
 from datetime import datetime
 
-from sqlalchemy import select, update
+from sqlalchemy import func, or_, select, update
 
 from app.models.account import Address, ContactMessage, PasswordResetToken
 from app.repositories.base import BaseRepository
+from app.utils.text import escape_like
 
 
 class PasswordResetRepository(BaseRepository[PasswordResetToken]):
@@ -40,3 +41,21 @@ class AddressRepository(BaseRepository[Address]):
 
 class ContactRepository(BaseRepository[ContactMessage]):
     model = ContactMessage
+
+    async def search(self, *, status: str | None, q: str | None, page: int, page_size: int) -> tuple[list[ContactMessage], int]:
+        where = []
+        if status:
+            where.append(ContactMessage.status == status)
+        if q:
+            like = f"%{escape_like(q.strip())}%"
+            where.append(or_(ContactMessage.name.ilike(like), ContactMessage.email.ilike(like),
+                             ContactMessage.subject.ilike(like), ContactMessage.message.ilike(like),
+                             ContactMessage.order_number.ilike(like)))
+        total = (await self.session.execute(select(func.count()).select_from(ContactMessage).where(*where))).scalar_one()
+        stmt = (select(ContactMessage).where(*where).order_by(ContactMessage.created_at.desc(), ContactMessage.id.desc())
+                .offset((page - 1) * page_size).limit(page_size))
+        return list((await self.session.execute(stmt)).scalars().all()), total
+
+    async def counts(self) -> dict[str, int]:
+        rows = await self.session.execute(select(ContactMessage.status, func.count()).group_by(ContactMessage.status))
+        return {status: n for status, n in rows.all()}

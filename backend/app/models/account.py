@@ -59,3 +59,7 @@ class ContactMessage(TimestampMixin, Base):
     locale: Mapped[str | None] = mapped_column(String(5))
     ip_address: Mapped[str | None] = mapped_column(String(64))
     emailed: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    status: Mapped[str] = mapped_column(String(12), default="new", server_default="new")  # new | answered | archived
+    admin_note: Mapped[str | None] = mapped_column(Text)
+    handled_by_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="SET NULL"))
+    handled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

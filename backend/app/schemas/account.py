@@ -82,3 +82,26 @@ class ContactIn(BaseModel):
 
 class SiteConfig(BaseModel):
     turnstile_site_key: str | None
+
+
+# ---------- inbox (staff) ----------
+
+class MessageOut(ORMModel):
+    id: int
+    name: str
+    email: str
+    subject: str
+    message: str
+    order_number: str | None
+    locale: str | None
+    user_id: int | None
+    status: str
+    admin_note: str | None
+    emailed: bool
+    handled_at: datetime | None
+    created_at: datetime
+
+
+class MessageUpdate(BaseModel):
+    status: str | None = Field(default=None, pattern=r"^(new|answered|archived)$")
+    admin_note: str | None = Field(default=None, max_length=4000)

@@ -13,6 +13,7 @@ from app.repositories.product import ProductQuery, ProductRepository
 from app.schemas.category import CategoryOut
 from app.schemas.common import Page
 from app.schemas.product import Facets, ProductCreate, ProductDetail, ProductOut, ProductUpdate
+from app.services.pricing import apply_sales
 
 PUBLISHING_STATUSES = {ContentStatus.PUBLISHED, ContentStatus.ARCHIVED}
 
@@ -52,12 +53,9 @@ class ProductService:
     # -- reading -------------------------------------------------------
     async def search(self, query: ProductQuery) -> Page[ProductOut]:
         items, total = await self.repo.search(query)
-        return Page[ProductOut](
-            items=[ProductOut.model_validate(p) for p in items],
-            total=total,
-            page=query.page,
-            page_size=query.page_size,
-        )
+        outs = [ProductOut.model_validate(p) for p in items]
+        await apply_sales(self.session, outs)
+        return Page[ProductOut](items=outs, total=total, page=query.page, page_size=query.page_size)
 
     async def category_path_for_slug(self, slug: str) -> str:
         category = await self.categories.get_by(slug=slug)
@@ -76,9 +74,12 @@ class ProductService:
             raise NotFoundError("Product not found")
         variants = [v for v in product.variants if staff or v.status == ContentStatus.PUBLISHED]
         breadcrumb = await self.categories.ancestors(product.category.path) if product.category else []
+        main = ProductOut.model_validate(product)
+        variant_outs = [ProductOut.model_validate(v) for v in variants]
+        await apply_sales(self.session, [main, *variant_outs], inherit_category=product.category_id)
         return ProductDetail(
-            **ProductOut.model_validate(product).model_dump(),
-            variants=[ProductOut.model_validate(v) for v in variants],
+            **main.model_dump(),
+            variants=variant_outs,
             category=CategoryOut.model_validate(product.category) if product.category else None,
             breadcrumb=[CategoryOut.model_validate(c) for c in breadcrumb],
         )
