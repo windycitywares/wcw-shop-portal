@@ -136,8 +136,9 @@ test.describe("checkout", () => {
 
   test("find my order explains a wrong number, unsubscribe asks before acting", async ({ page }) => {
     await page.goto("/track-order");
-    await page.getByLabel("Order number").fill("WCW-999999");
-    await page.getByLabel("Email address").fill("nobody@example.com");
+    const main = page.getByRole("main"); // the footer has its own "Email address" (newsletter)
+    await main.getByLabel("Order number").fill("WCW-999999");
+    await main.getByLabel("Email address").fill("nobody@example.com");
     await page.getByRole("button", { name: "Find order" }).click();
     await expect(page.getByRole("alert")).toContainText("couldn't find");
     await a11y(page, { enforce: false });
