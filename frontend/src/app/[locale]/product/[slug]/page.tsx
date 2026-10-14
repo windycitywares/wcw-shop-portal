@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { attrKey, attrValue } from "@/i18n/attributes";
-import { isLocale, localePath, type Locale } from "@/i18n/config";
+import { fmt, isLocale, localePath, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { getProduct, getProducts } from "@/lib/api";
+import { getProduct, getProducts, getRelated } from "@/lib/api";
 import { alternates } from "@/lib/seo";
-import { attributeList } from "@/lib/utils";
+import { attributeList, displayPrice } from "@/lib/utils";
 import { ProductGrid } from "@/components/catalog/ProductCard";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { PurchasePanel } from "@/components/catalog/PurchasePanel";
 import { JsonLd, breadcrumbLd, productLd } from "@/components/seo/JsonLd";
+import { MiniCards } from "@/components/product/MiniCards";
+import { RecentlyViewed } from "@/components/product/RecentlyViewed";
+import { Reviews } from "@/components/product/Reviews";
 import { Breadcrumbs, Container, type Crumb } from "@/components/ui/misc";
+import { Stars } from "@/components/ui/Stars";
 
 export const revalidate = 60;
 
@@ -54,6 +58,7 @@ export default async function ProductPage({ params }: Props) {
   const details = Object.entries(product.attributes).filter(
     ([, v]) => !Array.isArray(v) || v.length === 1,
   );
+  const alsoBought = (await getRelated(product.slug, locale)).filter((p) => p.id !== product.id);
   const related = product.category
     ? (await getProducts({ category: product.category.slug, page_size: "5" }, locale)).items
         .filter((p) => p.id !== product.id)
@@ -68,6 +73,15 @@ export default async function ProductPage({ params }: Props) {
         <div>
           {product.category && <p className="text-sm text-muted">{product.category.name}</p>}
           <h1 className="mt-2 text-4xl sm:text-5xl">{product.title}</h1>
+          {(product.rating_count ?? 0) > 0 && (
+            <a href="#reviews" className="mt-3 inline-flex text-sm hover:underline">
+              <Stars
+                rating={product.rating_avg ?? 0}
+                count={product.rating_count}
+                label={fmt(t.product.rating, { rating: (product.rating_avg ?? 0).toFixed(1), count: product.rating_count ?? 0 })}
+              />
+            </a>
+          )}
           <div className="mt-8">
             <PurchasePanel product={product} />
           </div>
@@ -115,6 +129,27 @@ export default async function ProductPage({ params }: Props) {
           </div>
         </section>
       )}
+
+      <Reviews slug={product.slug} />
+
+      <MiniCards
+        items={alsoBought.filter((p) => !related.some((r) => r.id === p.id))}
+        title={t.discover.alsoBought}
+        hrefFor={(slug) => localePath(locale, `/product/${slug}`)}
+        locale={locale}
+      />
+
+      <RecentlyViewed
+        current={{
+          id: product.id,
+          slug: product.slug,
+          title: product.title,
+          base_price: product.base_price,
+          sale_price: product.sale_price ?? null,
+          compare_at_price: displayPrice(product).compareAt,
+          image: product.images[0]?.url ?? null,
+        }}
+      />
 
       <JsonLd data={productLd(product, locale)} />
       <JsonLd data={breadcrumbLd(crumbs)} />

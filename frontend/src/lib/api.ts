@@ -5,7 +5,7 @@
  */
 import "server-only";
 import { defaultLocale, type Locale } from "@/i18n/config";
-import type { CategoryDetail, CategoryNode, Facets, Page, Product, ProductDetail, ShopConfig } from "./types";
+import type { CategoryDetail, CategoryNode, Facets, Page, Product, ProductCardData, ProductDetail, ShopConfig } from "./types";
 
 const API_URL = (
   process.env.API_URL ||
@@ -110,5 +110,14 @@ export async function getShopConfig(lang?: Locale): Promise<ShopConfig | null> {
     return await get<ShopConfig>(withLang("/shop/config", lang), 60);
   } catch {
     return null;
+  }
+}
+
+/** "Customers also bought": products from the same paid orders, then popular ones from the category. */
+export async function getRelated(slug: string, lang?: Locale): Promise<ProductCardData[]> {
+  try {
+    return await get<ProductCardData[]>(withLang(`/products/${encodeURIComponent(slug)}/related`, lang), 300);
+  } catch {
+    return [];
   }
 }

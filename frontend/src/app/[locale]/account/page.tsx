@@ -11,6 +11,7 @@ import { Field, Input } from "@/components/ui/Field";
 import { Alert, Container } from "@/components/ui/misc";
 import { Addresses } from "@/components/account/Addresses";
 import { MyOrders } from "@/components/account/MyOrders";
+import { MyWishlist } from "@/components/account/MyWishlist";
 
 export default function AccountPage() {
   const { user, loading, logout, refresh, changePassword } = useAuth();
@@ -73,6 +74,7 @@ export default function AccountPage() {
       </section>
 
       <MyOrders />
+      <MyWishlist />
       <Addresses />
 
       <section aria-labelledby="password-heading" className="mt-6 rounded-[var(--radius-card)] border border-line bg-surface p-6">
