@@ -464,9 +464,6 @@ const es: Dictionary = {
     changed: "Contraseña cambiada. Se cerró tu sesión en todos los demás dispositivos.",
     change: "Cambiar contraseña",
     changeFailed: "No se pudo cambiar la contraseña.",
-    orders: "Pedidos",
-    ordersEmpty: "Tu historial de pedidos aparecerá aquí cuando el pago en línea esté disponible.",
-    keepShopping: "Seguir comprando",
     signOut: "Cerrar sesión",
   },
   attributes: {
