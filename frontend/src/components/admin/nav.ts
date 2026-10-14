@@ -16,6 +16,10 @@ export interface NavGroup {
 export const NAV: NavGroup[] = [
   { label: null, items: [{ href: "/admin", label: "Dashboard", icon: "dashboard", permission: null }] },
   {
+    label: "Sales",
+    items: [{ href: "/admin/orders", label: "Orders", icon: "orders", permission: "orders:manage" }],
+  },
+  {
     label: "Catalog",
     items: [
       { href: "/admin/products", label: "Products", icon: "products", permission: "catalog:view_unpublished" },
