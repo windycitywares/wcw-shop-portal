@@ -68,15 +68,14 @@ export function CouponForm() {
       </div>
     );
   }
+  // Not a <form>: this box also sits inside the checkout form, and nested forms are dropped by browsers
+  // (Apply would then submit the whole checkout).
+  const apply = () => {
+    if (draft.trim()) setCoupon(draft);
+    setDraft("");
+  };
   return (
-    <form
-      className="flex gap-2"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (draft.trim()) setCoupon(draft);
-        setDraft("");
-      }}
-    >
+    <div className="flex gap-2">
       <label htmlFor="coupon" className="sr-only">
         {t.cart.couponLabel}
       </label>
@@ -84,16 +83,22 @@ export function CouponForm() {
         id="coupon"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            apply();
+          }
+        }}
         placeholder={t.cart.couponLabel}
         autoComplete="off"
         autoCapitalize="characters"
         maxLength={40}
         className="min-w-0 flex-1 rounded-[var(--radius-control)] border border-line bg-surface px-4 py-2 text-sm uppercase placeholder:normal-case focus-visible:outline-2 focus-visible:outline-accent"
       />
-      <Button type="submit" variant="secondary" size="sm" disabled={!draft.trim()}>
+      <Button type="button" variant="secondary" size="sm" disabled={!draft.trim()} onClick={apply}>
         {t.cart.couponApply}
       </Button>
-    </form>
+    </div>
   );
 }
 
