@@ -51,3 +51,16 @@ reset_requests_by_ip = RateLimiter(max_hits=10, window_seconds=60 * 60)
 reset_attempts_by_ip = RateLimiter(max_hits=20, window_seconds=15 * 60)
 # Contact form: 5 messages per IP per hour.
 contact_by_ip = RateLimiter(max_hits=5, window_seconds=60 * 60)
+# Shop: price quotes 120 per IP per minute, cart saves 60, checkouts 12 per hour, order look-ups 15 per 15 minutes,
+# wrong coupon codes 10 per 15 minutes (codes are random, so guessing one is hopeless at this rate).
+quotes_by_ip = RateLimiter(max_hits=120, window_seconds=60)
+cart_sync_by_ip = RateLimiter(max_hits=60, window_seconds=60)
+checkout_by_ip = RateLimiter(max_hits=12, window_seconds=60 * 60)
+order_lookup_by_ip = RateLimiter(max_hits=15, window_seconds=15 * 60)
+coupon_failures_by_ip = RateLimiter(max_hits=10, window_seconds=15 * 60)
+# Analytics events: 240 per IP per minute (a busy page sends a handful), reviews 6 per user per day,
+# back-in-stock requests 10 per IP per hour, newsletter sign-ups 8 per IP per hour.
+events_by_ip = RateLimiter(max_hits=240, window_seconds=60)
+reviews_by_user = RateLimiter(max_hits=6, window_seconds=24 * 60 * 60)
+stock_alerts_by_ip = RateLimiter(max_hits=10, window_seconds=60 * 60)
+newsletter_by_ip = RateLimiter(max_hits=8, window_seconds=60 * 60)

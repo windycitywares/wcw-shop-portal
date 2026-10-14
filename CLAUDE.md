@@ -7,6 +7,12 @@ Rollout: build-out runs on **shop.windycitywares.com** (API on api.windycityware
 domain keeps its existing `index.html`; move to the main domain at launch (`docs/DEPLOYMENT.md` →
 "Go live"). Keep `NEXT_PUBLIC_ALLOW_INDEXING=false` until then.
 
+## How to work (owner's rule)
+
+**Work in batches and open small PRs** — never make all changes in one shot (it exhausts the session limit).
+One layer or feature per PR, each green and safe to deploy alone, pushed as soon as it's done. Rules and the current
+batch plan: `docs/WORKING_IN_BATCHES.md`. Read it before starting multi-part work.
+
 ## Layout
 
 - `backend/` — FastAPI API (Python 3.11+, async SQLAlchemy 2, asyncpg, PostgreSQL)

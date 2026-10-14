@@ -25,7 +25,16 @@ class User(TimestampMixin, Base):
 
 
 class NewsletterSubscriber(TimestampMixin, Base):
+    """Marketing consent registry: everyone who opted in to emails, and who later unsubscribed."""
+
     __tablename__ = "newsletter_subscribers"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     email: Mapped[str] = mapped_column(String(320), unique=True)
+    locale: Mapped[str | None] = mapped_column(String(5))
+    source: Mapped[str] = mapped_column(String(20), default="site", server_default="site")  # site | checkout | account
+    unsubscribe_token: Mapped[str] = mapped_column(
+        String(40), unique=True, server_default=text("md5(random()::text || clock_timestamp()::text)")
+    )
+    unsubscribed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    welcome_coupon: Mapped[str | None] = mapped_column(String(40))

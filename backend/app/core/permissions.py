@@ -22,6 +22,11 @@ class Permission(StrEnum):
     FINANCE_VIEW = "finance:view"
     USERS_MANAGE = "users:manage"
     SETTINGS_MANAGE = "settings:manage"
+    PROMOTIONS_MANAGE = "promotions:manage"  # sales, coupons, automatic offers, email campaigns
+    REPORTS_VIEW = "reports:view"
+    CUSTOMERS_VIEW = "customers:view"
+    REVIEWS_MODERATE = "reviews:moderate"
+    AUDIT_VIEW = "audit:view"
 
 
 _AUTHOR = {
@@ -36,6 +41,7 @@ _PUBLISHER = _AUTHOR | {
     Permission.CATALOG_PUBLISH,
     Permission.CATALOG_DELETE,
     Permission.CATEGORY_MANAGE,
+    Permission.REVIEWS_MODERATE,
 }
 
 ROLE_PERMISSIONS: dict[UserRole, frozenset[Permission]] = {

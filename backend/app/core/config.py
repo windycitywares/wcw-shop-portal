@@ -88,6 +88,15 @@ class Settings(BaseSettings):
     password_reset_minutes: int = 60
     max_addresses_per_user: int = 10
 
+    # Card payments through Stripe Checkout. Both stay on the server (backend/.env). Without a secret key,
+    # checkout offers "pay later" (if enabled in Settings) and, outside production, a no-charge test payment.
+    stripe_secret_key: str | None = None
+    stripe_webhook_secret: str | None = None
+    stripe_api_base: str = "https://api.stripe.com"
+
+    # Analytics ignores crawlers and headless browsers; the browser tests turn this on.
+    analytics_accept_bots: bool = False
+
     @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"

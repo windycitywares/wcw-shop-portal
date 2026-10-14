@@ -29,6 +29,7 @@ class Mail:
     text: str
     html: str | None = None
     reply_to: str | None = None
+    headers: tuple[tuple[str, str], ...] = ()  # extra headers such as List-Unsubscribe
 
 
 def build_message(mail: Mail, settings: Settings) -> EmailMessage:
@@ -40,6 +41,8 @@ def build_message(mail: Mail, settings: Settings) -> EmailMessage:
     msg["Message-ID"] = make_msgid(domain=settings.mail_from.split("@")[-1])
     if mail.reply_to:
         msg["Reply-To"] = mail.reply_to
+    for name, value in mail.headers:
+        msg[name] = value
     msg.set_content(mail.text)
     if mail.html:
         msg.add_alternative(mail.html, subtype="html")
