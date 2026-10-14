@@ -112,7 +112,7 @@ test.describe("checkout", () => {
     await page.getByLabel("Email for your receipt").fill(`guest-${Date.now()}@example.com`);
     await page.getByLabel("Full name").fill("Ana Ruiz");
     await page.getByLabel("Street address").fill("1 Main St");
-    await page.getByLabel("City").fill("Chicago");
+    await page.getByLabel("City", { exact: true }).fill("Chicago");
     await page.getByLabel("State / province").fill("IL");
     await page.getByLabel("ZIP / postal code").fill("60601");
     await page.getByLabel(/Test payment/).check();
