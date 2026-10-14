@@ -15,7 +15,8 @@ test("add, edit, reorder and delete a category", async ({ page }) => {
   await form.getByRole("button", { name: "Add category" }).click();
   await expect(page.getByText("Category added")).toBeVisible();
   const tree = page.getByRole("region", { name: "Category tree" });
-  await expect(tree.getByText(name)).toBeVisible();
+  const names = (text: string) => tree.getByTestId("category-name").filter({ hasText: text });
+  await expect(names(name)).toBeVisible();
 
   // Edit
   await tree.getByRole("button", { name: `Edit ${name}` }).click();
@@ -37,7 +38,7 @@ test("add, edit, reorder and delete a category", async ({ page }) => {
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Delete category" }).click();
   await expect(page.getByText("Category deleted")).toBeVisible();
-  await expect(tree.getByText(name)).toHaveCount(0);
+  await expect(names(name)).toHaveCount(0);
 
   seen.expectClean();
 });
@@ -58,7 +59,8 @@ test("a category that still has a sub-category cannot be deleted", async ({ page
   await form().getByLabel("Parent").selectOption({ label: parent });
   await form().getByRole("button", { name: "Add category" }).click();
   const tree = page.getByRole("region", { name: "Category tree" });
-  await expect(tree.getByText(child)).toBeVisible();
+  const names = (text: string) => tree.getByTestId("category-name").filter({ hasText: text });
+  await expect(names(child)).toBeVisible();
 
   await tree.getByRole("button", { name: `Edit ${parent}` }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
@@ -70,7 +72,7 @@ test("a category that still has a sub-category cannot be deleted", async ({ page
     await tree.getByRole("button", { name: `Edit ${name}` }).click();
     await page.getByRole("button", { name: "Delete", exact: true }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Delete category" }).click();
-    await expect(tree.getByText(name)).toHaveCount(0);
+    await expect(names(name)).toHaveCount(0);
   }
   seen.expectClean();
 });

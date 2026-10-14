@@ -53,7 +53,7 @@ export default function CategoriesAdmin() {
           <li key={node.id}>
             <div className={`flex items-center gap-2 rounded-[var(--radius-control)] px-2 py-1.5 hover:bg-canvas ${editing?.id === node.id ? "bg-accent-soft/60" : ""}`}>
               <span className="min-w-0 flex-1 truncate text-sm">
-                <span className="font-medium">{node.name}</span> <span className="text-xs text-muted">/{node.slug}</span>
+                <span className="font-medium" data-testid="category-name">{node.name}</span> <span className="text-xs text-muted">/{node.slug}</span>
               </span>
               {!node.is_active && <Pill tone="neutral">Hidden</Pill>}
               <Button size="sm" variant="ghost" className="size-8 px-0" disabled={i === 0} onClick={() => move(nodes, i, -1)}>

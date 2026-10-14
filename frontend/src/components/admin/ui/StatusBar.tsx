@@ -25,7 +25,7 @@ export function StatusBar({ segments, className }: { segments: Segment[]; classN
       </div>
       <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-1.5 text-sm">
         {segments.map((s) => (
-          <li key={s.label} className={cn("flex items-center gap-2", s.value === 0 && "opacity-60")}>
+          <li key={s.label} className={cn("flex items-center gap-2", s.value === 0 && "[&>span:first-child]:opacity-40")}>
             <span aria-hidden="true" className="size-2.5 rounded-[3px]" style={{ background: s.color }} />
             <span className="text-muted">{s.label}</span>
             <span className="num font-semibold">{s.value}</span>

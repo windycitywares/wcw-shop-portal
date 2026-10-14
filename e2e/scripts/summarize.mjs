@@ -35,14 +35,25 @@ function walk(suite, trail) {
 }
 for (const s of report.suites ?? []) walk(s, []);
 
+fs.mkdirSync(new URL("../shots/", import.meta.url), { recursive: true });
 const esc = (s) => s.replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A");
 const total = rows.length;
 const failed = failures.length;
 console.log(`E2E: ${total - failed - flaky.length} passed, ${flaky.length} flaky, ${failed} failed of ${total}`);
 
+// Full detail goes to REPORT.md (published with the screenshots); the annotation stays short because
+// GitHub truncates long messages.
+const report_md = [
+  `# E2E report: ${total - failed - flaky.length} passed, ${flaky.length} flaky, ${failed} failed of ${total}`,
+  "",
+  ...failures.map((f) => `## ✗ ${f.name}\n\`${f.file}\`\n\n\`\`\`\n${f.err}\n\`\`\`\n`),
+  ...(flaky.length ? ["## Flaky (passed on retry)", ...flaky.map((n) => `- ${n}`), ""] : []),
+  ...(a11y.size ? ["## Accessibility findings (not enforced)", ...[...a11y].map(([d, n]) => `### ${n}\n\`\`\`\n${d}\n\`\`\``)] : []),
+].join("\n");
+fs.writeFileSync(new URL("../shots/REPORT.md", import.meta.url), report_md);
 if (failed) {
-  const body = failures.map((f) => `✗ ${f.name}  (${f.file})\n${f.err}`).join("\n\n");
-  console.log(`::error title=E2E: ${failed} of ${total} tests failed::${esc(body.slice(0, 12000))}`);
+  const body = failures.map((f) => `✗ ${f.name} (${f.file}): ${f.err.split("\n").slice(0, 3).join(" | ").slice(0, 280)}`).join("\n");
+  console.log(`::error title=E2E: ${failed} of ${total} tests failed::${esc(body.slice(0, 3500))}`);
 }
 if (flaky.length) console.log(`::warning title=E2E flaky tests::${esc(flaky.join("\n"))}`);
 for (const [desc, name] of a11y) console.log(`::warning title=Accessibility (storefront): ${esc(name)}::${esc(desc.slice(0, 3000))}`);

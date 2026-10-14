@@ -12,8 +12,8 @@ test.describe("product lifecycle", () => {
     // Create as a published product
     await page.goto("/admin/products/new");
     await adminReady(page);
-    await page.getByLabel("Title").fill(title);
-    await page.getByLabel("Description").fill("A test urn created by the automated browser tests.");
+    await page.getByLabel("Title", { exact: true }).fill(title);
+    await page.getByLabel("Description", { exact: true }).fill("A test urn created by the automated browser tests.");
     await page.getByLabel("SKU").fill(sku);
     await page.getByLabel("Price (USD)").fill("49.50");
     await page.getByLabel("Compare-at price").fill("60");
@@ -50,7 +50,7 @@ test.describe("product lifecycle", () => {
     await page.getByRole("button", { name: "Search" }).click();
     const row = page.getByRole("row").filter({ hasText: sku });
     await expect(row).toHaveCount(1);
-    await expect(row.getByText("Published")).toBeVisible();
+    await expect(row.getByText("Published", { exact: true }).filter({ visible: true })).toBeVisible();
     await expect(row.getByText("$55.00")).toBeVisible();
     await row.getByRole("button", { name: "Unpublish" }).click();
     await expect(page.getByText("Unpublished", { exact: true })).toBeVisible();
@@ -87,7 +87,7 @@ test.describe("product lifecycle", () => {
       await page.getByRole("button", { name: "Search" }).click();
       const row = page.getByRole("row").filter({ hasText: sku });
       await expect(row).toHaveCount(1);
-      await expect(row.getByText("Draft", { exact: true })).toBeVisible();
+      await expect(row.getByText("Draft", { exact: true }).filter({ visible: true })).toBeVisible();
 
       await page.getByRole("tab", { name: "Published" }).click();
       await expect(page.getByText("No products match.")).toBeVisible();
@@ -98,7 +98,7 @@ test.describe("product lifecycle", () => {
       await expect(page.getByText("Sent for review")).toBeVisible();
       await page.getByRole("tab", { name: "In review" }).click();
       await row.getByRole("button", { name: "Publish" }).click();
-      await expect(page.getByText("Published", { exact: true }).first()).toBeVisible();
+      await expect(page.getByRole("status").filter({ hasText: "Published" })).toBeVisible();
     } finally {
       await api.delete(`products/${id}`);
       await api.dispose();

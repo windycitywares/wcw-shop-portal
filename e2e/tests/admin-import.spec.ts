@@ -50,13 +50,13 @@ test("preview and import an Etsy CSV, then update it by importing again", async 
   seen.expectClean();
 });
 
-test("a file that is not an Etsy export is explained, not accepted", async ({ page }) => {
+test("a file with the wrong columns is explained, not accepted", async ({ page }) => {
   const seen = watch(page, [{ status: 400 }, { status: 422 }]);
   await page.goto("/admin/import");
   await adminReady(page);
   await page.getByLabel("File").setInputFiles({ name: "wrong.csv", mimeType: "text/csv", buffer: Buffer.from("name,cost\nx,1\n") });
   await page.getByRole("button", { name: "Preview" }).click();
-  await expect(page.locator("#admin-main").getByRole("alert")).toContainText(/Etsy/);
+  await expect(page.locator("#admin-main").getByRole("alert")).toContainText(/header row|column/i);
   void seen;
 });
 

@@ -145,7 +145,7 @@ jobs:
 
       - name: Publish screenshots
         # Reviewable PNGs of every admin page and key storefront pages on the `e2e-shots` branch.
-        if: always() && hashFiles('e2e/shots/*.png') != ''
+        if: always() && hashFiles('e2e/shots/*') != ''
         continue-on-error: true
         run: |
           cd e2e/shots

@@ -62,34 +62,34 @@ export function MetricStrip({ items, compareLabel, className }: { items: MetricI
         className="-ml-px -mt-px grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-[repeat(var(--cols),minmax(0,1fr))]"
         style={{ ["--cols" as string]: items.length }}
       >
-        {items.map((m) => {
-          const body = (
-            <>
-              <dt className="text-sm text-muted">{m.label}</dt>
-              <dd className="mt-1 flex items-end justify-between gap-2">
-                <span className="num text-[1.625rem] font-semibold leading-none tracking-tight">{m.value}</span>
-                {m.spark && <Sparkline values={m.spark} />}
-              </dd>
-              {m.change !== undefined && (
-                <dd className="mt-2">
-                  <Delta change={m.change} good={m.good} label={compareLabel} />
-                </dd>
-              )}
-              {m.hint && <dd className="mt-1 text-xs text-muted">{m.hint}</dd>}
-            </>
-          );
-          return (
-            <div key={m.label} className="border-l border-t border-line">
+        {items.map((m) => (
+          // One group per figure, with dt/dd as direct children (what <dl> requires). A linked figure uses a
+          // stretched link inside the <dt>, so the whole cell is clickable.
+          <div
+            key={m.label}
+            className={cn("relative border-l border-t border-line px-5 py-4", m.href && "hover:bg-canvas has-[a:focus-visible]:bg-canvas")}
+          >
+            <dt className="text-sm text-muted">
               {m.href ? (
-                <Link href={m.href} className="block h-full px-5 py-4 hover:bg-canvas">
-                  {body}
+                <Link href={m.href} className="after:absolute after:inset-0 hover:text-ink hover:underline">
+                  {m.label}
                 </Link>
               ) : (
-                <div className="h-full px-5 py-4">{body}</div>
+                m.label
               )}
-            </div>
-          );
-        })}
+            </dt>
+            <dd className="mt-1 flex items-end justify-between gap-2">
+              <span className="num text-[1.625rem] font-semibold leading-none tracking-tight">{m.value}</span>
+              {m.spark && <Sparkline values={m.spark} />}
+            </dd>
+            {m.change !== undefined && (
+              <dd className="mt-2">
+                <Delta change={m.change} good={m.good} label={compareLabel} />
+              </dd>
+            )}
+            {m.hint && <dd className="mt-1 text-xs text-muted">{m.hint}</dd>}
+          </div>
+        ))}
       </dl>
     </div>
   );
