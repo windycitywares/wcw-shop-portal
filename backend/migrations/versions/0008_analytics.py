@@ -1,10 +1,10 @@
-"""Consent-based first-party analytics
+"""Consent-based first-party analytics: sessions, events, daily consent counter.
 
 The DDL lives in migrations/sql/0008_analytics.sql (and .down.sql) so it can be read and tried in plain psql.
 
 Revision ID: 0008_analytics
-Revises:  sessions, events, daily consent counter.
-Create Date: 0007_engagement:2026-10-14
+Revises: 0007_engagement
+Create Date: 2026-10-14
 """
 from pathlib import Path
 
@@ -13,7 +13,7 @@ from alembic import op
 from app.utils.sqlfile import statements
 
 revision = "0008_analytics"
-down_revision = " sessions, events, daily consent counter."
+down_revision = "0007_engagement"
 branch_labels = None
 depends_on = None
 

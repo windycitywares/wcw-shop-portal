@@ -42,9 +42,15 @@ jobs:
         run: pip install -r requirements.txt httpx
       - name: Migrations (upgrade, downgrade the newest three, upgrade again)
         run: |
-          alembic upgrade head
-          alembic downgrade -3
-          alembic upgrade head
+          set +e
+          (alembic upgrade head && alembic downgrade -3 && alembic upgrade head) > ../migrate.log 2>&1
+          status=$?
+          cat ../migrate.log
+          if [ $status -ne 0 ]; then
+            body=$(tail -n 40 ../migrate.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=Migrations failed::${body}"
+          fi
+          exit $status
       - name: Tests (unit + API against PostgreSQL)
         run: |
           set +e
