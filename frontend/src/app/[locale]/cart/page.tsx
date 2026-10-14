@@ -5,11 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { lineKey, useCart, type CartLine } from "@/lib/cart";
 import { apiFetch } from "@/lib/client-api";
-import { site } from "@/lib/site";
 import type { Quote } from "@/lib/types";
 import { CartLines } from "@/components/cart/CartLines";
 import { CartMessages, CartTotals, CouponForm, FreeShippingProgress, RewardHint } from "@/components/cart/CartSummary";
-import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/Button";
 import { Alert, Container, EmptyState } from "@/components/ui/misc";
 
 type Recovered = { items: { product_id: number; quantity: number; options: Record<string, string> }[]; coupon: string | null };
@@ -93,17 +92,9 @@ export default function CartPage() {
             <RewardHint />
             <CouponForm />
             <CartTotals />
-            {/* Checkout (address -> payment -> review) arrives in the next storefront batch. */}
-            <Button size="lg" className="w-full" disabled aria-describedby="checkout-note">
+            <ButtonLink href={href("/checkout")} size="lg" className="w-full">
               {t.cart.checkout}
-            </Button>
-            <p id="checkout-note" className="text-xs text-muted">
-              {t.cart.checkoutSoon}{" "}
-              <a href={site.social[0].href} target="_blank" rel="noopener noreferrer" className="underline">
-                Etsy
-                <span className="sr-only"> {t.footer.newTab}</span>
-              </a>
-            </p>
+            </ButtonLink>
           </aside>
         </div>
       )}

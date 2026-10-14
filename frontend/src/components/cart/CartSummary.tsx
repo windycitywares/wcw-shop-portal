@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { useCart } from "@/lib/cart";
+import type { Quote } from "@/lib/types";
 import { cn, formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 
@@ -97,8 +98,10 @@ export function CouponForm() {
 }
 
 /** Totals from the server quote. Falls back to the remembered subtotal if prices couldn't be checked. */
-export function CartTotals({ compact = false }: { compact?: boolean }) {
-  const { quote, quoting, quoteError, subtotal } = useCart();
+export function CartTotals({ compact = false, quote: override }: { compact?: boolean; quote?: Quote | null }) {
+  const cart = useCart();
+  const { quoting, quoteError, subtotal } = cart;
+  const quote = override ?? cart.quote;
   const { t, locale } = useI18n();
   const money = (n: number) => formatPrice(n, quote?.currency ?? "USD", locale);
   if (!quote) {

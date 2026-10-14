@@ -194,3 +194,76 @@ export interface Quote {
   messages: string[];
   blocking: boolean;
 }
+
+export type OrderStatus = "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
+
+export interface OrderAddress {
+  full_name: string;
+  company?: string | null;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  region?: string | null;
+  postal_code: string;
+  country: string;
+  phone?: string | null;
+}
+
+/** An order as its owner sees it (private link or account page). */
+export interface PublicOrder {
+  id: number;
+  number: string;
+  email: string;
+  customer_name: string | null;
+  status: OrderStatus;
+  payment_status: string;
+  fulfillment_status: string;
+  currency: string;
+  subtotal: number;
+  discount_total: number;
+  shipping_total: number;
+  tax_total: number;
+  grand_total: number;
+  refunded_total: number;
+  coupon_code: string | null;
+  discounts: { type: string; label: string; code: string | null; amount: number }[];
+  shipping_address: OrderAddress | null;
+  carrier: string | null;
+  tracking_number: string | null;
+  tracking_url: string | null;
+  payment_provider: string | null;
+  notes: string | null;
+  placed_at: string | null;
+  paid_at: string | null;
+  shipped_at: string | null;
+  delivered_at: string | null;
+  cancelled_at: string | null;
+  items: {
+    id: number;
+    product_id: number | null;
+    slug: string | null;
+    sku: string;
+    title: string;
+    image_url: string | null;
+    unit_price: number;
+    list_price: number | null;
+    quantity: number;
+    line_total: number;
+    discount_total: number;
+    attributes: Record<string, unknown>;
+  }[];
+  timeline: { type: string; message: string | null; created_at: string }[];
+  access_token: string | null;
+}
+
+export interface PaymentAction {
+  provider: string;
+  status: "paid" | "pending" | "redirect";
+  redirect_url: string | null;
+  instructions: string | null;
+}
+
+export interface CheckoutResult {
+  order: PublicOrder;
+  payment: PaymentAction;
+}
