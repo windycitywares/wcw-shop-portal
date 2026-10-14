@@ -172,6 +172,26 @@ class World:
             raise AssertionError(f"quote failed: {r.status_code} {r.text}")
         return r.json()
 
+    # ---- checkout -------------------------------------------------------------------------
+    @staticmethod
+    def address(**over: Any) -> dict[str, Any]:
+        return {"full_name": "Ana Ruiz", "line1": "1 Main St", "city": "Chicago", "region": "IL", "postal_code": "60601",
+                "country": "US", **over}
+
+    def checkout_body(self, email: str, items: list[dict], **over: Any) -> dict[str, Any]:
+        return {"items": items, "email": email, "shipping_address": self.address(), "payment_method": "test", "locale": "en", **over}
+
+    def place(self, email: str, items: list[dict], headers: dict | None = None, expect: int = 201, **over: Any) -> dict[str, Any]:
+        """Check out (test payment unless `payment_method` is given) and return the response body."""
+        reset_limits()
+        r = self.post("/checkout", self.checkout_body(email, items, **over), headers)
+        if r.status_code != expect:
+            raise AssertionError(f"checkout answered {r.status_code}, expected {expect}: {r.text}")
+        return r.json()
+
+    def stock(self, product: dict[str, Any]) -> dict[str, Any]:
+        return self.sql("SELECT stock_quantity, stock_status::text AS status, units_sold FROM products WHERE id = :id", id=product["id"])[0]
+
     def mails_to(self, email: str, subject_part: str | None = None) -> list[Any]:
         found = [m for m in self.sent if m.to == email.lower()]
         return [m for m in found if subject_part.lower() in m.subject.lower()] if subject_part else found

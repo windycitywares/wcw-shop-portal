@@ -1,9 +1,12 @@
+import secrets
 from datetime import datetime, timezone
+from decimal import Decimal
 
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.enums import UserRole
+from app.core.enums import OrderStatus, UserRole
 from app.core.exceptions import (
     AuthenticationError,
     ConflictError,
@@ -11,11 +14,18 @@ from app.core.exceptions import (
     PermissionDeniedError,
     ValidationFailedError,
 )
+from app.core.i18n import LANGUAGES
 from app.core.permissions import permissions_for
 from app.core.security import create_access_token, hash_password, verify_password
+from app.domain import emailtext
+from app.domain.contacts import SERVICE_ONLY_SOURCES  # noqa: F401  (also imported from here by other services)
+from app.models.order import Order
 from app.models.user import NewsletterSubscriber, User
 from app.repositories.user import NewsletterRepository, UserRepository
 from app.schemas.user import RegisterIn, TokenOut, UserCreate, UserMe, UserUpdate
+from app.services import emails
+from app.services.promotions import issue_coupon
+from app.services.settings import SettingsService
 
 
 def to_me(user: User) -> UserMe:
@@ -109,16 +119,77 @@ class UserService(AuthService):
 
 
 class NewsletterService:
+    """The marketing consent registry: who opted in, when they left, and the one-time welcome offer."""
+
     def __init__(self, session: AsyncSession):
         self.session = session
         self.repo = NewsletterRepository(session)
 
-    async def subscribe(self, email: str) -> None:
+    async def _has_ordered(self, email: str) -> bool:
+        return (await self.session.execute(
+            select(func.count()).select_from(Order).where(Order.email == email, Order.status != OrderStatus.CANCELLED)
+        )).scalar_one() > 0
+
+    async def add(
+        self, email: str, locale: str | None = "en", *, source: str = "site", welcome: bool = True, commit: bool = True,
+    ) -> NewsletterSubscriber:
+        """Subscribe an address (or welcome it back). New subscribers get the welcome coupon when that is switched on."""
         email = email.strip().lower()
-        if await self.repo.get_by(email=email):
-            return  # already subscribed; don't reveal membership
-        self.repo.add(NewsletterSubscriber(email=email))
-        try:
+        locale = locale if locale in LANGUAGES else "en"
+        row = await self.repo.get_by(email=email)
+        if row is not None and row.source not in SERVICE_ONLY_SOURCES:
+            if row.unsubscribed_at is not None:  # coming back: no second welcome offer
+                row.unsubscribed_at = None
+                row.locale = locale
+            if commit:
+                await self.session.commit()
+            return row
+        if row is not None:  # so far only allowed to send service emails: now a real subscriber
+            row.source, row.unsubscribed_at, row.locale = source, None, locale
+        else:
+            row = self.repo.add(NewsletterSubscriber(email=email, locale=locale, source=source, unsubscribe_token=secrets.token_urlsafe(24)))
+        queued = []
+        settings = await SettingsService(self.session).load()
+        if welcome and settings.welcome.enabled and not await self._has_ordered(email):
+            coupon = await issue_coupon(
+                self.session, email=email, kind="percent", value=Decimal(settings.welcome.percent), expires_days=settings.welcome.expires_days,
+                source="welcome", prefix="WELCOME", campaign="welcome", min_subtotal=settings.welcome.min_subtotal, first_order_only=True,
+                name="Welcome offer",
+            )
+            row.welcome_coupon = coupon.code
+            queued.append(emails.enqueue(self.session, "welcome_offer", email, {
+                "name": None, "percent": settings.welcome.percent, "expires": emailtext.long_date(coupon.expires_at, locale),
+                "code": coupon.code, "shop_url": emails.site_link("/shop", locale),
+                "unsubscribe_url": emails.unsubscribe_url(row.unsubscribe_token, locale),
+            }, locale=locale, related_type="newsletter"))
+        if commit:
+            try:
+                await self.session.commit()
+            except IntegrityError:  # two sign-ups for the same address at once
+                await self.session.rollback()
+                return await self.repo.get_by(email=email) or row
+            await emails.deliver(self.session, queued)
+        return row
+
+    async def contact(self, email: str, locale: str | None, source: str) -> NewsletterSubscriber:
+        """The consent row for an address, created (for service emails only) when missing. Flushes, no commit."""
+        email = email.strip().lower()
+        row = await self.repo.get_by(email=email)
+        if row is None:
+            row = self.repo.add(NewsletterSubscriber(email=email, locale=locale if locale in LANGUAGES else "en", source=source,
+                                                     unsubscribe_token=secrets.token_urlsafe(24)))
+            await self.session.flush()
+        return row
+
+    async def subscribe(self, email: str, locale: str | None = "en") -> None:
+        await self.add(email, locale, source="site", welcome=True)
+
+    async def unsubscribe(self, token: str) -> bool:
+        """Opt out with the link from an email. True when the token is known (repeating it is harmless)."""
+        row = await self.repo.get_by(unsubscribe_token=token)
+        if row is None:
+            return False
+        if row.unsubscribed_at is None:
+            row.unsubscribed_at = datetime.now(timezone.utc)
             await self.session.commit()
-        except IntegrityError:
-            await self.session.rollback()
+        return True
