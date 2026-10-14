@@ -65,7 +65,7 @@ export function rangeLabel(r: DateRange): string {
   return `${f.format(parse(r.from))} – ${f.format(parse(r.to))}`;
 }
 
-/** Query string for the report endpoints: ?from=…&to=… */
+/** Query string for the report endpoints (`/admin/reports/*`): ?start=…&end=… (inclusive store-local dates). */
 export function rangeParams(r: { from: string; to: string }, extra: Record<string, string> = {}): string {
-  return new URLSearchParams({ from: r.from, to: r.to, ...extra }).toString();
+  return new URLSearchParams({ start: r.from, end: r.to, ...extra }).toString();
 }

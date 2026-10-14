@@ -35,6 +35,6 @@ test("a range across the daylight-saving change still counts whole days", () => 
 test("labels and query strings", () => {
   assert.equal(rangeLabel(presetRange("30d", today)), "Last 30 days");
   assert.equal(rangeLabel({ preset: "custom", from: "2026-10-01", to: "2026-10-14" }), "Oct 1, 2026 – Oct 14, 2026");
-  assert.equal(rangeParams({ from: "2026-10-01", to: "2026-10-14" }), "from=2026-10-01&to=2026-10-14");
-  assert.equal(rangeParams({ from: "2026-10-01", to: "2026-10-14" }, { by: "day" }), "from=2026-10-01&to=2026-10-14&by=day");
+  assert.equal(rangeParams({ from: "2026-10-01", to: "2026-10-14" }), "start=2026-10-01&end=2026-10-14");
+  assert.equal(rangeParams({ from: "2026-10-01", to: "2026-10-14" }, { by: "day" }), "start=2026-10-01&end=2026-10-14&by=day");
 });
