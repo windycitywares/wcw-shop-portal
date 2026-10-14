@@ -120,6 +120,21 @@ A cron job runs every 10 minutes (`crontab -l`):
 
 So the release flow is: **merge a PR into `main` → live within ~10 minutes.**
 
+## Background jobs
+
+The same cron line also runs `deploy/run-jobs.sh` after every update check (every 10 minutes), which calls
+`python -m app.scripts.run_jobs`: queued emails and retries, abandoned-cart reminders, review requests,
+back-in-stock emails, expiry of unpaid card orders, the Monday 7am owner digest (Settings → Digest) and a nightly
+clean-up of analytics older than the retention period. It is safe to run by hand and two runs never overlap.
+
+```bash
+bash ~/repos/wcw-portal/deploy/run-jobs.sh                 # whatever is due
+bash ~/repos/wcw-portal/deploy/run-jobs.sh --only outbox   # just some jobs
+bash ~/repos/wcw-portal/deploy/run-jobs.sh --force-digest  # send the weekly email now
+```
+
+It prints a line to `~/logs/wcw-deploy.log` only when it did something or a job failed.
+
 ## Main site (windycitywares.com)
 
 windycitywares.com runs the brand site from the separate repo **windycitywares/wcw-main-site**
