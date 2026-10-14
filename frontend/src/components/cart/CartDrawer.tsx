@@ -38,7 +38,10 @@ export function CartDrawer() {
               <FreeShippingProgress />
               <RewardHint />
               <CartTotals compact />
-              <ButtonLink href={href("/cart")} onClick={close} className="w-full" size="lg">
+              <ButtonLink href={href("/checkout")} onClick={close} className="w-full" size="lg">
+                {t.cart.checkout}
+              </ButtonLink>
+              <ButtonLink href={href("/cart")} onClick={close} className="w-full" variant="secondary">
                 {t.cart.view}
               </ButtonLink>
             </div>

@@ -91,6 +91,51 @@ test.describe("the cart", () => {
   });
 });
 
+test.describe("checkout", () => {
+  test("a guest checks out with the test payment and lands on the private order page", async ({ page }) => {
+    const seen = watch(page);
+    await page.goto("/shop");
+    await page.getByRole("link", { name: new RegExp(PRODUCT) }).first().click();
+    await page.getByRole("button", { name: "Add to cart" }).click();
+    await page.getByRole("dialog", { name: "Your cart" }).getByRole("link", { name: "Checkout" }).click();
+
+    await expect(page.getByRole("heading", { level: 1, name: "Checkout" })).toBeVisible();
+    const summary = page.getByRole("complementary", { name: "Your order" });
+    await expect(summary.getByText("$8.95")).toBeVisible(); // flat shipping under the free-shipping threshold
+
+    // An unknown code is explained, not silently ignored.
+    await summary.getByLabel("Discount code").fill("NOT-A-REAL-CODE");
+    await summary.getByRole("button", { name: "Apply" }).click();
+    await expect(summary.getByRole("alert")).toContainText("NOT-A-REAL-CODE");
+    await summary.getByRole("button", { name: "Remove code" }).click();
+
+    await page.getByLabel("Email for your receipt").fill(`guest-${Date.now()}@example.com`);
+    await page.getByLabel("Full name").fill("Ana Ruiz");
+    await page.getByLabel("Street address").fill("1 Main St");
+    await page.getByLabel("City").fill("Chicago");
+    await page.getByLabel("State / province").fill("IL");
+    await page.getByLabel("ZIP / postal code").fill("60601");
+    await page.getByLabel(/Test payment/).check();
+    await a11y(page, { enforce: false });
+    await page.getByRole("button", { name: "Place order" }).click();
+
+    await expect(page).toHaveURL(/\/order\/[\w-]+$/);
+    await expect(page.getByRole("heading", { level: 1, name: /^Order WCW-\d+$/ })).toBeVisible();
+    await expect(page.getByText("Thank you! Your payment was received.")).toBeVisible();
+    await expect(page.getByText("Ana Ruiz")).toBeVisible();
+    await expect(page.getByRole("list", { name: "Order progress" })).toBeVisible();
+
+    await page.goto("/cart");
+    await expect(page.getByText("Your cart is empty.")).toBeVisible(); // the cart was emptied after ordering
+    seen.expectClean();
+  });
+
+  test("an empty cart can't check out", async ({ page }) => {
+    await page.goto("/checkout");
+    await expect(page.getByText("Your cart is empty.")).toBeVisible();
+  });
+});
+
 test.describe("contact and account pages", () => {
   test("the contact form validates before sending", async ({ page }) => {
     await page.goto("/contact");
