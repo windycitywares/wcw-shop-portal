@@ -51,6 +51,10 @@ class Product(TimestampMixin, Base):
         server_default=StockStatus.IN_STOCK.value,
     )
     stock_quantity: Mapped[int | None]
+    cost_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))  # what it costs us, for margin reports
+    units_sold: Mapped[int] = mapped_column(default=0, server_default=text("0"))  # paid units, drives "best seller"
+    rating_avg: Mapped[Decimal] = mapped_column(Numeric(3, 2), default=0, server_default=text("0"))
+    rating_count: Mapped[int] = mapped_column(default=0, server_default=text("0"))
     attributes: Mapped[dict[str, Any]] = mapped_column(
         JSONB, default=dict, server_default=text("'{}'::jsonb")
     )
