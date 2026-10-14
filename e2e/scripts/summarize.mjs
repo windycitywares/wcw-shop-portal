@@ -23,14 +23,12 @@ function walk(suite, trail) {
       const status = t.status; // expected | unexpected | flaky | skipped
       rows.push({ name, status, ms: last?.duration ?? 0, file: spec.file });
       if (status === "unexpected") {
-        const err = last?.error?.message ?? last?.errors?.[0]?.message ?? "failed";
-        failures.push({ name, file: spec.file, err: err.replace(/\u001b\[[0-9;]*m/g, "").split("\n").slice(0, 14).join("\n") });
+        failures.push({ name, file: spec.file, err: describe(last) || "failed" });
       }
       if (status === "flaky") {
         const first = t.results.find((r) => r.status === "failed" || r.status === "timedOut");
-        const err = (first?.error?.message ?? first?.errors?.[0]?.message ?? "").replace(/\u001b\[[0-9;]*m/g, "").split("\n").slice(0, 12).join("\n");
         flaky.push(name);
-        flakyErrors.set(name, err);
+        flakyErrors.set(name, describe(first));
       }
       for (const a of t.annotations ?? []) {
         if (a.type?.startsWith("a11y")) a11y.set(a.description, name);
@@ -42,6 +40,21 @@ function walk(suite, trail) {
 for (const s of report.suites ?? []) walk(s, []);
 
 fs.mkdirSync(new URL("../shots/", import.meta.url), { recursive: true });
+// What a failed attempt was doing: its error, where it stopped, and the steps with their durations.
+function describe(result) {
+  if (!result) return "";
+  const err = (result.error?.message ?? result.errors?.[0]?.message ?? "").replace(/\u001b\[[0-9;]*m/g, "").split("\n").slice(0, 12).join("\n");
+  const loc = result.error?.location ?? result.errors?.[0]?.location;
+  const steps = [];
+  const walkSteps = (list, depth) => {
+    for (const st of list ?? []) {
+      if (depth < 2 && st.duration > 400) steps.push(`${"  ".repeat(depth)}${(st.duration / 1000).toFixed(1)}s ${st.title}${st.error ? "  ← failed" : ""}`);
+      walkSteps(st.steps, depth + 1);
+    }
+  };
+  walkSteps(result.steps, 0);
+  return [err, loc ? `at ${loc.file?.split("/").slice(-1)[0]}:${loc.line}` : "", steps.length ? `slow steps:\n${steps.slice(0, 14).join("\n")}` : ""].filter(Boolean).join("\n");
+}
 const esc = (s) => s.replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A");
 const total = rows.length;
 const failed = failures.length;
