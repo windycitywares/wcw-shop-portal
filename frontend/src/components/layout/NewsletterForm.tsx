@@ -5,7 +5,7 @@ import { useI18n } from "@/i18n/client";
 import { apiFetch } from "@/lib/client-api";
 
 export function NewsletterForm() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -14,11 +14,8 @@ export function NewsletterForm() {
     const email = String(new FormData(e.currentTarget).get("email") || "");
     setState("sending");
     try {
-      const res = await apiFetch<{ detail: string }>("/newsletter", {
-        method: "POST",
-        body: JSON.stringify({ email }),
-      });
-      setMessage(res.detail);
+      await apiFetch("/newsletter", { method: "POST", body: JSON.stringify({ email, locale }) });
+      setMessage(t.footer.subscribed);
       setState("done");
     } catch (err) {
       setMessage(err instanceof Error ? err.message : t.auth.error);

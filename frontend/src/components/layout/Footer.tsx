@@ -16,6 +16,7 @@ export function Footer({ locale }: { locale: Locale }) {
       title: t.footer.shop,
       links: [
         { label: t.nav.shopAll, href: l("/shop") },
+        { label: t.nav.deals, href: l("/deals") },
         { label: t.footer.newArrivals, href: l("/shop?sort=newest") },
         { label: t.nav.search, href: l("/search") },
       ],
@@ -30,7 +31,10 @@ export function Footer({ locale }: { locale: Locale }) {
     },
     {
       title: t.footer.help,
-      links: [{ label: t.footer.contact, href: l("/contact") }],
+      links: [
+        { label: t.footer.findOrder, href: l("/track-order") },
+        { label: t.footer.contact, href: l("/contact") },
+      ],
     },
   ];
   return (

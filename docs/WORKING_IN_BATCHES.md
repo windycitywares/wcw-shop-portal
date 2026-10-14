@@ -28,19 +28,42 @@ Owner's instruction, for every session that works on this repo (people or Claude
 
 ## Current plan: commerce, promotions, tracking and reports
 
-Backend (merge in order):
+Status as of 2026-10-14. Merge in the order listed; only merge a PR once its CI is green.
 
-| # | Batch | Contents |
-|---|-------|----------|
-| 1 | Data layer | Migrations 0006–0008, models, core (permissions, limits, config), pure domain rules + unit tests |
-| 2 | Pricing and promotions API | Store settings, sales, coupons (incl. bulk generation), cart offers, cart quote, sale prices on products |
-| 3 | Checkout and orders | Checkout, payments (Stripe, pay later), order emails, stock, orders admin, abandoned carts |
-| 4 | Engagement | Reviews, wishlist, back-in-stock, newsletter + welcome offer, customers, email campaigns |
-| 5 | Tracking, reports, jobs | Consent-based analytics, report APIs, KPIs + suggestions, scheduled jobs, integration tests |
+Backend:
 
-Storefront (one PR each): sale badges + deals page · cart with coupon and free-shipping progress · checkout ·
-order page + order lookup + unsubscribe · reviews, wishlist, notify-me · consent banner + tracking · info pages
-(FAQ, shipping, returns, privacy, terms).
+| # | Batch | Contents | PR |
+|---|-------|----------|----|
+| 1 | Data layer | Migrations 0006–0008, models, core (permissions, limits, config), pure domain rules + unit tests | #19 + fix #20 (merged) |
+| 2 | Pricing and promotions API | Store settings, sales, coupons (incl. bulk generation), cart offers, cart quote, sale prices on products | #21 (merged) |
+| 3 | Checkout and orders | Checkout, payments (Stripe, pay later), order emails, stock, orders admin, abandoned carts | #22 (merged) |
+| 4 | Engagement | Reviews, wishlist, back-in-stock, newsletter + welcome offer, customers, email campaigns | #23 (merged) |
+| 5 | Tracking, reports, jobs | Consent-based analytics, report APIs, KPIs + suggestions, scheduled jobs, integration tests | #24 (merged) |
+
+Storefront:
+
+| # | Batch | PR |
+|---|-------|----|
+| 1 | Sale prices, badges, ratings, Deals page, announcement bar | #25 (merged) |
+| 2 | Server-priced cart, discount codes, free-shipping progress, cart recovery links | #26 (merged) |
+| 3 | Checkout + private order page | #27 (merged; fix #28) |
+| 4 | Order history, find my order, unsubscribe page | #29 |
+| 5 | Product reviews, wishlist hearts, notify-me, recently viewed, also bought | next |
+| 6 | Consent banner + behaviour tracking (needs backend #24) | |
+| 7 | Info pages: FAQ, shipping, returns, privacy, terms (legal text needs the owner's review) | |
 
 Admin (one PR each): new navigation + dashboard · orders · promotions (sales, coupons, offers) · customers + campaigns ·
-reviews + settings + audit log · analytics pages + suggestions.
+reviews + settings + audit log · analytics pages + suggestions · contact-messages inbox.
+
+Closed draft #18 (`feat/commerce-core`, an earlier one-shot version) is superseded. Its contact-messages inbox and
+first admin pages for orders, promotions and settings are the starting point for those admin batches.
+
+Parked, already-written backend code lives on branch `wip/commerce-rest` (not for merging): take files from it with
+`git checkout wip/commerce-rest -- <paths>` when a batch needs them.
+
+Lessons from these batches (check before pushing):
+- Alembic revision headers: `tests/test_migration_chain.py` catches a broken chain.
+- Raw SQL through asyncpg: parameters in a `SELECT` list need `CAST(:x AS type)`. Check new queries as untyped
+  prepared statements (`PREPARE q AS ...` with `$1..$n`) against a migrated database.
+- Frontend can't be type-checked in the sandbox (npm is blocked); CI's `build` job is the type check. Watch for
+  union types on shared components (e.g. Turnstile `action`).
