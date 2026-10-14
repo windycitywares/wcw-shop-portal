@@ -2,6 +2,7 @@ import type { Crumb } from "@/components/ui/misc";
 import { localePath, type Locale } from "@/i18n/config";
 import { absoluteUrl, site } from "@/lib/site";
 import type { ProductDetail } from "@/lib/types";
+import { displayPrice } from "@/lib/utils";
 
 /** Renders schema.org structured data. `<` is escaped so content can't break out of the script tag. */
 export function JsonLd({ data }: { data: Record<string, unknown> }) {
@@ -45,10 +46,13 @@ const AVAILABILITY: Record<string, string> = {
 };
 
 export function productLd(p: ProductDetail, locale: Locale = "en") {
-  const offer = (item: { sku: string; base_price: number; currency: string; stock_status: string }) => ({
+  type Priced = { sku: string; base_price: number; compare_at_price: number | null; sale_price?: number | null; currency: string; stock_status: string; sale_ends_at?: string | null };
+  const now = (item: Priced) => displayPrice(item).amount;
+  const offer = (item: Priced) => ({
     "@type": "Offer",
     sku: item.sku,
-    price: item.base_price.toFixed(2),
+    price: now(item).toFixed(2),
+    ...(item.sale_price != null && item.sale_ends_at ? { priceValidUntil: item.sale_ends_at.slice(0, 10) } : {}),
     priceCurrency: item.currency,
     availability: AVAILABILITY[item.stock_status],
     url: absoluteUrl(localePath(locale, `/product/${p.slug}`)),
@@ -63,12 +67,15 @@ export function productLd(p: ProductDetail, locale: Locale = "en") {
     image: p.images.map((i) => i.url),
     brand: { "@type": "Brand", name: brand },
     category: p.category?.name,
+    ...(p.rating_count
+      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: (p.rating_avg ?? 0).toFixed(1), reviewCount: p.rating_count } }
+      : {}),
     offers: p.variants.length
       ? {
           "@type": "AggregateOffer",
           priceCurrency: p.currency,
-          lowPrice: Math.min(...p.variants.map((v) => v.base_price)).toFixed(2),
-          highPrice: Math.max(...p.variants.map((v) => v.base_price)).toFixed(2),
+          lowPrice: Math.min(...p.variants.map(now)).toFixed(2),
+          highPrice: Math.max(...p.variants.map(now)).toFixed(2),
           offerCount: p.variants.length,
           offers: p.variants.map(offer),
         }

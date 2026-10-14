@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { Providers } from "@/components/Providers";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { JsonLd, organizationLd } from "@/components/seo/JsonLd";
@@ -61,6 +62,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         </a>
         <I18nProvider locale={locale}>
           <Providers>
+            <AnnouncementBar locale={locale} />
             <Header locale={locale} />
             <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
               {children}

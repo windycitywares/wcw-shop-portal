@@ -73,6 +73,11 @@ export function MobileNav({ tree }: { tree: CategoryNode[] }) {
                   {t.nav.shopAll}
                 </Link>
               </li>
+              <li>
+                <Link href={href("/deals")} onClick={close} className="block py-3 font-medium">
+                  {t.nav.deals}
+                </Link>
+              </li>
               {tree.map((node) => (
                 <li key={node.id}>
                   <Branch node={node} onNavigate={close} />
