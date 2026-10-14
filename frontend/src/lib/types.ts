@@ -267,3 +267,14 @@ export interface CheckoutResult {
   order: PublicOrder;
   payment: PaymentAction;
 }
+
+/** Compact product (wishlist, also bought, recently viewed). */
+export interface ProductCardData {
+  id: number;
+  slug: string;
+  title: string;
+  base_price: number;
+  sale_price: number | null;
+  compare_at_price: number | null;
+  image: string | null;
+}

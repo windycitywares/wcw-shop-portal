@@ -8,6 +8,8 @@ import type { Product, ProductDetail } from "@/lib/types";
 import { attributeList, cn, displayPrice, formatPrice, percentOff } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Price } from "@/components/ui/misc";
+import { NotifyMe } from "@/components/product/NotifyMe";
+import { WishlistButton } from "@/components/product/WishlistButton";
 
 /**
  * Two ways a product offers choices:
@@ -173,6 +175,8 @@ export function PurchasePanel({ product }: { product: ProductDetail }) {
           {soldOut ? t.product.soldOut : t.product.addToCart}
         </Button>
       </div>
+      {soldOut && <NotifyMe productId={active.id} />}
+      <WishlistButton productId={product.id} />
     </div>
   );
 }
