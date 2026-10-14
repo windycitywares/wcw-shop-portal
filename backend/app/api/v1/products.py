@@ -13,9 +13,11 @@ from app.repositories.product import SORTS, ProductQuery, ProductRepository
 from app.schemas.common import Page
 from app.schemas.product import (
     Facets,
+    ProductCard,
     ProductCreate,
     ProductDetail,
     ProductOut,
+    ProductStaffDetail,
     ProductUpdate,
     StatusChange,
 )
@@ -48,6 +50,8 @@ async def list_products(
     min_price: Annotated[Decimal | None, Query(ge=0)] = None,
     max_price: Annotated[Decimal | None, Query(ge=0)] = None,
     in_stock: bool = False,
+    on_sale: bool = False,
+    min_rating: Annotated[int | None, Query(ge=1, le=5)] = None,
     sort: Annotated[str, Query(pattern="^(" + "|".join(SORTS) + ")$")] = "newest",
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 24,
@@ -73,12 +77,23 @@ async def list_products(
         in_stock_only=in_stock,
         created_by_id=user.id if mine and user else None,
         source=source,
+        on_sale=await service.on_sale_clause() if on_sale else None,
+        min_rating=min_rating,
         sort=sort,
         page=page,
         page_size=page_size,
     )
     # Translations are left out of storefront lists (they'd triple the payload).
-    return localize.page(await service.search(query), lang)
+    return localize.page(await service.search(query, lang), lang)
+
+
+@router.get("/suggest", response_model=list[ProductCard])
+async def suggest_products(
+    response: Response, session: SessionDep, q: Annotated[str, Query(min_length=2, max_length=80)], lang: Lang = None
+):
+    """Search-as-you-type: up to six matching products (title, price, photo)."""
+    response.headers["Cache-Control"] = "public, max-age=30"
+    return await ProductService(session).suggest(q, lang)
 
 
 @router.get("/facets", response_model=Facets)
@@ -103,31 +118,38 @@ async def export_products(session: SessionDep, _: Staff):
     )
 
 
-@router.get("/by-id/{product_id}", response_model=ProductDetail)
+@router.get("/by-id/{product_id}", response_model=ProductStaffDetail)
 async def get_product_by_id(session: SessionDep, user: Staff, product_id: int):
     return await ProductService(session).detail(viewer=user, id=product_id)
 
 
+@router.get("/{slug}/related", response_model=list[ProductCard])
+async def related_products(response: Response, session: SessionDep, slug: str, lang: Lang = None):
+    """"Customers also bought": products from the same paid orders, then popular ones from the category."""
+    response.headers["Cache-Control"] = "public, max-age=120"
+    return await ProductService(session).related(slug, lang)
+
+
 @router.get("/{slug}", response_model=ProductDetail)
 async def get_product(session: SessionDep, user: OptionalUser, slug: str, lang: Lang = None):
-    result = await ProductService(session).detail(viewer=user, slug=slug)
+    result = await ProductService(session).detail(viewer=user, lang=lang, slug=slug)
     localize.product(result, lang)
     return result
 
 
-@router.post("", response_model=ProductDetail, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ProductStaffDetail, status_code=status.HTTP_201_CREATED)
 async def create_product(
     session: SessionDep, user: Annotated[User, Depends(require(Permission.CATALOG_CREATE))], data: ProductCreate
 ):
     return await ProductService(session).create(data, user)
 
 
-@router.patch("/{product_id}", response_model=ProductDetail)
+@router.patch("/{product_id}", response_model=ProductStaffDetail)
 async def update_product(session: SessionDep, user: CurrentUser, product_id: int, data: ProductUpdate):
     return await ProductService(session).update(product_id, data, user)
 
 
-@router.post("/{product_id}/status", response_model=ProductDetail)
+@router.post("/{product_id}/status", response_model=ProductStaffDetail)
 async def change_status(session: SessionDep, user: CurrentUser, product_id: int, data: StatusChange):
     """Workflow: draft -> in_review (authors) -> published / archived (publishers, admins)."""
     return await ProductService(session).set_status(product_id, data.status, user)

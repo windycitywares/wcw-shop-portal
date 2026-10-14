@@ -31,6 +31,7 @@ class ProductFields(BaseModel):
     seo_title: str | None = Field(default=None, max_length=300)
     seo_description: str | None = Field(default=None, max_length=500)
     translations: Translations = {}
+    cost_price: Decimal | None = Field(default=None, ge=0, max_digits=12, decimal_places=2)
 
 
 class ProductCreate(ProductFields):
@@ -60,6 +61,7 @@ class ProductUpdate(BaseModel):
     seo_title: str | None = Field(default=None, max_length=300)
     seo_description: str | None = Field(default=None, max_length=500)
     translations: Translations | None = None
+    cost_price: Decimal | None = Field(default=None, ge=0, max_digits=12, decimal_places=2)
 
 
 class StatusChange(BaseModel):
@@ -91,12 +93,39 @@ class ProductOut(ORMModel):
     published_at: datetime | None
     created_at: datetime
     updated_at: datetime
+    rating_avg: Money = Decimal("0")
+    rating_count: int = 0
+    # Filled in by the pricing layer (not stored): the sale price right now, what it is called and when it ends.
+    sale_price: Money | None = None
+    sale_label: str | None = None
+    sale_ends_at: datetime | None = None
+    # "sale", "best_seller", "new", "low_stock"
+    badges: list[str] = []
 
 
 class ProductDetail(ProductOut):
     variants: list[ProductOut]
     category: CategoryOut | None
     breadcrumb: list[CategoryOut]
+
+
+class ProductStaffDetail(ProductDetail):
+    """Adds what only staff may see. Public routes declare ProductDetail, which drops these fields."""
+
+    cost_price: Money | None = None
+    units_sold: int = 0
+
+
+class ProductCard(ORMModel):
+    """Compact product for typeahead and "also bought" strips."""
+
+    id: int
+    slug: str
+    title: str
+    base_price: Money
+    sale_price: Money | None = None
+    compare_at_price: Money | None = None
+    image: str | None = None
 
 
 class FacetValue(BaseModel):

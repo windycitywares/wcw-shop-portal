@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
 
 from app.core.enums import UserRole
+from app.core.i18n import LANG_PATTERN
 from app.schemas.common import ORMModel
 
 Password = Field(min_length=8, max_length=72)
@@ -58,5 +59,10 @@ class TokenOut(BaseModel):
     user: UserMe
 
 
+class UnsubscribeIn(BaseModel):
+    token: str = Field(min_length=10, max_length=60)
+
+
 class NewsletterIn(BaseModel):
     email: EmailStr
+    locale: str = Field(default="en", pattern=LANG_PATTERN)

@@ -5,10 +5,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core import captcha
-from app.core.exceptions import AuthenticationError, TooManyRequestsError
+from app.core.exceptions import AuthenticationError, NotFoundError, TooManyRequestsError
 from app.core.rate_limit import (
     failed_logins_by_email,
     failed_logins_by_ip,
+    newsletter_by_ip,
     registrations_by_ip,
     reset_attempts_by_ip,
     reset_requests_by_email,
@@ -16,7 +17,7 @@ from app.core.rate_limit import (
 )
 from app.schemas.account import ForgotPasswordIn, ResetPasswordIn
 from app.schemas.common import Message
-from app.schemas.user import NewsletterIn, PasswordChange, ProfileUpdate, SignUpIn, TokenOut, UserMe
+from app.schemas.user import NewsletterIn, PasswordChange, ProfileUpdate, SignUpIn, TokenOut, UnsubscribeIn, UserMe
 from app.services.account import PasswordResetService
 from app.services.auth import AuthService, NewsletterService, UserService, to_me
 
@@ -113,6 +114,19 @@ newsletter_router = APIRouter(prefix="/newsletter", tags=["newsletter"])
 
 
 @newsletter_router.post("", response_model=Message, status_code=status.HTTP_202_ACCEPTED)
-async def subscribe(session: SessionDep, data: NewsletterIn):
-    await NewsletterService(session).subscribe(data.email)
-    return Message(detail="Thanks for subscribing!")
+async def subscribe(request: Request, session: SessionDep, data: NewsletterIn):
+    """Join the email list. The answer is the same for new and existing addresses; new ones get the welcome offer by email."""
+    ip_key = client_ip(request)
+    if newsletter_by_ip.is_blocked(ip_key):
+        raise TooManyRequestsError("Too many sign-ups from this network. Please try again later.")
+    newsletter_by_ip.hit(ip_key)
+    await NewsletterService(session).subscribe(str(data.email), data.locale)
+    return Message(detail="Thanks for subscribing! If this is your first time, your welcome offer is on its way.")
+
+
+@newsletter_router.post("/unsubscribe", response_model=Message)
+async def unsubscribe(session: SessionDep, data: UnsubscribeIn):
+    """Opt out using the token from the link in any of our emails."""
+    if not await NewsletterService(session).unsubscribe(data.token):
+        raise NotFoundError("This unsubscribe link isn't valid.")
+    return Message(detail="You're unsubscribed. We won't email you again.")

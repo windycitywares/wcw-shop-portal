@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from decimal import Decimal
 
-from sqlalchemy import Select, Text, cast, func, or_, select, text
+from sqlalchemy import ColumnElement, Select, Text, cast, func, or_, select, text
 from sqlalchemy.orm import selectinload
 
 from app.core.enums import ContentStatus, StockStatus
@@ -17,6 +17,8 @@ SORTS = {
     "price_desc": (Product.base_price.desc(), Product.id.desc()),
     "title": (Product.title.asc(), Product.id.asc()),
     "updated": (Product.updated_at.desc(), Product.id.desc()),
+    "best_selling": (Product.units_sold.desc(), Product.id.desc()),
+    "rating": (Product.rating_avg.desc(), Product.rating_count.desc(), Product.id.desc()),
 }
 
 
@@ -32,6 +34,8 @@ class ProductQuery:
     include_variants: bool = False
     created_by_id: int | None = None
     source: str | None = None
+    on_sale: ColumnElement[bool] | None = None  # built by promo_catalog.on_sale_clause
+    min_rating: int | None = None
     sort: str = "newest"
     page: int = 1
     page_size: int = 24
@@ -68,6 +72,10 @@ class ProductRepository(BaseRepository[Product]):
             stmt = stmt.where(Product.stock_status == StockStatus.IN_STOCK)
         if f.created_by_id is not None:
             stmt = stmt.where(Product.created_by_id == f.created_by_id)
+        if f.on_sale is not None:
+            stmt = stmt.where(f.on_sale)
+        if f.min_rating:
+            stmt = stmt.where(Product.rating_count > 0, Product.rating_avg >= f.min_rating)
         if f.source:
             stmt = stmt.where(Product.source == f.source)
         for key, values in f.attributes.items():
@@ -87,6 +95,59 @@ class ProductRepository(BaseRepository[Product]):
             stmt.order_by(*order).offset((f.page - 1) * f.page_size).limit(f.page_size)
         )
         return list(rows.scalars().all()), total
+
+    async def suggest(self, q: str, limit: int = 6) -> list[Product]:
+        """Fast typeahead: published top-level products whose title, SKU or translation matches."""
+        like = f"%{escape_like(q.strip())}%"
+        starts = f"{escape_like(q.strip())}%"
+        stmt = (
+            select(Product)
+            .where(
+                Product.parent_id.is_(None),
+                Product.status == ContentStatus.PUBLISHED,
+                or_(Product.title.ilike(like), Product.sku.ilike(like), cast(Product.translations, Text).ilike(like)),
+            )
+            .order_by(Product.title.ilike(starts).desc(), Product.units_sold.desc(), Product.title)
+            .limit(limit)
+        )
+        return list((await self.session.execute(stmt)).scalars().all())
+
+    async def co_purchased_ids(self, product_id: int, limit: int = 8) -> list[int]:
+        """Products that appear in the same paid orders, most often first."""
+        rows = await self.session.execute(
+            text(
+                """
+                SELECT oi2.product_id, COUNT(DISTINCT oi2.order_id) AS n
+                FROM order_items oi1
+                JOIN orders o ON o.id = oi1.order_id AND o.paid_at IS NOT NULL AND o.status <> 'cancelled'
+                JOIN order_items oi2 ON oi2.order_id = oi1.order_id AND oi2.product_id <> oi1.product_id
+                WHERE oi1.product_id = :pid AND oi2.product_id IS NOT NULL
+                GROUP BY oi2.product_id
+                ORDER BY n DESC, oi2.product_id
+                LIMIT :lim
+                """
+            ),
+            {"pid": product_id, "lim": limit},
+        )
+        return [r[0] for r in rows.all()]
+
+    async def popular_in_category(self, category_id: int | None, exclude: list[int], limit: int) -> list[Product]:
+        stmt = select(Product).where(
+            Product.parent_id.is_(None), Product.status == ContentStatus.PUBLISHED, Product.id.notin_(exclude or [0])
+        )
+        if category_id is not None:
+            stmt = stmt.where(Product.category_id == category_id)
+        stmt = stmt.order_by(Product.units_sold.desc(), Product.published_at.desc().nulls_last(), Product.id).limit(limit)
+        return list((await self.session.execute(stmt)).scalars().all())
+
+    async def get_many(self, ids: list[int]) -> list[Product]:
+        if not ids:
+            return []
+        rows = await self.session.execute(
+            select(Product).where(Product.id.in_(ids), Product.status == ContentStatus.PUBLISHED, Product.parent_id.is_(None))
+        )
+        by_id = {p.id: p for p in rows.scalars().all()}
+        return [by_id[i] for i in ids if i in by_id]
 
     async def get_with_relations(self, **filters) -> Product | None:
         stmt = (
