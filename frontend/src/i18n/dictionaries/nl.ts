@@ -458,9 +458,6 @@ const nl: Dictionary = {
     changed: "Wachtwoord gewijzigd. Je bent overal elders uitgelogd.",
     change: "Wachtwoord wijzigen",
     changeFailed: "Het wachtwoord kon niet worden gewijzigd.",
-    orders: "Bestellingen",
-    ordersEmpty: "Je bestelgeschiedenis verschijnt hier zodra online afrekenen beschikbaar is.",
-    keepShopping: "Verder winkelen",
     signOut: "Uitloggen",
   },
   attributes: {
