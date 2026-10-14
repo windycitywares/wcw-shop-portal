@@ -4,6 +4,7 @@
 # - API: when `main` has new commits, run update-api.sh (tests must pass before it restarts).
 # - Storefront: when GitHub Actions has published a new build, run update-storefront.sh.
 # - Main site: when windycitywares/wcw-main-site Actions has published a new build, run update-main-site.sh.
+# - Then the background jobs (queued emails, reminders, weekly digest, clean-up): run-jobs.sh.
 set -uo pipefail
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"   # cron's default PATH is minimal
 exec 9>"$HOME/.wcw-deploy.lock"
@@ -21,3 +22,5 @@ fi
 
 bash "$REPO/deploy/update-storefront.sh" --if-changed || echo "$(date '+%F %T') storefront update FAILED"
 bash "$REPO/deploy/update-main-site.sh" --if-changed || echo "$(date '+%F %T') main site update FAILED"
+
+bash "$REPO/deploy/run-jobs.sh" || echo "$(date '+%F %T') background jobs FAILED"
