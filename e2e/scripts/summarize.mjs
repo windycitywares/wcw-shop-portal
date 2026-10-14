@@ -11,6 +11,7 @@ const report = JSON.parse(fs.readFileSync(file, "utf8"));
 const rows = [];
 const failures = [];
 const flaky = [];
+const flakyErrors = new Map();
 const a11y = new Map();
 
 function walk(suite, trail) {
@@ -25,7 +26,12 @@ function walk(suite, trail) {
         const err = last?.error?.message ?? last?.errors?.[0]?.message ?? "failed";
         failures.push({ name, file: spec.file, err: err.replace(/\u001b\[[0-9;]*m/g, "").split("\n").slice(0, 14).join("\n") });
       }
-      if (status === "flaky") flaky.push(name);
+      if (status === "flaky") {
+        const first = t.results.find((r) => r.status === "failed" || r.status === "timedOut");
+        const err = (first?.error?.message ?? first?.errors?.[0]?.message ?? "").replace(/\u001b\[[0-9;]*m/g, "").split("\n").slice(0, 12).join("\n");
+        flaky.push(name);
+        flakyErrors.set(name, err);
+      }
       for (const a of t.annotations ?? []) {
         if (a.type?.startsWith("a11y")) a11y.set(a.description, name);
       }
@@ -47,7 +53,7 @@ const report_md = [
   `# E2E report: ${total - failed - flaky.length} passed, ${flaky.length} flaky, ${failed} failed of ${total}`,
   "",
   ...failures.map((f) => `## ✗ ${f.name}\n\`${f.file}\`\n\n\`\`\`\n${f.err}\n\`\`\`\n`),
-  ...(flaky.length ? ["## Flaky (passed on retry)", ...flaky.map((n) => `- ${n}`), ""] : []),
+  ...(flaky.length ? ["## Flaky (passed on retry)", ...flaky.map((n) => `### ${n}\n\`\`\`\n${flakyErrors.get(n)}\n\`\`\`\n`)] : []),
   ...(a11y.size ? ["## Accessibility findings (not enforced)", ...[...a11y].map(([d, n]) => `### ${n}\n\`\`\`\n${d}\n\`\`\``)] : []),
 ].join("\n");
 fs.writeFileSync(new URL("../shots/REPORT.md", import.meta.url), report_md);
@@ -55,7 +61,7 @@ if (failed) {
   const body = failures.map((f) => `✗ ${f.name} (${f.file}): ${f.err.split("\n").slice(0, 3).join(" | ").slice(0, 280)}`).join("\n");
   console.log(`::error title=E2E: ${failed} of ${total} tests failed::${esc(body.slice(0, 3500))}`);
 }
-if (flaky.length) console.log(`::warning title=E2E flaky tests::${esc(flaky.join("\n"))}`);
+if (flaky.length) console.log(`::warning title=E2E flaky tests::${esc(flaky.map((n) => `${n}: ${(flakyErrors.get(n) ?? "").split("\n").slice(0, 4).join(" | ")}`).join("\n").slice(0, 3000))}`);
 for (const [desc, name] of a11y) console.log(`::warning title=Accessibility (storefront): ${esc(name)}::${esc(desc.slice(0, 3000))}`);
 
 if (process.env.GITHUB_STEP_SUMMARY) {
