@@ -1,6 +1,9 @@
 /** Every admin page. New admin pages are added here, and the tests below cover them automatically. */
 export const ADMIN_ROUTES: { path: string; heading: RegExp; name: string }[] = [
   { path: "/admin", heading: /./, name: "dashboard" },
+  { path: "/admin/analytics", heading: /^Analytics$/, name: "analytics" },
+  { path: "/admin/analytics/sales", heading: /^Sales report$/, name: "analytics-sales" },
+  { path: "/admin/analytics/products", heading: /^Product performance$/, name: "analytics-products" },
   { path: "/admin/orders", heading: /^Orders$/, name: "orders" },
   { path: "/admin/promotions", heading: /^Promotions$/, name: "promotions" },
   { path: "/admin/promotions?tab=coupons", heading: /^Promotions$/, name: "promotions-coupons" },
