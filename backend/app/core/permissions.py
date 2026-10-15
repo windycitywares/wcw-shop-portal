@@ -27,6 +27,7 @@ class Permission(StrEnum):
     CUSTOMERS_VIEW = "customers:view"
     REVIEWS_MODERATE = "reviews:moderate"
     AUDIT_VIEW = "audit:view"
+    MESSAGES_MANAGE = "messages:manage"  # the contact inbox
 
 
 _AUTHOR = {
