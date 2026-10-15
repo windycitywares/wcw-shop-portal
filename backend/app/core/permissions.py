@@ -29,6 +29,7 @@ class Permission(StrEnum):
     AUDIT_VIEW = "audit:view"
     MESSAGES_MANAGE = "messages:manage"  # the contact inbox
     ENVIRONMENT_MANAGE = "environment:manage"  # switch between live and test data
+    BACKUPS_MANAGE = "backups:manage"  # database backups
 
 
 _AUTHOR = {

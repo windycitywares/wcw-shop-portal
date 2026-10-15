@@ -49,8 +49,9 @@ class World:
         async def fake_send(mail: Any) -> None:
             self.sent.append(mail)
 
-        self._mailer, self._real_send = mailer, mailer.send
-        mailer.send = fake_send
+        # Replace only the SMTP step, so Test-mode redirection in mailer.send runs as in production.
+        self._mailer, self._real_send = mailer, mailer.deliver
+        mailer.deliver = fake_send
         self.client = TestClient(create_app())
         self.sfx = uuid.uuid4().hex[:8]
         self._n = 0
@@ -62,7 +63,7 @@ class World:
         self.customer_email, self.customer = self.register("customer")
 
     def close(self) -> None:
-        self._mailer.send = self._real_send
+        self._mailer.deliver = self._real_send
 
     # ---- database ---------------------------------------------------------------------------
     def db(self, fn):
