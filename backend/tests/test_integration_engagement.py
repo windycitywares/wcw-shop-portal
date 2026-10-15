@@ -1,6 +1,7 @@
 """Batch 4 API tests against PostgreSQL: reviews, wishlist, back-in-stock, review requests, customers and campaigns."""
 
 import csv
+import json
 import io
 import unittest
 
@@ -118,9 +119,10 @@ class WishlistAndStockAlertTests(unittest.TestCase):
     def test_back_in_stock_email_once(self):
         w = self.w
         p = w.product(out_of_stock=True)
-        email = w.email("waiting")
+        self.assertEqual(w.post(f"/products/{p['id']}/notify-me", {"email": w.email("guest")}).status_code, 401)  # signed in only
+        email, me = w.register("waiting")
         for _ in range(2):
-            self.assertEqual(w.post(f"/products/{p['id']}/notify-me", {"email": email}).status_code, 202)
+            self.assertEqual(w.post(f"/products/{p['id']}/notify-me", {}, me).status_code, 202)
         self.assertEqual(w.value("SELECT count(*) FROM stock_alerts WHERE email = :e", e=email), 1)
 
         async def notify(session):
@@ -134,6 +136,89 @@ class WishlistAndStockAlertTests(unittest.TestCase):
         run_job(notify)
         run_job(notify)
         self.assertEqual(len(w.mails_to(email, "back in stock")), 1)
+
+
+@skip_unless_db
+class StockRequestTests(unittest.TestCase):
+    """Requests for option combinations: back-in-stock emails, special requests answered by staff, the customer's list."""
+
+    def setUp(self):
+        reset_limits()
+        self.w = world()
+
+    def variant(self, parent: dict, attrs: dict, in_stock: bool) -> dict:
+        v = self.w.product(out_of_stock=not in_stock)
+        self.w.sql("UPDATE products SET parent_id = :p, attributes = CAST(:a AS jsonb) WHERE id = :id", p=parent["id"], a=json.dumps(attrs), id=v["id"])
+        return v
+
+    def notify(self):
+        async def go(session):
+            from app.services.engagement import StockAlertService
+
+            return await StockAlertService(session).notify_back_in_stock()
+
+        return run_job(go)
+
+    def test_list_options_on_a_sold_out_product(self):
+        w = self.w
+        p = w.product(out_of_stock=True)
+        w.sql("UPDATE products SET attributes = CAST(:a AS jsonb) WHERE id = :id", a=json.dumps({"Size": ["Small", "Large"], "Wood": "Oak"}), id=p["id"])
+        email, me = w.register("sizes")
+        url = f"/products/{p['id']}/stock-requests"
+        self.assertEqual(w.post(url, {"options": {"Size": "Large"}}).status_code, 401)
+        self.assertEqual(w.post(url, {"options": {"Size": "Huge"}}, me).status_code, 422)
+        self.assertEqual(w.post(url, {"options": {}}, me).status_code, 422)  # a size must be chosen
+        r = w.post(url, {"options": {"Size": "Large"}, "note": "For my mother's ashes", "locale": "en"}, me)
+        self.assertEqual(r.status_code, 201, r.text)
+        self.assertEqual((r.json()["kind"], r.json()["already"]), ("restock", False))
+        self.assertTrue(w.post(url, {"options": {"Size": "Large"}}, me).json()["already"])  # asking twice is fine
+        mine = w.get("/account/stock-requests", me).json()
+        self.assertEqual((mine[0]["options"], mine[0]["status"], mine[0]["note"]), ({"Size": "Large"}, "waiting", "For my mother's ashes"))
+
+        w.sql("UPDATE products SET stock_status = 'in_stock', stock_quantity = 2 WHERE id = :id", id=p["id"])
+        self.notify()
+        mails = w.mails_to(email, "back in stock")
+        self.assertEqual(len(mails), 1)
+        self.assertIn("Size: Large", mails[0].subject)
+        self.assertEqual(w.get("/account/stock-requests", me).json()[0]["status"], "notified")
+        # in stock now: no request needed
+        self.assertEqual(w.post(url, {"options": {"Size": "Small"}}, me).status_code, 409)
+
+    def test_variant_combinations_and_special_requests(self):
+        w = self.w
+        parent = w.product()
+        self.variant(parent, {"Size": "Small", "Wood": "Oak"}, True)
+        large_oak = self.variant(parent, {"Size": "Large", "Wood": "Oak"}, False)
+        self.variant(parent, {"Size": "Small", "Wood": "Walnut"}, True)
+        email, me = w.register("combo")
+        url = f"/products/{parent['id']}/stock-requests"
+
+        self.assertEqual(w.post(url, {"options": {"Size": "Small", "Wood": "Oak"}}, me).status_code, 409)  # buy it instead
+        r = w.post(url, {"options": {"Size": "Large", "Wood": "Oak"}}, me)
+        self.assertEqual(r.json()["kind"], "restock")
+        self.assertEqual(w.value("SELECT product_id FROM stock_alerts WHERE email = :e AND kind = 'restock'", e=email), large_oak["id"])
+        r = w.post(url, {"options": {"Size": "Large", "Wood": "Walnut"}, "note": "Could you make this?"}, me)
+        self.assertEqual(r.json()["kind"], "request")  # not a combination the shop sells
+
+        self.assertEqual(w.get("/admin/stock-requests", w.publisher).status_code, 403)
+        listed = w.get("/admin/stock-requests", w.admin, kind="request", q=email).json()
+        self.assertEqual(len(listed["items"]), 1)
+        special = listed["items"][0]
+        self.assertEqual((special["options"], special["note"], special["product_id"]), ({"Size": "Large", "Wood": "Walnut"}, "Could you make this?", parent["id"]))
+
+        self.notify()  # the back-in-stock job never answers special requests
+        self.assertEqual(w.mails_to(email), [])
+        r = w.post(f"/admin/stock-requests/{special['id']}/notify", {"message": "We can make it, ships in a week."}, w.admin)
+        self.assertEqual(r.status_code, 204, r.text)
+        mail = w.mails_to(email, "Good news")[0]
+        self.assertIn("ships in a week", mail.text)
+        self.assertEqual(w.post(f"/admin/stock-requests/{special['id']}/notify", {}, w.admin).status_code, 409)
+
+        restock = next(m for m in w.get("/account/stock-requests", me).json() if m["kind"] == "restock")
+        self.assertEqual(w.delete(f"/account/stock-requests/{restock['id']}", me).status_code, 204)
+        self.assertEqual(next(m for m in w.get("/account/stock-requests", me).json() if m["id"] == restock["id"])["status"], "closed")
+        _, other = w.register("stranger")
+        self.assertEqual(w.delete(f"/account/stock-requests/{restock['id']}", other).status_code, 404)
 
 
 @skip_unless_db

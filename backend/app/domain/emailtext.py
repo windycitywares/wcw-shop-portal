@@ -311,6 +311,21 @@ def _back_in_stock(ctx: dict[str, Any]) -> Rendered:
     return _render(subject, blocks)
 
 
+def _request_available(ctx: dict[str, Any]) -> Rendered:
+    """Staff answering a stock request: it can be ordered now (with an optional personal line from the shop)."""
+    l = loc(ctx.get("locale"))
+    subject = {"en": "Good news: {title} is available", "es": "Buenas noticias: {title} está disponible",
+               "nl": "Goed nieuws: {title} is beschikbaar"}[l].format(**ctx)
+    intro = {"en": "You asked us about {title}. It can be ordered now.",
+             "es": "Nos preguntaste por {title}. Ya se puede pedir.",
+             "nl": "Je vroeg ons naar {title}. Je kunt het nu bestellen."}[l].format(**ctx)
+    blocks: list[Block] = [("p", _greet(ctx)), ("p", intro)]
+    if ctx.get("message"):
+        blocks.append(("p", str(ctx["message"])))
+    blocks += [("button", {"en": "View the product", "es": "Ver el producto", "nl": "Bekijk het product"}[l], ctx["link"]), ("p", s("thanks_sign", l))]
+    return _render(subject, blocks)
+
+
 def _campaign(ctx: dict[str, Any]) -> Rendered:
     l = loc(ctx.get("locale"))
     blocks: list[Block] = [("p", _greet(ctx))]
@@ -351,6 +366,7 @@ RENDERERS = {
     "abandoned_cart": _abandoned_cart,
     "review_request": _review_request,
     "back_in_stock": _back_in_stock,
+    "request_available": _request_available,
     "campaign": _campaign,
     "admin_new_order": _admin_new_order,
     "digest": _digest,

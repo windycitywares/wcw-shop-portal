@@ -62,6 +62,13 @@ class StockAlert(Base):
     locale: Mapped[str | None] = mapped_column(String(5))
     notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=_NOW)
+    # 0012: the option combination asked for ({"Size": "Large"}), a note from the customer, and the kind:
+    # "restock" = a combination the shop sells, emailed automatically when back; "request" = one it doesn't sell, for staff.
+    options: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default=text("'{}'::jsonb"))
+    note: Mapped[str | None] = mapped_column(Text)
+    kind: Mapped[str] = mapped_column(String(10), default="restock", server_default="restock")
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    handled_by_email: Mapped[str | None] = mapped_column(String(320))
 
 
 class Campaign(TimestampMixin, Base):
