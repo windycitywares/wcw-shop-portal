@@ -19,7 +19,7 @@ class SqlFileTests(unittest.TestCase):
             self.assertTrue(parts, f.name)
             for part in parts:
                 first = part.split(None, 1)[0].upper()
-                self.assertIn(first, {"CREATE", "ALTER", "UPDATE", "INSERT", "DROP", "COMMENT"}, f"{f.name}: {part[:60]}")
+                self.assertIn(first, {"CREATE", "ALTER", "UPDATE", "INSERT", "DELETE", "DROP", "COMMENT"}, f"{f.name}: {part[:60]}")
                 self.assertEqual(part.count("("), part.count(")"), f"{f.name}: unbalanced parentheses in {part[:60]}")
 
 
