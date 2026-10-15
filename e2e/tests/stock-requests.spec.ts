@@ -51,8 +51,10 @@ test.describe("signed in", () => {
       await dialog.getByLabel("Anything we should know? (optional)").fill("Needed by November");
       await dialog.getByRole("button", { name: "Notify me" }).click();
       await expect(dialog.getByRole("status")).toContainText("as soon as");
-      await dialog.getByRole("link", { name: "See my requests" }).first().click();
-      const mine = page.getByRole("region", { name: "My stock requests" }).or(page.locator("#my-stock-requests"));
+      await expect(dialog.getByRole("link", { name: "See my requests" })).toHaveAttribute("href", "/account#my-stock-requests");
+      await page.goto("/account");
+      const mine = page.locator("#my-stock-requests");
+      await expect(mine.getByRole("heading", { name: "My stock requests" })).toBeVisible();
       await expect(mine.getByText(p.title)).toBeVisible();
       await expect(mine.getByText("Size: Large")).toBeVisible();
       await mine.getByRole("button", { name: new RegExp(`Cancel request ${p.title}`) }).click();

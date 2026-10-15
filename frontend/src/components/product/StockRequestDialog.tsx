@@ -162,7 +162,7 @@ export function StockRequestDialog({
                   : fmt(done.kind === "request" ? t.stockRequest.doneRequest : t.stockRequest.doneRestock, { email: user.email, item: itemName })}
               </p>
               <div className="flex flex-wrap gap-3">
-                <ButtonLink href={`${href("/account")}#my-stock-requests`} variant="secondary">
+                <ButtonLink href={`${href("/account")}#my-stock-requests`} variant="secondary" onClick={() => onOpenChange(false)}>
                   {t.stockRequest.seeRequests}
                 </ButtonLink>
                 <Button variant="ghost" onClick={() => onOpenChange(false)}>
@@ -233,7 +233,7 @@ export function StockRequestDialog({
                 </>
               )}
               <p className="text-xs text-muted">
-                <Link href={`${href("/account")}#my-stock-requests`} className="underline underline-offset-4">
+                <Link href={`${href("/account")}#my-stock-requests`} className="underline underline-offset-4" onClick={() => onOpenChange(false)}>
                   {t.stockRequest.seeRequests}
                 </Link>
               </p>
