@@ -240,7 +240,7 @@ class BackupService:
         return rows[0] if rows else {"enabled": False, "hour": 3, "keep": 5, "repo": None, "branch": "main", "updated_at": None, "updated_by_email": None}
 
     async def save_config(self, data: dict[str, Any], actor_email: str) -> dict[str, Any]:
-        repo = (data.get("repo") or "").strip() or None
+        repo = re.sub(r"(?i)^https?://github\.com/|\.git$|/+$", "", (data.get("repo") or "").strip()) or None  # a pasted URL works too
         if repo and not REPO_PATTERN.match(repo):
             raise ValidationFailedError("Enter the repository as owner/name, e.g. windycitywares/wcw-backups")
         if repo and repo.lower() == "windycitywares/wcw-portal":
