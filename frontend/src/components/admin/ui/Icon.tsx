@@ -44,6 +44,7 @@ const PATHS = {
   cart: "M3 4h2.5l2 11h10l2-8H7 M9 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z M17 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z",
   heart: "M12 20s-7.5-4.6-7.5-10A4.5 4.5 0 0 1 12 7.2 4.5 4.5 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10Z",
   clock: "M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z M12 8v4l3 2",
+  inbox: "M4 13l2.5-7h11L20 13v6H4v-6Z M4 13h4.5l1.5 2.5h4l1.5-2.5H20",
 } as const;
 
 export type IconName = keyof typeof PATHS;
