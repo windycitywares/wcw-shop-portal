@@ -22,6 +22,7 @@ class User(TimestampMixin, Base):
     is_active: Mapped[bool] = mapped_column(default=True, server_default=text("true"))
     # Tokens issued before this moment are rejected (set when the password changes).
     password_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    notifications_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))  # admin bell: read up to here
 
 
 class NewsletterSubscriber(TimestampMixin, Base):

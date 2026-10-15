@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { TestModeBanner } from "@/components/TestModeBanner";
+import { NotificationBell } from "./notifications/NotificationBell";
 import { NAV, isActive, titleFor } from "./nav";
 import { Icon } from "./ui/Icon";
 import { Popover } from "./ui/Popover";
@@ -153,6 +154,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <p className="text-sm font-medium text-muted lg:hidden">{titleFor(pathname)}</p>
 
             <div className="ml-auto flex items-center gap-1">
+              <NotificationBell />
               <ThemeSwitcher />
               <Popover
                 label="Account menu"

@@ -96,6 +96,15 @@ export default function AdminMessages() {
   }, [view, page, q]);
   useEffect(load, [load]);
 
+  // Links from the bell open one message (?id=123).
+  useEffect(() => {
+    const id = Number(new URLSearchParams(window.location.search).get("id"));
+    if (id > 0) {
+      setView("all");
+      open(id);
+    }
+  }, []);
+
   const show = useCallback((d: Detail) => {
     setDetail(d);
     setNote(d.staff_note ?? "");

@@ -15,6 +15,7 @@ export function Popover({
   className,
   panelClassName,
   triggerClassName,
+  onOpenChange,
 }: {
   trigger: React.ReactNode;
   /** Accessible name for the button when `trigger` is only an icon. */
@@ -24,6 +25,7 @@ export function Popover({
   className?: string;
   panelClassName?: string;
   triggerClassName?: string;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
   const close = () => {
@@ -47,7 +49,7 @@ export function Popover({
     };
   }, []);
   return (
-    <details ref={ref} className={cn("relative", className)}>
+    <details ref={ref} className={cn("relative", className)} onToggle={(e) => onOpenChange?.(e.currentTarget.open)}>
       <summary
         className={cn(
           "flex h-9 cursor-pointer list-none items-center gap-2 rounded-[var(--radius-control)] border border-line bg-surface px-3 text-sm font-medium hover:border-ink/40 [&::-webkit-details-marker]:hidden",
