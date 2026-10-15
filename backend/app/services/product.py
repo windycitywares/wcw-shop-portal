@@ -21,7 +21,7 @@ from app.schemas.product import (
     ProductStaffDetail,
     ProductUpdate,
 )
-from app.services import localize, promo_catalog
+from app.services import localize, photos, promo_catalog
 from app.services.settings import SettingsService
 
 PUBLISHING_STATUSES = {ContentStatus.PUBLISHED, ContentStatus.ARCHIVED}
@@ -230,6 +230,34 @@ class ProductService:
         if product.parent_id is None:
             await self.session.flush()
             await self.repo.set_variant_status(product.id, product.status)
+
+    # ---- photos -----------------------------------------------------------------------------------------
+
+    async def add_photos(self, product_id: int, uploads: list[bytes], user: User) -> ProductStaffDetail:
+        """Check and save uploaded photos (named after the product) and add them after the existing ones."""
+        product = await self._get_or_404(product_id)
+        self.policy.assert_can_edit(user, product)
+        photos.require_files(len(uploads))
+        photos.ensure_room(len(product.images or []), len(uploads))
+        processed = [photos.process(raw) for raw in uploads]  # all checked before anything is written
+        urls = photos.save(product.slug, product.title, processed)
+        product.images = [*(product.images or []), *({"url": u, "alt": product.title} for u in urls)]
+        await self._commit()
+        return await self.detail(viewer=user, id=product_id)
+
+    async def remove_photo(self, product_id: int, url: str, user: User) -> ProductStaffDetail:
+        """Take a photo off the product; our own uploaded file is deleted too (links to Etsy etc. are just removed)."""
+        product = await self._get_or_404(product_id)
+        self.policy.assert_can_edit(user, product)
+        remaining = [i for i in (product.images or []) if i.get("url") != url]
+        if len(remaining) == len(product.images or []):
+            raise NotFoundError("That photo isn't on this product")
+        product.images = remaining
+        await self._commit()
+        still_used = await self.repo.count(Product.images.contains([{"url": url}]))
+        if not still_used:  # another product (a variant, a copy) may share the file
+            photos.remove_file(url)
+        return await self.detail(viewer=user, id=product_id)
 
     async def _get_or_404(self, product_id: int) -> Product:
         product = await self.repo.get(product_id)

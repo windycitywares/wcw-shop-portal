@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/client-api";
 import type { ContentStatus, ProductDetail, StockStatus } from "@/lib/types";
 import { STATUS_LABEL, STOCK_LABEL, formatPrice } from "@/lib/utils";
 import { AttributeBuilder, fromRows, toRows, type AttributeRow } from "@/components/admin/AttributeBuilder";
+import { PhotoManager } from "@/components/admin/PhotoManager";
 import { useCategoryTree } from "@/components/admin/useCategoryOptions";
 import { Icon } from "@/components/admin/ui/Icon";
 import { ConfirmDialog } from "@/components/admin/ui/Modal";
@@ -18,7 +19,6 @@ import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
-import { ProductImage } from "@/components/ui/ProductImage";
 
 const STATUS_TONE: Record<ContentStatus, Tone> = { draft: "neutral", in_review: "accent", published: "success", archived: "warning" };
 
@@ -231,20 +231,18 @@ export default function ProductEditor() {
           </Panel>
 
           <Panel>
-            <PanelHeader title="Photos" description="Paste one image address per line. The first is the main photo." />
-            <div className="space-y-4 p-5">
-              {imageUrls.length > 0 && (
-                <ul className="flex flex-wrap gap-2" aria-label="Photo preview">
-                  {imageUrls.slice(0, 8).map((u, i) => (
-                    <li key={`${u}-${i}`} className={`relative size-16 overflow-hidden rounded bg-sand ${i === 0 ? "ring-2 ring-accent" : ""}`}>
-                      <ProductImage src={u} alt="" sizes="64px" />
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <Field label="Image URLs">
-                {(p) => <Textarea {...p} rows={4} value={form.images} onChange={set("images")} className="font-mono text-xs" />}
-              </Field>
+            <PanelHeader title="Photos" description="The first photo is the main one in the shop. Use the arrows to change the order, then save." />
+            <div className="p-5">
+              <PhotoManager
+                productId={product?.id ?? null}
+                urls={imageUrls}
+                onChange={(next) => setForm((f) => ({ ...f, images: next.join("\n") }))}
+                onSaved={(saved) => {
+                  setProduct(saved);
+                  // Keep unsaved edits to other fields; take the photo list as the server saved it.
+                  setForm((f) => ({ ...f, images: saved.images.map((i) => i.url).join("\n") }));
+                }}
+              />
             </div>
           </Panel>
 
