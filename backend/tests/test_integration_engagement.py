@@ -207,6 +207,25 @@ class StockRequestTests(unittest.TestCase):
         self.assertEqual((status[small["id"]], status[large["id"]]), ("in_stock", "out_of_stock"))  # none left of Large
         self.assertEqual(w.quote([item(small)])["messages"], [])
 
+    def test_add_variant_continues_the_sku_numbering(self):
+        w = self.w
+        parent = w.product()
+        sku = w.value("SELECT sku FROM products WHERE id = :id", id=parent["id"])
+        w.sql("UPDATE products SET category_id = (SELECT id FROM categories ORDER BY id LIMIT 1) WHERE id = :id", id=parent["id"])
+        for n in (1, 2, 4):
+            v = self.variant(parent, {"Size": f"S{n}"}, True)
+            w.sql("UPDATE products SET sku = :s WHERE id = :id", s=f"{sku}-{n}", id=v["id"])
+        tpl = w.get(f"/products/{parent['id']}/variant-template", w.admin).json()
+        self.assertEqual(tpl["sku"], f"{sku}-5")
+        self.assertEqual((tpl["option_names"], tpl["variant_count"], tpl["parent_id"]), (["Size"], 3, parent["id"]))
+        self.assertEqual(w.get(f"/products/{parent['id']}/variant-template", w.customer).status_code, 403)
+
+        # A variant created without a category goes into its product's category
+        r = w.post("/products", {"title": "Variant", "sku": tpl["sku"], "base_price": 30, "parent_id": parent["id"], "attributes": {"Size": "S5"}}, w.admin)
+        self.assertEqual(r.status_code, 201, r.text)
+        self.assertEqual(r.json()["category_id"], tpl["category_id"])
+        self.assertEqual(w.get(f"/products/{parent['id']}/variant-template", w.admin).json()["sku"], f"{sku}-6")
+
     def test_variant_combinations_and_special_requests(self):
         w = self.w
         parent = w.product()
