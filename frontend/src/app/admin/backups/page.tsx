@@ -68,12 +68,31 @@ export default function AdminBackups() {
   }, [show]);
   useEffect(load, [load]);
 
-  async function save(e: React.FormEvent) {
+  async function save(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    // Read what is in the boxes right now (a browser's autofill can show text the page never received).
+    const fields = new FormData(e.currentTarget);
+    const repo = String(fields.get("repo") ?? "")
+      .trim()
+      .replace(/^https?:\/\/github\.com\//i, "")
+      .replace(/\.git$/i, "")
+      .replace(/\/+$/, "");
+    const next = {
+      enabled: fields.get("enabled") === "on",
+      hour: Number(fields.get("hour") ?? form.hour),
+      keep: Number(fields.get("keep") ?? form.keep),
+      repo,
+      branch: String(fields.get("branch") ?? "").trim() || "main",
+    };
+    setForm(next);
+    if (next.enabled && !repo) {
+      push({ title: "Not saved", description: "Type the repository in the box first, e.g. windycitywares/wcw-backups.", tone: "danger" });
+      return;
+    }
     setBusy("save");
     try {
-      show(await apiFetch<Backups>("/admin/backups", { method: "PUT", body: JSON.stringify({ ...form, repo: form.repo.trim() || null }) }));
-      push({ title: "Backup settings saved", description: form.enabled ? `Daily after ${hourLabel(form.hour)}, keeping ${form.keep}` : "Automatic backups are off" });
+      show(await apiFetch<Backups>("/admin/backups", { method: "PUT", body: JSON.stringify({ ...next, repo: repo || null }) }));
+      push({ title: "Backup settings saved", description: next.enabled ? `${repo}: daily after ${hourLabel(next.hour)}, keeping ${next.keep}` : `${repo || "No repository"}: automatic backups are off` });
     } catch (err) {
       push({ title: "Not saved", description: err instanceof Error ? err.message : undefined, tone: "danger" });
     } finally {
@@ -120,9 +139,14 @@ export default function AdminBackups() {
         title="Backups"
         description="A daily encrypted copy of the live database, kept in a private GitHub repository. Only the newest few are kept."
         actions={
-          <Button size="sm" disabled={!!busy || !data?.repo || missing.length > 0} onClick={runNow}>
-            {busy === "run" ? "Backing up…" : "Back up now"}
-          </Button>
+          <span className="flex flex-col items-end gap-1">
+            <Button size="sm" disabled={!!busy || !data?.repo || missing.length > 0} onClick={runNow}>
+              {busy === "run" ? "Backing up…" : "Back up now"}
+            </Button>
+            {data && (!data.repo || missing.length > 0) && (
+              <span className="text-xs text-muted">{missing.length > 0 ? "Available once the server is set up" : "Save a repository first"}</span>
+            )}
+          </span>
         }
       />
       {error && (
@@ -142,16 +166,26 @@ export default function AdminBackups() {
           <PanelBody>
             <form onSubmit={save} className="space-y-4">
               <label className="flex items-center gap-2 text-sm font-medium">
-                <input type="checkbox" checked={form.enabled} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} className="size-4 accent-[var(--color-accent)]" />
+                <input type="checkbox" name="enabled" checked={form.enabled} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} className="size-4 accent-[var(--color-accent)]" />
                 Back up automatically every day
               </label>
               <Field label="Private GitHub repository" hint="owner/name, e.g. windycitywares/wcw-backups. Public repositories are refused.">
-                {(p) => <Input {...p} value={form.repo} onChange={(e) => setForm({ ...form, repo: e.target.value })} placeholder="windycitywares/wcw-backups" />}
+                {(p) => (
+                  <Input
+                    {...p}
+                    name="repo"
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={form.repo}
+                    onChange={(e) => setForm({ ...form, repo: e.target.value })}
+                    placeholder="windycitywares/wcw-backups"
+                  />
+                )}
               </Field>
               <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-3">
                 <Field label="Time (shop time)">
                   {(p) => (
-                    <Select {...p} value={form.hour} onChange={(e) => setForm({ ...form, hour: Number(e.target.value) })}>
+                    <Select {...p} name="hour" value={form.hour} onChange={(e) => setForm({ ...form, hour: Number(e.target.value) })}>
                       {Array.from({ length: 24 }, (_, h) => (
                         <option key={h} value={h}>
                           After {hourLabel(h)}
@@ -161,9 +195,9 @@ export default function AdminBackups() {
                   )}
                 </Field>
                 <Field label="Backups to keep">
-                  {(p) => <Input {...p} type="number" min={1} max={30} value={form.keep} onChange={(e) => setForm({ ...form, keep: Number(e.target.value) })} />}
+                  {(p) => <Input {...p} name="keep" type="number" min={1} max={30} value={form.keep} onChange={(e) => setForm({ ...form, keep: Number(e.target.value) })} />}
                 </Field>
-                <Field label="Branch">{(p) => <Input {...p} value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} />}</Field>
+                <Field label="Branch">{(p) => <Input {...p} name="branch" autoComplete="off" value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} />}</Field>
               </div>
               <Button type="submit" size="sm" variant="secondary" disabled={!!busy}>
                 {busy === "save" ? "Saving…" : "Save settings"}
