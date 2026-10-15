@@ -220,7 +220,13 @@ Setup, once:
 4. In Admin → Backups enter the repository, choose the hour and how many to keep, turn backups on, and press
    "Back up now" to check everything works.
 
-Restore a backup:
+Restore a backup from the admin: Admin → Backups → **Restore** next to a backup. Type the random word shown to
+confirm. The shop first makes a fresh backup of the current data (so the restore can be undone), then restores in
+one transaction (a failure changes nothing) and runs the migrations. It refuses while Test mode is on or a test copy
+exists, and while the scheduled jobs run. `pg_restore` is looked for next to `pg_dump`; set `BACKUP_PG_RESTORE` to
+its full path if needed.
+
+Restore by hand (e.g. if the admin itself is down):
 ```bash
 # download backups/wcw-backup-YYYYMMDD-HHMMSS.dump.enc from the GitHub repository, then on the server:
 cd ~/repos/wcw-portal/backend && source ~/virtualenv/repos/wcw-portal/backend/3.11/bin/activate

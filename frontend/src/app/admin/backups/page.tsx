@@ -11,6 +11,7 @@ import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
+import { RestoreDialog, backupDate } from "@/components/admin/RestoreDialog";
 
 interface Run {
   id: number;
@@ -51,6 +52,7 @@ export default function AdminBackups() {
   const [data, setData] = useState<Backups | null>(null);
   const [form, setForm] = useState({ enabled: false, hour: 3, keep: 5, repo: "", branch: "main" });
   const [busy, setBusy] = useState<"" | "save" | "run">("");
+  const [restoring, setRestoring] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const show = useCallback((d: Backups) => {
@@ -221,8 +223,16 @@ export default function AdminBackups() {
               <ul className="divide-y divide-line text-sm">
                 {(data.files ?? []).map((f) => (
                   <li key={f.name} className="flex items-center justify-between gap-3 py-2">
-                    <span className="min-w-0 truncate font-mono text-xs">{f.name}</span>
-                    <span className="num shrink-0 text-muted">{mb(f.size)}</span>
+                    <span className="min-w-0">
+                      <span className="block font-medium">{backupDate(f.name)}</span>
+                      <span className="block truncate font-mono text-xs text-muted">
+                        {f.name} · {mb(f.size)}
+                      </span>
+                    </span>
+                    <Button size="sm" variant="secondary" disabled={!!busy || missing.length > 0} onClick={() => setRestoring(f.name)}>
+                      Restore
+                      <span className="sr-only"> backup from {backupDate(f.name)}</span>
+                    </Button>
                   </li>
                 ))}
               </ul>
@@ -234,6 +244,8 @@ export default function AdminBackups() {
           </PanelBody>
         </Panel>
       </div>
+
+      <RestoreDialog file={restoring} onClose={() => setRestoring(null)} onDone={load} />
 
       <Panel className="mt-6">
         <PanelHeader title="History" description="The last 20 attempts." />

@@ -41,6 +41,24 @@ class BackupApiTests(unittest.TestCase):
         self.assertEqual((latest["status"], latest["trigger"]), ("failed", "manual"))
         self.put({**base, "repo": None}, w.admin)
 
+    def test_restore_needs_the_exact_random_word(self):
+        w = self.w
+        file = "wcw-backup-20261015-030000.dump.enc"
+        self.assertEqual(w.post("/admin/backups/restore/prepare", {"file": file}, w.publisher).status_code, 403)
+        self.assertEqual(w.post("/admin/backups/restore/prepare", {"file": "../../etc/passwd"}, w.admin).status_code, 422)
+        challenge = w.post("/admin/backups/restore/prepare", {"file": file}, w.admin).json()
+        self.assertRegex(challenge["word"], r"^[a-z]+-\d{4}$")
+
+        wrong = w.post("/admin/backups/restore", {"file": file, "word": "restore", "token": challenge["token"]}, w.admin)
+        self.assertEqual(wrong.status_code, 422)
+        self.assertIn("doesn't match", wrong.json()["detail"])
+
+        # The right word passes the check; without the server secrets the restore stops before touching anything.
+        r = w.post("/admin/backups/restore", {"file": file, "word": challenge["word"], "token": challenge["token"]}, w.admin)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["status"], "failed")
+        self.assertIn("BACKUP_", r.json()["error"])
+
 
 if __name__ == "__main__":
     unittest.main()
