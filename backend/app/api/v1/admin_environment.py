@@ -21,8 +21,9 @@ async def _out(stats: dict | None = None) -> EnvironmentOut:
 
 
 async def _release(session) -> None:
-    """End the request's own transaction first: it may hold locks on the test copy that copying has to replace."""
-    await session.rollback()
+    """End the request's own transaction first: it may hold locks on the test copy that copying has to replace.
+    close() (not rollback) keeps the signed-in user's loaded fields readable afterwards."""
+    await session.close()
 
 
 @router.get("", response_model=EnvironmentOut)
