@@ -78,6 +78,13 @@ async def _retention(session: AsyncSession, now: datetime, args: argparse.Namesp
     return await retention.purge(session, now)
 
 
+async def _backup(session: AsyncSession, now: datetime, args: argparse.Namespace) -> Any:
+    from app.core.database import engine
+    from app.services.backups import BackupService
+
+    return await BackupService(engine).run_if_due(now)
+
+
 JOBS: dict[str, Job] = {
     "outbox": _outbox,
     "cart_reminders": _cart_reminders,
@@ -86,6 +93,7 @@ JOBS: dict[str, Job] = {
     "expire_unpaid": _expire_unpaid,
     "digest": _digest,
     "retention": _retention,
+    "backup": _backup,
 }
 
 

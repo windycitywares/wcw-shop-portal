@@ -203,6 +203,33 @@ While test mode is on:
 After a deploy with a migration, `update-api.sh` refreshes the copy (`python -m app.scripts.test_env sync-if-active`).
 Emergency switch back: `python -m app.scripts.test_env live`.
 
+## Backups (Admin → Backups)
+
+Every day after the hour set in Admin → Backups (shop time), the jobs cron dumps the **live** data (`pg_dump`, the
+`public` schema only, never the test copy), encrypts it with AES-256-GCM and commits it to `backups/` in a
+**private** GitHub repository, keeping only the newest few (5 by default). Older backups are dropped from the
+repository's history too, so they really go away. "Back up now" in the admin does the same on demand.
+
+Setup, once:
+1. On GitHub create a **private** repository, e.g. `windycitywares/wcw-backups` (the shop refuses a public one).
+2. Create a fine-grained personal access token: Repository access → only that repository; Permissions →
+   Contents: Read and write. Copy it.
+3. In `backend/.env` on the server set `BACKUP_GITHUB_TOKEN=` (the token) and `BACKUP_PASSPHRASE=` (a long random
+   phrase, at least 12 characters). **Store the passphrase in your password manager as well**: without it no
+   backup can be opened. If `pg_dump` isn't on the PATH, set `BACKUP_PG_DUMP=` to its full path.
+4. In Admin → Backups enter the repository, choose the hour and how many to keep, turn backups on, and press
+   "Back up now" to check everything works.
+
+Restore a backup:
+```bash
+# download backups/wcw-backup-YYYYMMDD-HHMMSS.dump.enc from the GitHub repository, then on the server:
+cd ~/repos/wcw-portal/backend && source ~/virtualenv/repos/wcw-portal/backend/3.11/bin/activate
+python -m app.scripts.backup decrypt wcw-backup-YYYYMMDD-HHMMSS.dump.enc restore.dump
+pg_restore --clean --if-exists --no-owner --no-privileges -h localhost -U <db user> -d <database> restore.dump
+rm restore.dump   # it holds customer data
+```
+Restoring replaces the live tables with the backup: put the shop in maintenance (or at least stop the cron) first.
+
 ## Email and CAPTCHA
 
 Password-reset emails and contact-form notifications go out through a HostItBro mailbox; sign-up and

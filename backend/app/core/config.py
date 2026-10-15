@@ -97,6 +97,12 @@ class Settings(BaseSettings):
     stripe_test_webhook_secret: str | None = None
     stripe_api_base: str = "https://api.stripe.com"
 
+    # Database backups to a private GitHub repository (Admin → Backups). The token needs Contents: read and write on
+    # that repository only; keep a copy of the passphrase somewhere safe: without it the backups can't be opened.
+    backup_github_token: str | None = None
+    backup_passphrase: str | None = None
+    backup_pg_dump: str = "pg_dump"
+
     # Analytics ignores crawlers and headless browsers; the browser tests turn this on.
     analytics_accept_bots: bool = False
 

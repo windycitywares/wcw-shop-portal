@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1 import (
     account,
+    admin_backups,
     admin_campaigns,
     admin_carts,
     admin_customers,
@@ -39,6 +40,7 @@ api_router.include_router(admin_orders.router)
 api_router.include_router(admin_carts.router)
 api_router.include_router(admin_customers.router)
 api_router.include_router(admin_environment.router)
+api_router.include_router(admin_backups.router)
 api_router.include_router(admin_inbox.router)
 api_router.include_router(admin_campaigns.router)
 api_router.include_router(admin_promotions.router)
