@@ -87,10 +87,15 @@ def _for_test_mode(mail: Mail) -> Mail | None:
 
 
 async def send(mail: Mail) -> None:
+    """Every email the app sends goes through here: Test-mode redirection first, then delivery."""
     redirected = _for_test_mode(mail)
     if redirected is None:
         return
-    mail = redirected
+    await deliver(redirected)
+
+
+async def deliver(mail: Mail) -> None:
+    """Hand one email to the SMTP server (tests replace this, so they see exactly what would go out)."""
     s = get_settings()
     msg = build_message(mail, s)
     if not s.smtp_host:
