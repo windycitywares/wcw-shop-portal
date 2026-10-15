@@ -32,6 +32,7 @@ export const NAV: NavGroup[] = [
     label: "Customers",
     items: [
       { href: "/admin/customers", label: "Customers", icon: "customers", permission: "customers:view" },
+      { href: "/admin/messages", label: "Messages", icon: "inbox", permission: "messages:manage" },
       { href: "/admin/campaigns", label: "Email campaigns", icon: "mail", permission: "promotions:manage" },
       { href: "/admin/carts", label: "Abandoned carts", icon: "cart", permission: "customers:view" },
     ],
