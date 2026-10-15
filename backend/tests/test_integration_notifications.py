@@ -28,7 +28,9 @@ class NotificationTests(unittest.TestCase):
 
         feed = w.get("/admin/notifications", w.admin).json()
         self.assertGreaterEqual(feed["unread"], 3)
-        by_type = {i["type"]: i for i in feed["items"]}
+        by_type: dict = {}
+        for i in feed["items"]:  # newest first: keep the first of each kind
+            by_type.setdefault(i["type"], i)
         self.assertEqual(by_type["order"]["href"], f"/admin/orders/{order['id']}")
         self.assertIn(order["number"], by_type["order"]["title"])
         self.assertTrue(by_type["message"]["href"].startswith("/admin/messages?id="))
