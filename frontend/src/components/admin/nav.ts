@@ -17,7 +17,10 @@ export const NAV: NavGroup[] = [
   { label: null, items: [{ href: "/admin", label: "Dashboard", icon: "dashboard", permission: null }] },
   {
     label: "Sales",
-    items: [{ href: "/admin/orders", label: "Orders", icon: "orders", permission: "orders:manage" }],
+    items: [
+      { href: "/admin/orders", label: "Orders", icon: "orders", permission: "orders:manage" },
+      { href: "/admin/promotions", label: "Promotions", icon: "tag", permission: "promotions:manage" },
+    ],
   },
   {
     label: "Catalog",
