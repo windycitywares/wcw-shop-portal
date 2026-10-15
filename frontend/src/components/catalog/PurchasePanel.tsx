@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { attrKey, attrValue } from "@/i18n/attributes";
 import { useI18n } from "@/i18n/client";
 import { useCart } from "@/lib/cart";
@@ -8,7 +8,8 @@ import type { Product, ProductDetail } from "@/lib/types";
 import { attributeList, cn, displayPrice, formatPrice, percentOff } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Price } from "@/components/ui/misc";
-import { NotifyMe } from "@/components/product/NotifyMe";
+import { StockRequestDialog, optionGroups as requestOptionGroups } from "@/components/product/StockRequestDialog";
+import { API_URL } from "@/lib/client-api";
 import { WishlistButton } from "@/components/product/WishlistButton";
 
 /**
@@ -17,8 +18,32 @@ import { WishlistButton } from "@/components/product/WishlistButton";
  * 2. List-valued attributes with no variants (e.g. Etsy "Size: Small, Large") -> pick options,
  *    which travel with the cart line.
  */
-export function PurchasePanel({ product }: { product: ProductDetail }) {
+export function PurchasePanel({ product: initial }: { product: ProductDetail }) {
   const { add } = useCart();
+  // The page itself is cached for a minute: re-read stock in the browser so a design that just sold shows it at once.
+  const [product, setProduct] = useState(initial);
+  useEffect(() => {
+    let live = true;
+    fetch(`${API_URL}/products/${encodeURIComponent(initial.slug)}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((fresh: ProductDetail | null) => {
+        if (!live || !fresh) return;
+        const stock = (p: Product) => ({ stock_status: p.stock_status, stock_quantity: p.stock_quantity });
+        setProduct((cur) => ({
+          ...cur,
+          ...stock(fresh),
+          variants: cur.variants.map((v) => {
+            const f = fresh.variants.find((x) => x.id === v.id);
+            return f ? { ...v, ...stock(f) } : v;
+          }),
+        }));
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [initial.slug]);
+  const [requestOpen, setRequestOpen] = useState<null | "notify" | "other">(null);
   const { t, fmt, locale } = useI18n();
   const hasVariants = product.variants.length > 0;
   const [variantId, setVariantId] = useState<number | null>(hasVariants ? product.variants[0].id : null);
@@ -35,6 +60,7 @@ export function PurchasePanel({ product }: { product: ProductDetail }) {
     Object.fromEntries(optionGroups.map((g) => [g.key, g.values[0]])),
   );
   const [qty, setQty] = useState(1);
+  const requestGroups = useMemo(() => requestOptionGroups(product), [product]);
 
   const variant: Product | undefined = product.variants.find((v) => v.id === variantId);
   const active: Product = variant ?? product;
@@ -51,6 +77,12 @@ export function PurchasePanel({ product }: { product: ProductDetail }) {
   const variantGroupLabel = hasVariants
     ? attrKey(t, Object.keys(product.variants[0].attributes)[0] ?? "Size")
     : t.product.options;
+
+  // What is chosen on the page, in the dialog's terms ({"Size": "Large", ...}).
+  const currentChoice = useMemo<Record<string, string>>(() => {
+    if (variant) return Object.fromEntries(Object.entries(variant.attributes).map(([k, v]) => [k, attributeList(v)[0]]));
+    return options;
+  }, [variant, options]);
 
   function onAdd() {
     add(
@@ -175,7 +207,26 @@ export function PurchasePanel({ product }: { product: ProductDetail }) {
           {soldOut ? t.product.soldOut : t.product.addToCart}
         </Button>
       </div>
-      {soldOut && <NotifyMe productId={active.id} />}
+      {soldOut && (
+        <Button variant="secondary" size="lg" className="w-full" onClick={() => setRequestOpen("notify")}>
+          {t.stockRequest.open}
+        </Button>
+      )}
+      {!soldOut && requestGroups.length > 0 && (
+        <p className="text-sm text-muted">
+          {t.stockRequest.other}{" "}
+          <button type="button" className="font-medium text-accent underline underline-offset-4" onClick={() => setRequestOpen("other")}>
+            {t.stockRequest.otherLink}
+          </button>
+        </p>
+      )}
+      <StockRequestDialog
+        product={product}
+        open={requestOpen !== null}
+        onOpenChange={(o) => !o && setRequestOpen(null)}
+        mode={requestOpen ?? "notify"}
+        initial={currentChoice}
+      />
       <WishlistButton productId={product.id} />
     </div>
   );

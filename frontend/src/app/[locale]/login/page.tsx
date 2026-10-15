@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { isStaff, useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/Button";
@@ -17,6 +17,10 @@ export default function LoginPage() {
   const [captcha, setCaptcha] = useState<string | null>(null);
   const [captchaKey, setCaptchaKey] = useState(0);
   const [mode, setMode] = useState<"signin" | "register">("signin");
+  useEffect(() => {
+    // "Create an account" links (e.g. from the notify-me dialog) open the form in sign-up mode.
+    if (new URLSearchParams(window.location.search).get("mode") === "register") setMode("register");
+  }, []);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 

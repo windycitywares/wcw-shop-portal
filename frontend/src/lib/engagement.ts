@@ -72,8 +72,30 @@ export const wishlistApi = {
   },
 };
 
-export const notifyMe = (productId: number, email: string, locale: string) =>
-  apiFetch<{ detail: string }>(`/products/${productId}/notify-me`, { method: "POST", body: JSON.stringify({ email, locale }) });
+export interface StockRequest {
+  id: number;
+  product_id: number;
+  title: string;
+  slug: string;
+  image: string | null;
+  options: Record<string, string>;
+  note: string | null;
+  kind: "restock" | "request";
+  status: "waiting" | "notified" | "closed";
+  created_at: string;
+  notified_at: string | null;
+}
+
+/** Signed-in customers ask to be emailed about a combination (or request one the shop doesn't sell yet). */
+export const stockRequests = {
+  create: (productId: number, options: Record<string, string>, note: string, locale: string) =>
+    apiFetch<{ kind: "restock" | "request"; options: Record<string, string>; already: boolean }>(`/products/${productId}/stock-requests`, {
+      method: "POST",
+      body: JSON.stringify({ options, note: note.trim() || null, locale }),
+    }),
+  mine: () => apiFetch<StockRequest[]>("/account/stock-requests"),
+  cancel: (id: number) => apiFetch(`/account/stock-requests/${id}`, { method: "DELETE" }),
+};
 
 /** Recently viewed designs, kept only in this browser (never sent anywhere). */
 const RECENT_KEY = "wcw-recent";

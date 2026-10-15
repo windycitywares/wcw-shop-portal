@@ -118,7 +118,7 @@ export default function AdminProducts() {
       hide: "sm",
       cell: (p) =>
         p.stock_status === "out_of_stock" ? (
-          <Pill tone="danger">Sold out</Pill>
+          <Pill tone="danger">Out of stock</Pill>
         ) : p.stock_quantity != null && p.stock_quantity <= 3 ? (
           <span className="num text-warning">{p.stock_quantity} left</span>
         ) : (
