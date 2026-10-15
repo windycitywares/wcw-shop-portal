@@ -13,4 +13,8 @@ export const ADMIN_ROUTES: { path: string; heading: RegExp; name: string }[] = [
   { path: "/admin/categories", heading: /^Categories$/, name: "categories" },
   { path: "/admin/import", heading: /^Import and export$/, name: "import" },
   { path: "/admin/users", heading: /^Team and customers$/, name: "users" },
+  { path: "/admin/reviews", heading: /^Reviews$/, name: "reviews" },
+  { path: "/admin/settings", heading: /^Settings$/, name: "settings" },
+  { path: "/admin/settings?tab=tax", heading: /^Settings$/, name: "settings-tax" },
+  { path: "/admin/audit", heading: /^Audit log$/, name: "audit" },
 ];
