@@ -13,6 +13,7 @@ _TAKE = text(
         stock_status = CASE WHEN stock_quantity - :qty <= 0 THEN 'out_of_stock'::stock_status ELSE stock_status END,
         updated_at = now()
     WHERE id = :id AND stock_status = 'in_stock' AND stock_quantity IS NOT NULL AND stock_quantity >= :qty
+      AND NOT EXISTS (SELECT 1 FROM products par WHERE par.id = products.parent_id AND par.stock_status = 'out_of_stock')
     """
 )
 

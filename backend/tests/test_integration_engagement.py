@@ -184,6 +184,29 @@ class StockRequestTests(unittest.TestCase):
         # in stock now: no request needed
         self.assertEqual(w.post(url, {"options": {"Size": "Small"}}, me).status_code, 409)
 
+    def test_product_out_of_stock_switches_off_its_variants(self):
+        w = self.w
+        parent = w.product()
+        small = self.variant(parent, {"Size": "Small"}, True)
+        large = self.variant(parent, {"Size": "Large"}, True)
+        # Older data: the product was marked out of stock while its variants still say in stock
+        w.sql("UPDATE products SET stock_status = 'out_of_stock' WHERE id = :id", id=parent["id"])
+        q = w.quote([item(small)])
+        self.assertIn("out of stock", " ".join(q["messages"]))
+        self.assertEqual(q["lines"], [])
+        _, me = w.register("switch")
+        self.assertEqual(w.post(f"/products/{parent['id']}/stock-requests", {"options": {"Size": "Small"}}, me).json()["kind"], "restock")
+
+        # Saving the product as out of stock switches the variants off; back in stock switches them on again
+        r = w.client.patch(w.url(f"/products/{parent['id']}"), json={"stock_status": "out_of_stock"}, headers=w.admin)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual({v["stock_status"] for v in r.json()["variants"]}, {"out_of_stock"})
+        w.sql("UPDATE products SET stock_quantity = 0 WHERE id = :id", id=large["id"])
+        r = w.client.patch(w.url(f"/products/{parent['id']}"), json={"stock_status": "in_stock"}, headers=w.admin)
+        status = {v["id"]: v["stock_status"] for v in r.json()["variants"]}
+        self.assertEqual((status[small["id"]], status[large["id"]]), ("in_stock", "out_of_stock"))  # none left of Large
+        self.assertEqual(w.quote([item(small)])["messages"], [])
+
     def test_variant_combinations_and_special_requests(self):
         w = self.w
         parent = w.product()
