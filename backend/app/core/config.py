@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     # (HostItBro: /home2/windycit/media.windycitywares.com → https://media.windycitywares.com).
     media_root: str = str(BACKEND_DIR / "media")
     media_url: str = "/media"
+    # Serve MEDIA_ROOT from the API at /media (development and tests only; in production the media subdomain serves it).
+    media_serve: bool = False
+    max_photo_bytes: int = 15 * 1024 * 1024
 
     # Public storefront URL, used for links in emails (password reset).
     site_url: str = "http://localhost:3000"

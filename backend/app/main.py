@@ -51,6 +51,14 @@ def create_app() -> FastAPI:
 
     app.include_router(api_router, prefix=settings.api_prefix)
 
+    if settings.media_serve:
+        from pathlib import Path
+
+        from fastapi.staticfiles import StaticFiles
+
+        Path(settings.media_root).mkdir(parents=True, exist_ok=True)
+        app.mount("/media", StaticFiles(directory=settings.media_root), name="media")
+
     @app.get("/health", tags=["health"])
     async def health() -> dict[str, str]:
         return {"status": "ok"}

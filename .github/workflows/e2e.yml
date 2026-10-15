@@ -39,6 +39,8 @@ jobs:
       CORS_ORIGINS: '["http://127.0.0.1:3000"]'
       SITE_URL: http://127.0.0.1:3000
       CONTACT_TO: shop@example.com
+      MEDIA_SERVE: "true"
+      MEDIA_URL: http://127.0.0.1:8000/media
       ADMIN_EMAIL: e2e-admin@example.com
       ADMIN_PASSWORD: E2e-only-Passw0rd-${{ github.run_id }}
       E2E_BASE_URL: http://127.0.0.1:3000

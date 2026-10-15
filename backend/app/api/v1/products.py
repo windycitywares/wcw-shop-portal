@@ -1,12 +1,13 @@
 from decimal import Decimal
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request, Response, status
+from fastapi import APIRouter, Depends, File, Query, Request, Response, UploadFile, status
 
 from app.api.deps import CurrentUser, OptionalUser, SessionDep, require
 from app.core.enums import ContentStatus
 from app.core.i18n import LANG_PATTERN
-from app.core.exceptions import PermissionDeniedError
+from app.core.config import get_settings
+from app.core.exceptions import PermissionDeniedError, ValidationFailedError
 from app.core.permissions import Permission
 from app.models.user import User
 from app.repositories.product import SORTS, ProductQuery, ProductRepository
@@ -147,6 +148,28 @@ async def create_product(
 @router.patch("/{product_id}", response_model=ProductStaffDetail)
 async def update_product(session: SessionDep, user: CurrentUser, product_id: int, data: ProductUpdate):
     return await ProductService(session).update(product_id, data, user)
+
+
+@router.post("/{product_id}/photos", response_model=ProductStaffDetail)
+async def upload_photos(session: SessionDep, user: CurrentUser, product_id: int, files: Annotated[list[UploadFile], File()]):
+    """Upload JPEG, PNG or WebP photos. They are re-encoded (metadata removed, very large ones scaled down), named after
+    the product ("walnut-urn-1.jpg", "walnut-urn-2.jpg"…) and added after the existing photos."""
+    limit = get_settings().max_photo_bytes
+    if len(files) > 10:
+        raise ValidationFailedError("Upload up to 10 photos at a time")
+    data = []
+    for f in files:
+        raw = await f.read(limit + 1)
+        if len(raw) > limit:
+            raise ValidationFailedError(f"{f.filename or 'A photo'} is larger than {limit // (1024 * 1024)} MB")
+        if raw:
+            data.append(raw)
+    return await ProductService(session).add_photos(product_id, data, user)
+
+
+@router.delete("/{product_id}/photos", response_model=ProductStaffDetail)
+async def remove_photo(session: SessionDep, user: CurrentUser, product_id: int, url: str = Query(max_length=2000)):
+    return await ProductService(session).remove_photo(product_id, url, user)
 
 
 @router.post("/{product_id}/status", response_model=ProductStaffDetail)
