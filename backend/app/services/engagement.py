@@ -69,9 +69,11 @@ def available_clause():
             p.stock_status.in_([StockStatus.BACKORDER, StockStatus.PREORDER]),
         )
 
+    parent = aliased(Product)
     has_children = exists().where(child.parent_id == Product.id).correlate(Product)
+    parent_off = exists().where(parent.id == Product.parent_id, parent.stock_status == StockStatus.OUT_OF_STOCK).correlate(Product)
     child_ok = exists().where(child.parent_id == Product.id, child.status == ContentStatus.PUBLISHED, buyable(child)).correlate(Product)
-    return and_(Product.status == ContentStatus.PUBLISHED, buyable(Product), or_(not_(has_children), child_ok))
+    return and_(Product.status == ContentStatus.PUBLISHED, buyable(Product), or_(not_(has_children), child_ok), not_(parent_off))
 
 
 async def recompute_rating(session: AsyncSession, product_id: int) -> None:
@@ -316,7 +318,10 @@ class StockAlertService:
             chosen = stock_requests.clean_options(groups, options or {})
         except ValueError as exc:
             raise ValidationFailedError(str(exc)) from exc
-        target = stock_requests.resolve(product.id, _buyable(product), [(v.id, v.attributes or {}, _buyable(v)) for v in variants], chosen)
+        switched_off = product.stock_status == StockStatus.OUT_OF_STOCK  # the product's own switch covers its variants
+        target = stock_requests.resolve(
+            product.id, _buyable(product), [(v.id, v.attributes or {}, _buyable(v) and not switched_off) for v in variants], chosen,
+        )
         if target.available:
             raise ConflictError("Good news: this one is available now. Add it to your cart instead.")
         note = (note or "").strip()[: stock_requests.MAX_NOTE] or None

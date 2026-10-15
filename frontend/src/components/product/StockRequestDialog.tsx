@@ -40,10 +40,11 @@ const buyable = (p: Product) =>
 /** Which product a choice is, and whether it can be bought now. variant undefined + sold=false = not a combination we sell. */
 function lookup(product: ProductDetail, chosen: Record<string, string>): { item?: Product; sold: boolean; available: boolean } {
   if (!product.variants.length) return { item: product, sold: true, available: buyable(product) };
+  const productOff = product.stock_status === "out_of_stock"; // switches off every variant
   const match = product.variants.find((v) =>
     Object.entries(chosen).every(([k, val]) => v.attributes[k] !== undefined && attributeList(v.attributes[k]).includes(val)),
   );
-  return match ? { item: match, sold: true, available: buyable(match) } : { sold: false, available: false };
+  return match ? { item: match, sold: true, available: !productOff && buyable(match) } : { sold: false, available: false };
 }
 
 type Done = { kind: "restock" | "request"; already: boolean } | null;

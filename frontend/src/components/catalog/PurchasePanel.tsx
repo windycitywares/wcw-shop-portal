@@ -64,7 +64,9 @@ export function PurchasePanel({ product: initial }: { product: ProductDetail }) 
 
   const variant: Product | undefined = product.variants.find((v) => v.id === variantId);
   const active: Product = variant ?? product;
-  const soldOut = active.stock_status === "out_of_stock";
+  // A product marked out of stock switches off all of its variants, whatever their own stock says.
+  const productOff = hasVariants && product.stock_status === "out_of_stock";
+  const soldOut = productOff || active.stock_status === "out_of_stock";
   const price = displayPrice(active);
   const saving = percentOff(price.amount, price.compareAt);
   const saleEnds = active.sale_price != null && active.sale_ends_at ? new Date(active.sale_ends_at) : null;
@@ -116,7 +118,7 @@ export function PurchasePanel({ product: initial }: { product: ProductDetail }) 
         />
         <p className="mt-1.5 flex flex-wrap gap-x-3 text-sm">
           <span className={soldOut ? "text-danger" : "text-success"}>
-            {t.product.stock[active.stock_status]}
+            {t.product.stock[productOff ? "out_of_stock" : active.stock_status]}
             {active.stock_quantity != null && active.stock_quantity > 0 && active.stock_quantity <= 3 && (
               <span className="text-muted">, {fmt(t.product.onlyLeft, { count: active.stock_quantity })}</span>
             )}
@@ -138,7 +140,7 @@ export function PurchasePanel({ product: initial }: { product: ProductDetail }) 
           <div className="overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
             {product.variants.map((v, i) => {
               const checked = v.id === variantId;
-              const out = v.stock_status === "out_of_stock";
+              const out = productOff || v.stock_status === "out_of_stock";
               return (
                 <label
                   key={v.id}

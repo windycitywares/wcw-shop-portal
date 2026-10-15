@@ -203,8 +203,29 @@ class ProductService:
 
         if "status" in changes:
             await self._apply_status_side_effects(product)
+        if changes.get("stock_status") is not None and product.parent_id is None:
+            await self._cascade_stock(product)
         await self._commit()
         return await self.detail(viewer=user, id=product_id)
+
+    async def _cascade_stock(self, product: Product) -> None:
+        """Out of stock on a product with variants switches every variant off; back in stock switches on the ones that
+        still have units (or don't track them). Back-order / pre-order apply to all variants."""
+        from sqlalchemy import text
+
+        value = getattr(product.stock_status, "value", product.stock_status)
+        if value == "out_of_stock":
+            sql = "UPDATE products SET stock_status = 'out_of_stock', updated_at = now() WHERE parent_id = :id AND stock_status <> 'out_of_stock'"
+        elif value == "in_stock":
+            sql = ("UPDATE products SET stock_status = 'in_stock', updated_at = now() WHERE parent_id = :id AND stock_status = 'out_of_stock' "
+                   "AND (stock_quantity IS NULL OR stock_quantity > 0)")
+        else:
+            await self.session.execute(
+                text("UPDATE products SET stock_status = CAST(:status AS stock_status), updated_at = now() WHERE parent_id = :id"),
+                {"id": product.id, "status": value},
+            )
+            return
+        await self.session.execute(text(sql), {"id": product.id})
 
     async def set_status(self, product_id: int, status: ContentStatus, user: User) -> ProductDetail:
         product = await self._get_or_404(product_id)

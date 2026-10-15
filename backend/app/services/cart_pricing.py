@@ -223,7 +223,7 @@ class CartPricer:
                 removed.append(pid)
                 blocking = True
                 continue
-            if not purchasable(product):
+            if not purchasable(product) or (parent is not None and parent.stock_status == StockStatus.OUT_OF_STOCK):
                 messages.append(t("line.out_of_stock", lang, title=title))
                 removed.append(pid)
                 blocking = True
