@@ -21,6 +21,11 @@ test.afterEach(async () => {
 test("add, edit, reorder and delete a category", async ({ page }) => {
   const seen = watch(page);
   const name = `E2E Category ${unique("c")}`;
+  // Make sure another top-level category exists, so the new one (added last) can move up.
+  const api = await adminApi();
+  const anchor = await api.post("categories", { data: { name: `E2E Anchor ${unique("a")}` } });
+  expect(anchor.ok(), await anchor.text()).toBeTruthy();
+  await api.dispose();
   await page.goto("/admin/categories");
   await adminReady(page);
 
