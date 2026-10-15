@@ -79,5 +79,5 @@ npm run typecheck
 
 ## Not built yet
 
-Checkout + payments (Stripe), orders admin, contact-messages admin, server-side cart, wishlist, site settings,
-drag-and-drop category UI, marketplace API sync. See README "Next steps".
+Drag-and-drop category UI (the `/categories/reorder` API is ready) and marketplace API sync (Etsy/Amazon).
+Stripe needs live keys and the tax rate needs setting in Admin → Settings. See README "Next steps".

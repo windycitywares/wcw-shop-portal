@@ -72,10 +72,7 @@ See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — includes the HostItBro server
 
 ## Next steps (not built yet)
 
-- Checkout: address → shipping → payment review, Stripe payment intents, order creation.
-- Orders admin (status updates, refunds), customer order history, wishlist, contact-messages inbox in admin.
-- Use saved addresses at checkout (the address book and API already exist).
-- Server-side cart for signed-in users.
-- Site settings (shipping rates, tax zones, logo upload).
 - Drag-and-drop category tree (the `/categories/reorder` API is ready).
 - Marketplace API connectors (Etsy Open API v3 / Amazon SP-API) for scheduled syncing.
+- Owner setup before launch: Stripe live keys, the Illinois sales-tax rate (Admin → Settings), and a review of the
+  returns, privacy and terms drafts.
