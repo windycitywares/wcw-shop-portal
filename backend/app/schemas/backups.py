@@ -51,3 +51,27 @@ class BackupResultOut(BaseModel):
     size_bytes: int | None = None
     error: str | None = None
     kept: list[str] | None = None
+
+
+class RestorePrepareIn(BaseModel):
+    file: str = Field(max_length=200)
+
+
+class RestoreChallengeOut(BaseModel):
+    file: str
+    word: str
+    token: str
+    expires_in: int
+
+
+class RestoreIn(BaseModel):
+    file: str = Field(max_length=200)
+    word: str = Field(max_length=100)
+    token: str = Field(max_length=200)
+
+
+class RestoreOut(BaseModel):
+    status: Literal["restored", "failed"]
+    file: str
+    safety_backup: str | None = None
+    error: str | None = None
