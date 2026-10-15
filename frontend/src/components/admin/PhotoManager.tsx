@@ -141,7 +141,6 @@ export function PhotoManager({
         className={cn(
           "relative rounded-[var(--radius-card)] border border-dashed border-line px-4 py-6 text-center transition-colors",
           dragging && "border-accent bg-accent-soft/40",
-          !productId && "opacity-70",
         )}
         onDragOver={(e) => {
           if (!productId) return;
