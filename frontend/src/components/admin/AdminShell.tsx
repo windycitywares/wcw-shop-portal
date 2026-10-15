@@ -8,6 +8,7 @@ import { isStaff, useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
+import { TestModeBanner } from "@/components/TestModeBanner";
 import { NAV, isActive, titleFor } from "./nav";
 import { Icon } from "./ui/Icon";
 import { Popover } from "./ui/Popover";
@@ -119,6 +120,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         <div className="flex min-w-0 flex-col">
+          <TestModeBanner label="Test mode" text="Test mode: you're working on a copy of the shop's data. Nothing here changes the live shop.">
+            {" "}
+            <Link href="/admin/environment" className="underline underline-offset-4">
+              Test mode settings
+            </Link>
+          </TestModeBanner>
           <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-canvas/90 px-4 backdrop-blur sm:px-6 lg:px-8">
             <Dialog.Root open={drawer} onOpenChange={setDrawer}>
               <Dialog.Trigger className="-ml-2 grid size-10 place-items-center rounded-full hover:bg-sand lg:hidden">

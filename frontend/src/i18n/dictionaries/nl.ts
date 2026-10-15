@@ -277,6 +277,10 @@ const nl: Dictionary = {
     recent: "Onlangs bekeken",
     alsoBought: "Andere klanten kochten ook",
   },
+  testMode: {
+    label: "Testmodus",
+    text: "Testmodus: dit is een kopie van de winkel om te testen. Bestellingen zijn niet echt, kaarten worden niet belast en klanten krijgen geen e-mails.",
+  },
   consent: {
     title: "Help ons de winkel te verbeteren",
     text: "Met je toestemming tellen we bezoeken en wat er bekeken wordt, privacyvriendelijk: geen advertenties, geen volgen op andere sites en we bewaren geen IP-adressen.",
