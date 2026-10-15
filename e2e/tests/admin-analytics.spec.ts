@@ -24,3 +24,12 @@ test("the report links move between reports and mark the current one", async ({ 
   await expect(page.getByRole("heading", { level: 1, name: "Product performance" })).toBeVisible();
   await expect(reports.getByRole("link", { name: "Products" })).toHaveAttribute("aria-current", "page");
 });
+
+test("inventory and catalog reports download without a date range", async ({ page }) => {
+  await page.goto("/admin/analytics/inventory");
+  await adminReady(page);
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download CSV" }).click();
+  expect((await download).suggestedFilename()).toBe("wcw-inventory.csv");
+  await expect(page.getByRole("tab", { name: /Needs restocking/ })).toHaveAttribute("aria-selected", "true");
+});

@@ -47,7 +47,7 @@ def build_rows(found: list[c.Row], low_threshold: int) -> list[c.Row]:
         price, cost = c.num(r["base_price"]) if r["base_price"] is not None else None, c.num(r["cost_price"]) if r["cost_price"] is not None else None
         title = display_title(r["title"], r["variant"])
         rows.append({
-            "id": r["id"], "title": title, "product_title": r["title"], "slug": r["slug"], "sku": r["sku"], "stock": stock, "status": status,
+            "id": r["id"], "product_id": r.get("product_id", r["id"]), "title": title, "product_title": r["title"], "slug": r["slug"], "sku": r["sku"], "stock": stock, "status": status,
             "sold_30d": r["sold_30d"], "sold_90d": r["sold_90d"], "days_of_cover": round(days, 1) if days is not None else None,
             "waiting": r["waiting"], "price": price, "cost": cost,
             "value_at_cost": round(stock * cost, 2) if stock and cost is not None else None,
