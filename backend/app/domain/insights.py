@@ -223,7 +223,7 @@ def dead_stock(m: Metrics) -> Insight | None:
     return Insight(
         "dead_stock", "opportunity", f"{info['count']} products haven't sold in 90 days{extra}",
         "Slow movers still need photos, space and attention. Try a time-boxed sale, bundle them with a best seller, or retire the listing.",
-        "Create a clearance sale", "/admin/sales", {"count": info["count"], "value": value},
+        "Create a clearance sale", "/admin/promotions?tab=sales", {"count": info["count"], "value": value},
     )
 
 

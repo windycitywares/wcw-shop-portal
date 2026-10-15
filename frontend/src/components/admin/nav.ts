@@ -14,7 +14,13 @@ export interface NavGroup {
 
 /** Sidebar structure. Add a page here and it appears for roles that hold its permission. */
 export const NAV: NavGroup[] = [
-  { label: null, items: [{ href: "/admin", label: "Dashboard", icon: "dashboard", permission: null }] },
+  {
+    label: null,
+    items: [
+      { href: "/admin", label: "Dashboard", icon: "dashboard", permission: null },
+      { href: "/admin/analytics", label: "Analytics", icon: "chart", permission: "reports:view" },
+    ],
+  },
   {
     label: "Sales",
     items: [

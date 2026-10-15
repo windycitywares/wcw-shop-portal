@@ -9,7 +9,7 @@ export interface Kpi {
   previous: number | null;
   delta: number | null;
   change: number | null;
-  format: "money" | "number" | "percent";
+  format: "money" | "number" | "percent" | "decimal" | "duration";
   help: string;
   better: "up" | "down" | "none";
 }
@@ -42,8 +42,21 @@ export function formatKpi(k: Pick<Kpi, "value" | "format">): string {
   if (k.value == null) return "—";
   if (k.format === "money") return money(k.value);
   if (k.format === "percent") return pct(k.value);
+  if (k.format === "decimal") return k.value.toFixed(1);
+  if (k.format === "duration") return duration(k.value);
   return fmtInt(k.value);
 }
+
+/** Seconds → "45s", "3m 20s", "1h 5m". */
+export function duration(seconds: number): string {
+  const s = Math.round(seconds);
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ${s % 60}s`;
+  return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
+}
+
+/** A rate or a dash when there was nothing to divide by. */
+export const rate = (n: number | null | undefined, digits = 1) => (n == null ? "—" : pct(n, digits));
 
 export const SEVERITY: Record<Insight["severity"], { label: string; tone: Tone }> = {
   critical: { label: "Urgent", tone: "danger" },
