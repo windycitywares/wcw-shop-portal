@@ -473,7 +473,7 @@ WHERE c.created_at >= :start AND c.created_at < :end
 
 # ------------------------------------------------------------------------------------------------ inventory
 STOCK_LEVELS = """
-SELECT p.id, COALESCE(root.title, p.title) AS title, p.title AS variant, COALESCE(root.slug, p.slug) AS slug, p.sku, p.stock_quantity AS stock,
+SELECT p.id, COALESCE(root.id, p.id) AS product_id, COALESCE(root.title, p.title) AS title, p.title AS variant, COALESCE(root.slug, p.slug) AS slug, p.sku, p.stock_quantity AS stock,
        p.stock_status::text AS stock_status, p.base_price, p.cost_price,
        COALESCE((SELECT sum(oi.quantity - oi.refunded_quantity) FROM order_items oi JOIN orders o ON o.id = oi.order_id
                  WHERE oi.product_id = p.id AND o.paid_at >= now() - interval '30 days' AND o.status <> 'cancelled'), 0)::int AS sold_30d,
@@ -528,7 +528,7 @@ FROM orders ORDER BY placed_at DESC NULLS LAST, id DESC LIMIT 6
 
 WAITING_REVIEWS = "SELECT count(*)::int FROM reviews WHERE status = 'pending'"
 STOCK_WAITLIST = """
-SELECT p.id, COALESCE(root.title, p.title) AS title, count(*)::int AS requests
+SELECT p.id, COALESCE(root.id, p.id) AS product_id, COALESCE(root.title, p.title) AS title, count(*)::int AS requests
 FROM stock_alerts a JOIN products p ON p.id = a.product_id LEFT JOIN products root ON root.id = p.parent_id
-WHERE a.notified_at IS NULL AND (p.stock_status = 'out_of_stock' OR p.stock_quantity = 0) GROUP BY 1, 2 ORDER BY requests DESC, title LIMIT 10
+WHERE a.notified_at IS NULL AND (p.stock_status = 'out_of_stock' OR p.stock_quantity = 0) GROUP BY 1, 2, 3 ORDER BY requests DESC, title LIMIT 10
 """

@@ -83,6 +83,17 @@ export default function AdminCustomers() {
   const [detail, setDetail] = useState<CustomerDetail | null>(null);
   const [error, setError] = useState("");
 
+  // Links from the reports open a search (?q=email) or a segment (?segment=vip).
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const found = p.get("q");
+    if (found) {
+      setQ(found);
+      setDraft(found);
+    }
+    if (p.get("segment")) setSegment(p.get("segment") ?? "");
+  }, []);
+
   const query = useCallback(() => {
     const p = new URLSearchParams({ sort, page: String(page), page_size: String(PAGE_SIZE) });
     if (q) p.set("q", q);
