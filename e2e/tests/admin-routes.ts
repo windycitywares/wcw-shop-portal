@@ -29,5 +29,6 @@ export const ADMIN_ROUTES: { path: string; heading: RegExp; name: string }[] = [
   { path: "/admin/settings", heading: /^Settings$/, name: "settings" },
   { path: "/admin/settings?tab=tax", heading: /^Settings$/, name: "settings-tax" },
   { path: "/admin/environment", heading: /^Test mode$/, name: "environment" },
+  { path: "/admin/backups", heading: /^Backups$/, name: "backups" },
   { path: "/admin/audit", heading: /^Audit log$/, name: "audit" },
 ];
