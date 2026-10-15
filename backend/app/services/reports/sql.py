@@ -479,7 +479,7 @@ SELECT p.id, COALESCE(root.id, p.id) AS product_id, COALESCE(root.title, p.title
                  WHERE oi.product_id = p.id AND o.paid_at >= now() - interval '30 days' AND o.status <> 'cancelled'), 0)::int AS sold_30d,
        COALESCE((SELECT sum(oi.quantity - oi.refunded_quantity) FROM order_items oi JOIN orders o ON o.id = oi.order_id
                  WHERE oi.product_id = p.id AND o.paid_at >= now() - interval '90 days' AND o.status <> 'cancelled'), 0)::int AS sold_90d,
-       (SELECT count(*) FROM stock_alerts a WHERE a.product_id = p.id AND a.notified_at IS NULL)::int AS waiting
+       (SELECT count(*) FROM stock_alerts a WHERE a.product_id = p.id AND a.notified_at IS NULL AND a.closed_at IS NULL)::int AS waiting
 FROM products p LEFT JOIN products root ON root.id = p.parent_id
 WHERE p.status = 'published' AND NOT EXISTS (SELECT 1 FROM products c WHERE c.parent_id = p.id)
   AND (root.id IS NULL OR root.status = 'published')
@@ -530,7 +530,7 @@ WAITING_REVIEWS = "SELECT count(*)::int FROM reviews WHERE status = 'pending'"
 STOCK_WAITLIST = """
 SELECT p.id, COALESCE(root.id, p.id) AS product_id, COALESCE(root.title, p.title) AS title, count(*)::int AS requests
 FROM stock_alerts a JOIN products p ON p.id = a.product_id LEFT JOIN products root ON root.id = p.parent_id
-WHERE a.notified_at IS NULL AND (p.stock_status = 'out_of_stock' OR p.stock_quantity = 0) GROUP BY 1, 2, 3 ORDER BY requests DESC, title LIMIT 10
+WHERE a.notified_at IS NULL AND a.closed_at IS NULL AND (p.stock_status = 'out_of_stock' OR p.stock_quantity = 0) GROUP BY 1, 2, 3 ORDER BY requests DESC, title LIMIT 10
 """
 
 UNANSWERED_MESSAGES = "SELECT count(*)::int FROM contact_messages WHERE status IN ('new', 'open')"

@@ -102,5 +102,54 @@ class ReviewModerateIn(BaseModel):
 
 
 class StockAlertIn(BaseModel):
-    email: EmailStr
+    """Old "notify me" form (email field ignored now: requests use the signed-in account)."""
+
+    email: EmailStr | None = None
     locale: str = Field(default="en", pattern=LANG_PATTERN)
+
+
+class StockRequestIn(BaseModel):
+    options: dict[str, str] = Field(default_factory=dict, max_length=10)
+    note: str | None = Field(default=None, max_length=1000)
+    locale: str = Field(default="en", pattern=LANG_PATTERN)
+
+
+class StockRequestCreated(BaseModel):
+    kind: Literal["restock", "request"]
+    options: dict[str, str]
+    already: bool
+
+
+class MyStockRequest(BaseModel):
+    id: int
+    product_id: int
+    title: str
+    slug: str
+    image: str | None
+    options: dict[str, str]
+    note: str | None
+    kind: Literal["restock", "request"]
+    status: Literal["waiting", "notified", "closed"]
+    created_at: datetime
+    notified_at: datetime | None
+
+
+class AdminStockRequest(MyStockRequest):
+    sku: str | None
+    variant: str | None
+    in_stock: bool
+    email: str
+    closed_at: datetime | None
+    handled_by_email: str | None
+
+
+class AdminStockRequestList(BaseModel):
+    items: list[AdminStockRequest]
+    total: int
+    page: int
+    page_size: int
+    counts: dict[str, int]
+
+
+class StockRequestNotifyIn(BaseModel):
+    message: str | None = Field(default=None, max_length=1000)
