@@ -59,8 +59,8 @@ test.describe("signed in", () => {
       await page.goto("/account");
       const mine = page.locator("#my-stock-requests");
       await expect(mine.getByRole("heading", { name: "My stock requests" })).toBeVisible();
-      await expect(mine.getByText(p.title)).toBeVisible();
-      await expect(mine.getByText("Size: Large")).toBeVisible();
+      await expect(mine).toContainText(p.title);
+      await expect(mine).toContainText("Size: Large");
       await mine.getByRole("button", { name: new RegExp(`Cancel request ${p.title}`) }).click();
       await expect(page.getByText("Request cancelled.")).toBeVisible();
       seen.expectClean();
