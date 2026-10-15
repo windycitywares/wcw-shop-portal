@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Index, String, Text, text
+from sqlalchemy import BigInteger, Boolean, CheckConstraint, DateTime, ForeignKey, Index, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, TimestampMixin
@@ -59,3 +59,29 @@ class ContactMessage(TimestampMixin, Base):
     locale: Mapped[str | None] = mapped_column(String(5))
     ip_address: Mapped[str | None] = mapped_column(String(64))
     emailed: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    # inbox (0009): new -> open -> replied/closed; spam is kept out of the default view
+    status: Mapped[str] = mapped_column(String(16), default="new", server_default="new")
+    staff_note: Mapped[str | None] = mapped_column(Text)
+    handled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    handled_by_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="SET NULL"))
+
+    __table_args__ = (
+        CheckConstraint("status IN ('new', 'open', 'replied', 'closed', 'spam')", name="ck_contact_messages_status"),
+        Index("ix_contact_messages_status_created", "status", text("created_at DESC")),
+        Index("ix_contact_messages_email", text("lower(email)")),
+    )
+
+
+class ContactReply(Base):
+    """An answer to a contact message, written in the admin and emailed to the sender."""
+
+    __tablename__ = "contact_replies"
+    __table_args__ = (Index("ix_contact_replies_message", "message_id", "created_at"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    message_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("contact_messages.id", ondelete="CASCADE"))
+    author_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="SET NULL"))
+    author_email: Mapped[str | None] = mapped_column(String(320))
+    body: Mapped[str] = mapped_column(Text)
+    emailed: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)

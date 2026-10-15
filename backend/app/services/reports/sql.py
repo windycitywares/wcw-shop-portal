@@ -532,3 +532,5 @@ SELECT p.id, COALESCE(root.title, p.title) AS title, count(*)::int AS requests
 FROM stock_alerts a JOIN products p ON p.id = a.product_id LEFT JOIN products root ON root.id = p.parent_id
 WHERE a.notified_at IS NULL AND (p.stock_status = 'out_of_stock' OR p.stock_quantity = 0) GROUP BY 1, 2 ORDER BY requests DESC, title LIMIT 10
 """
+
+UNANSWERED_MESSAGES = "SELECT count(*)::int FROM contact_messages WHERE status IN ('new', 'open')"

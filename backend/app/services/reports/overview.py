@@ -35,7 +35,7 @@ def overview_kpis(sold: dict, sold_before: dict, visits: dict, visits_before: di
     return cards
 
 
-def attention(to_ship: int, late: int, awaiting: int, pending_reviews: int, summary: dict[str, Any]) -> list[c.Row]:
+def attention(to_ship: int, late: int, awaiting: int, pending_reviews: int, summary: dict[str, Any], messages: int = 0) -> list[c.Row]:
     """Things that need a person today, most urgent first. Only items with something to do are listed."""
     items = [
         {"key": "late", "label": "Paid orders waiting 2+ days to ship", "count": late, "href": "/admin/orders?status=paid", "tone": "critical"},
@@ -43,6 +43,7 @@ def attention(to_ship: int, late: int, awaiting: int, pending_reviews: int, summ
         {"key": "awaiting", "label": "Orders waiting for payment", "count": awaiting, "href": "/admin/orders?status=pending", "tone": "info"},
         {"key": "out_of_stock", "label": "Products out of stock", "count": summary.get("out", 0), "href": "/admin/analytics/inventory", "tone": "warning"},
         {"key": "low_stock", "label": "Products running low", "count": summary.get("low", 0), "href": "/admin/analytics/inventory", "tone": "info"},
+        {"key": "messages", "label": "Customer messages to answer", "count": messages, "href": "/admin/messages", "tone": "warning"},
         {"key": "reviews", "label": "Reviews to approve", "count": pending_reviews, "href": "/admin/reviews?status=pending", "tone": "info"},
     ]
     return [i for i in items if i["count"]]
@@ -81,6 +82,7 @@ async def report(
         "attention": attention(
             await c.scalar(session, sql.TO_SHIP) or 0, await c.scalar(session, sql.UNSHIPPED) or 0,
             (await c.one(session, sql.PAYMENTS_WAITING)).get("n", 0), pending, stock,
+            await c.scalar(session, sql.UNANSWERED_MESSAGES) or 0,
         ),
         "live_visitors": await c.scalar(session, sql.LIVE_NOW) or 0,
         "recent_orders": [
