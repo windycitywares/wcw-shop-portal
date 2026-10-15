@@ -6,6 +6,7 @@ import { Analytics } from "@/components/analytics/Analytics";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { TestModeBanner } from "@/components/TestModeBanner";
 import { JsonLd, organizationLd } from "@/components/seo/JsonLd";
 import { I18nProvider } from "@/i18n/client";
 import { isLocale, locales, ogLocale } from "@/i18n/config";
@@ -63,6 +64,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         </a>
         <I18nProvider locale={locale}>
           <Providers>
+            <TestModeBanner label={t.testMode.label} text={t.testMode.text} />
             <AnnouncementBar locale={locale} />
             <Header locale={locale} />
             <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
