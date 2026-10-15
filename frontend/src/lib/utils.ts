@@ -35,7 +35,7 @@ export function formatAttribute(value: AttributeValue): string {
 
 export const STOCK_LABEL: Record<string, string> = {
   in_stock: "In stock",
-  out_of_stock: "Sold out",
+  out_of_stock: "Out of stock",
   backorder: "Available on backorder",
   preorder: "Available for pre-order",
 };
