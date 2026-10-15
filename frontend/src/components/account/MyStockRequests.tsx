@@ -13,9 +13,13 @@ export function MyStockRequests() {
   const { t, fmt, href, locale } = useI18n();
   const [items, setItems] = useState<StockRequest[] | null>(null);
   const [notice, setNotice] = useState("");
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    stockRequests.mine().then(setItems, () => setItems([]));
+    stockRequests.mine().then(setItems, () => {
+      setFailed(true);
+      setItems([]);
+    });
   }, []);
 
   if (items === null) return null;
@@ -31,7 +35,11 @@ export function MyStockRequests() {
           {notice}
         </p>
       )}
-      {items.length === 0 ? (
+      {failed ? (
+        <p role="alert" className="mt-4 text-sm text-danger">
+          {t.auth.error}
+        </p>
+      ) : items.length === 0 ? (
         <p className="mt-4 text-sm text-muted">{t.stockRequest.myEmpty}</p>
       ) : (
         <ul className="mt-4 divide-y divide-line rounded-[var(--radius-card)] border border-line bg-surface">
