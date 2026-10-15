@@ -279,6 +279,10 @@ const en = {
     recent: "Recently viewed",
     alsoBought: "Customers also bought",
   },
+  testMode: {
+    label: "Test mode",
+    text: "Test mode: this is a copy of the shop for testing. Orders aren't real, cards aren't charged and no emails reach customers.",
+  },
   consent: {
     title: "Help us improve the shop",
     text: "With your permission we count visits and what people look at, privately: no ads, no tracking across other sites, and no IP addresses stored.",

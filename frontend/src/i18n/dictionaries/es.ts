@@ -282,6 +282,10 @@ const es: Dictionary = {
     recent: "Vistos recientemente",
     alsoBought: "Otros clientes también compraron",
   },
+  testMode: {
+    label: "Modo de prueba",
+    text: "Modo de prueba: esta es una copia de la tienda para hacer pruebas. Los pedidos no son reales, no se cobra a las tarjetas y no se envían correos a los clientes.",
+  },
   consent: {
     title: "Ayúdanos a mejorar la tienda",
     text: "Con tu permiso contamos las visitas y lo que se mira, de forma privada: sin anuncios, sin seguimiento en otros sitios y sin guardar direcciones IP.",
