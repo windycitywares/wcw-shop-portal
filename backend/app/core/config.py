@@ -92,6 +92,9 @@ class Settings(BaseSettings):
     # checkout offers "pay later" (if enabled in Settings) and, outside production, a no-charge test payment.
     stripe_secret_key: str | None = None
     stripe_webhook_secret: str | None = None
+    # Used instead of the two above while Admin → Test mode is on (Stripe "test mode" keys: no real charges).
+    stripe_test_secret_key: str | None = None
+    stripe_test_webhook_secret: str | None = None
     stripe_api_base: str = "https://api.stripe.com"
 
     # Analytics ignores crawlers and headless browsers; the browser tests turn this on.

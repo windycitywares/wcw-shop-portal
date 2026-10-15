@@ -32,6 +32,8 @@ echo "→ Running tests"
 python -m unittest discover -q tests
 echo "→ Database migrations"
 alembic upgrade head
+echo "→ Test mode: refresh the test data if the migration changed the tables"
+python -m app.scripts.test_env sync-if-active || echo "✗ could not refresh the test data (Admin → Test mode → Copy live data again)"
 echo "→ Restarting the app"
 RESTARTED=1
 # Cron runs with a minimal PATH (no /usr/sbin), so find the selector explicitly; Passenger's

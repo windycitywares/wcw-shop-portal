@@ -186,6 +186,23 @@ Roll back to the old static page: Setup Node.js App → stop the windycitywares.
 At go-live the store takes over the main domain: stop this app and remove the `update-main-site.sh`
 line from `deploy/auto-deploy.sh` at the same time.
 
+## Test mode (Admin → Test mode)
+
+Admins can switch the whole shop between the **live** data and a **test copy** of it. The copy is a second schema,
+`wcw_test`, in the same database (no extra cPanel database needed; the database user must be allowed to create
+schemas, which the owner of a cPanel database is). Turning test on always copies the live data afresh; "Copy live
+data again" refreshes it; after switching back to live the copy can be deleted.
+
+While test mode is on:
+- every page shows a "Test mode" banner; everyone is signed out by a switch and signs in again;
+- emails never reach customers: all of them go to the test inbox set on the Test mode page (or nowhere);
+- card payments use `STRIPE_TEST_SECRET_KEY` / `STRIPE_TEST_WEBHOOK_SECRET` from `backend/.env` (no real charges;
+  without them only the no-charge "Test payment" is offered). Live Stripe events still update the live data;
+- ids and order numbers in the copy start 1,000,000 above live, so test records are easy to tell apart.
+
+After a deploy with a migration, `update-api.sh` refreshes the copy (`python -m app.scripts.test_env sync-if-active`).
+Emergency switch back: `python -m app.scripts.test_env live`.
+
 ## Email and CAPTCHA
 
 Password-reset emails and contact-form notifications go out through a HostItBro mailbox; sign-up and

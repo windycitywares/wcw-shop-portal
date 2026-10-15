@@ -6,6 +6,7 @@ from typing import Any
 import bcrypt
 import jwt
 
+from app.core import appmode
 from app.core.config import get_settings
 
 
@@ -30,6 +31,8 @@ def create_access_token(subject: str | int, role: str, expires_minutes: int | No
         "iat": now,
         "exp": now + timedelta(minutes=minutes),
         "type": "access",
+        # Which copy of the data the account belongs to: an id in the test copy may be a different person live.
+        "env": appmode.current().effective,
     }
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 

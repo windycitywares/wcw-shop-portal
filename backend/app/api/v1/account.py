@@ -56,6 +56,21 @@ async def contact(request: Request, session: SessionDep, user: OptionalUser, dat
     return ok
 
 
+@contact_router.get("/environment")
+async def environment(response: Response) -> dict[str, bool]:
+    """Whether the shop is running on test data, so every page can say so. Public: it holds nothing secret."""
+    from sqlalchemy import text
+
+    from app.core.database import engine
+
+    response.headers["Cache-Control"] = "no-store"
+    async with engine.connect() as conn:  # taking a connection refreshes the mode
+        await conn.execute(text("SELECT 1"))
+    from app.core import appmode
+
+    return {"test": appmode.current().is_test}
+
+
 @contact_router.get("/site-config", response_model=SiteConfig)
 async def site_config(response: Response):
     """Public, non-secret settings the storefront needs at runtime (e.g. the Turnstile site key)."""

@@ -156,20 +156,46 @@ async def my_order(order_id: int, response: Response, session: SessionDep, user:
 # ---- Stripe ---------------------------------------------------------------------------------
 
 
+async def _test_copy_exists() -> bool:
+    from sqlalchemy import text
+
+    from app.core import appmode
+    from app.core.database import engine
+
+    async with engine.connect() as conn:
+        found = await conn.execute(text("SELECT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = :s)"), {"s": appmode.TEST_SCHEMA})
+        return bool(found.scalar_one())
+
+
 @router.post("/payments/stripe/webhook", include_in_schema=False)
-async def stripe_webhook(request: Request, session: SessionDep):
+async def stripe_webhook(request: Request):
     """Stripe tells us a payment succeeded or a refund happened. Only requests signed with our secret are accepted."""
-    secret = get_settings().stripe_webhook_secret
+    settings = get_settings()
     declared = request.headers.get("content-length")
     if declared and declared.isdigit() and int(declared) > MAX_WEBHOOK_BYTES:
         raise ValidationFailedError("Request too large")
     body = await request.body()
-    if not secret or len(body) > MAX_WEBHOOK_BYTES or not verify_signature(body, request.headers.get("stripe-signature"), secret):
+    signature = request.headers.get("stripe-signature")
+    # Live events always update the live data and test events the test copy, whichever mode the shop is in now.
+    if len(body) > MAX_WEBHOOK_BYTES:
+        raise ValidationFailedError("Request too large")
+    if settings.stripe_webhook_secret and verify_signature(body, signature, settings.stripe_webhook_secret):
+        target = "live"
+    elif settings.stripe_test_webhook_secret and verify_signature(body, signature, settings.stripe_test_webhook_secret):
+        target = "test"
+    else:
         raise ValidationFailedError("Invalid signature")
+    if target == "test" and not await _test_copy_exists():
+        return {"received": True, "result": "ignored: there is no test copy"}
     try:
         event = json.loads(body)
     except ValueError as exc:
         raise ValidationFailedError("Invalid payload") from exc
-    result = await OrderService(session).handle_stripe_event(event)
+    from app.core import appmode
+    from app.core.database import SessionFactory
+
+    with appmode.use(target):  # every connection and email in this block follows the event's mode
+        async with SessionFactory() as scoped:
+            result = await OrderService(scoped).handle_stripe_event(event)
     return {"received": True, "result": result}
 

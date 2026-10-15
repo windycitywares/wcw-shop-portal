@@ -5,6 +5,7 @@ from collections.abc import AsyncIterator
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
+from app.core import appmode
 from app.core.config import get_settings
 
 
@@ -22,6 +23,7 @@ def _build_engine():
 
 
 engine = _build_engine()
+appmode.install(engine)  # Live / Test: every connection works on the chosen copy of the data
 SessionFactory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 
