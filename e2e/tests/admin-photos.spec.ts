@@ -3,7 +3,7 @@ import { adminApi, adminReady, adminState, unique, watch } from "./support";
 
 test.use({ storageState: adminState });
 
-// A valid 2x2 PNG.
+// A valid 2x2 PNG without transparency (saved as JPEG: only transparent PNGs stay PNG).
 const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR4nGM4UaEBRAwQCgAp7gWhjAnOiAAAAABJRU5ErkJggg==",
   "base64",
@@ -25,7 +25,7 @@ test("a photo is uploaded, named after the product, and removed", async ({ page 
     await expect(photos.getByRole("listitem")).toHaveCount(1);
 
     const saved = (await (await api.get(`products/by-id/${id}`)).json()) as { images: { url: string }[] };
-    expect(saved.images[0].url).toMatch(new RegExp(`/products/[^/]+/oak-keepsake-${sku.toLowerCase()}-1\\.png$`));
+    expect(saved.images[0].url).toMatch(new RegExp(`/products/[^/]+/oak-keepsake-${sku.toLowerCase()}-1\\.jpg$`));
 
     await photos.getByRole("button", { name: "Remove photo 1" }).click();
     await expect(page.getByText("Photo removed")).toBeVisible();
