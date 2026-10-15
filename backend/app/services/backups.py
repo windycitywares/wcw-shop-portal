@@ -230,7 +230,8 @@ class BackupService:
         with appmode.use(appmode.LIVE):
             async with self.engine.connect() as conn:
                 await conn.execute(text("SET search_path TO public"))  # the live tables, also while Test mode is on
-                found = [dict(r) for r in (await conn.execute(text(sql), params)).mappings().all()]
+                result = await conn.execute(text(sql), params)
+                found = [dict(r) for r in result.mappings().all()] if result.returns_rows else []
                 await conn.commit()
                 return found
 
