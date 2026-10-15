@@ -47,6 +47,16 @@ Never use more than eight series; fold the rest into "Other". Every chart has a 
 read with the arrow keys, and has a "Show as table" switch. Don't use two y-axes. Status colours
 (`success`, `warning`, `danger`) always come with words or an icon, never colour alone.
 
+## Report pages
+
+Analytics pages live under `app/admin/analytics/<report>` and read `/admin/reports/<report>` (definitions of every
+figure are in `backend/app/services/reports/sql.py`). Build them from `components/admin/analytics/common.tsx`:
+`useReport<T>(name)` (loads for the remembered date range), `ReportHeader` (title, range picker, CSV export and the
+"Reports" link bar), `KpiStrip` (the report's `kpis` with comparison), `InsightList`, `bucketFormat` (axis labels
+that follow day/week/month buckets), `Empty` and `Loading`. A new report is added to `REPORTS` in that file and to
+`e2e/tests/admin-routes.ts`. Rates can be `null` when there is nothing to divide by — show them with `rate()` from
+`components/admin/reports.ts`, which prints a dash.
+
 ## Tests
 
 `e2e/` holds Playwright tests that run against the real API and database (workflow `.github/workflows/e2e.yml`).
