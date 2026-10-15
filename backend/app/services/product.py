@@ -138,6 +138,35 @@ class ProductService:
         await self.decorate(result.variants, lang, parent_category_id=product.category_id)
         return result
 
+    async def variant_template(self, product_id: int, user: User) -> dict:
+        """What "Add variant" starts from: the next SKU in the product's numbering, its category, price, tags and the
+        option names its variants use (values left for the variant)."""
+        from sqlalchemy import select
+
+        from app.domain.variants import next_variant_sku
+
+        parent = await self._get_or_404(product_id)
+        if parent.parent_id is not None:
+            parent = await self._get_or_404(parent.parent_id)  # "add variant" from a variant: add to its product
+        self.policy.assert_can_edit(user, parent)
+        siblings = (await self.session.execute(select(Product).where(Product.parent_id == parent.id).order_by(Product.id))).scalars().all()
+        taken = [v.sku for v in siblings]
+        sku = next_variant_sku(parent.sku, taken)
+        while await self.repo.get_by(sku=sku):  # used elsewhere in the catalog: take the next number
+            taken.append(sku)
+            sku = next_variant_sku(parent.sku, taken)
+        keys = list(dict.fromkeys(k for v in siblings if v.attributes for k in v.attributes)) or [
+            k for k, v in (parent.attributes or {}).items() if isinstance(v, list)
+        ]
+        last = siblings[-1] if siblings else None
+        return {
+            "parent_id": parent.id, "parent_title": parent.title, "parent_sku": parent.sku, "sku": sku,
+            "title": f"{parent.title} — ", "category_id": parent.category_id,
+            "base_price": float((last.base_price if last else parent.base_price) or 0),
+            "currency": parent.currency, "tags": list(parent.tags or []), "option_names": keys,
+            "variant_count": len(siblings),
+        }
+
     # -- writing -------------------------------------------------------
     async def create(self, data: ProductCreate, user: User) -> ProductDetail:
         self.policy.assert_can_set_status(user, data.status)
@@ -151,6 +180,9 @@ class ProductService:
             if not parent or parent.parent_id is not None:
                 raise NotFoundError("Parent product not found (variants can't have variants)")
             self.policy.assert_can_edit(user, parent)
+
+        if parent is not None and data.category_id is None:
+            data.category_id = parent.category_id  # variants live in their product's category
 
         if data.slug:
             if await self.repo.get_by(slug=data.slug):

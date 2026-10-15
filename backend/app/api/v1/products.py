@@ -150,6 +150,12 @@ async def update_product(session: SessionDep, user: CurrentUser, product_id: int
     return await ProductService(session).update(product_id, data, user)
 
 
+@router.get("/{product_id}/variant-template")
+async def variant_template(session: SessionDep, user: Staff, product_id: int) -> dict:
+    """Prefill for "Add variant": next SKU (parent SKU + "-<n>"), category, price, tags and option names."""
+    return await ProductService(session).variant_template(product_id, user)
+
+
 @router.post("/{product_id}/photos", response_model=ProductStaffDetail)
 async def upload_photos(session: SessionDep, user: CurrentUser, product_id: int, files: Annotated[list[UploadFile], File()]):
     """Upload JPEG, PNG or WebP photos. They are re-encoded (metadata removed, very large ones scaled down), named after

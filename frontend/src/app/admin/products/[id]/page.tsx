@@ -75,6 +75,19 @@ function fromProduct(p: ProductDetail): FormState {
   };
 }
 
+interface VariantTemplate {
+  parent_id: number;
+  parent_title: string;
+  parent_sku: string;
+  sku: string;
+  title: string;
+  category_id: number | null;
+  base_price: number;
+  tags: string[];
+  option_names: string[];
+  variant_count: number;
+}
+
 const orNull = (s: string) => (s.trim() === "" ? null : s.trim());
 const numOrNull = (s: string) => (s.trim() === "" ? null : Number(s));
 
@@ -88,6 +101,7 @@ export default function ProductEditor() {
   const [attrs, setAttrs] = useState<AttributeRow[]>([]);
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [parentId, setParentId] = useState<number | null>(null);
+  const [parentInfo, setParentInfo] = useState<{ title: string; sku: string; count: number } | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -96,7 +110,26 @@ export default function ProductEditor() {
   useEffect(() => {
     if (isNew) {
       const parent = new URLSearchParams(window.location.search).get("parent");
-      if (parent) setParentId(Number(parent));
+      if (parent) {
+        setParentId(Number(parent));
+        // Start from the product: next SKU in its numbering (…-7), its category, price, tags and option names.
+        apiFetch<VariantTemplate>(`/products/${parent}/variant-template`).then(
+          (tpl) => {
+            setParentId(tpl.parent_id);
+            setParentInfo({ title: tpl.parent_title, sku: tpl.parent_sku, count: tpl.variant_count });
+            setForm((f) => ({
+              ...f,
+              title: tpl.title,
+              sku: tpl.sku,
+              category_id: tpl.category_id != null ? String(tpl.category_id) : "",
+              base_price: tpl.base_price ? String(tpl.base_price) : "",
+              tags: tpl.tags.join(", "),
+            }));
+            setAttrs(tpl.option_names.map((key) => ({ key, value: "" })));
+          },
+          (e) => setError(e.message),
+        );
+      }
       return;
     }
     apiFetch<ProductDetail>(`/products/by-id/${id}`).then(
@@ -181,7 +214,11 @@ export default function ProductEditor() {
   return (
     <div>
       <PageHeader
-        back={{ href: "/admin/products", label: "All products" }}
+        back={
+          (parentId ?? product?.parent_id)
+            ? { href: `/admin/products/${parentId ?? product?.parent_id}`, label: parentInfo ? `Back to ${parentInfo.title}` : "Back to the product" }
+            : { href: "/admin/products", label: "All products" }
+        }
         title={title}
         description={
           product ? (
@@ -195,6 +232,8 @@ export default function ProductEditor() {
                 </Link>
               )}
             </span>
+          ) : parentInfo ? (
+            `Variant ${parentInfo.count + 1} of ${parentInfo.title} (${parentInfo.sku}). SKU, category, price and tags are filled in from the product; fill in the option value and change anything that differs.`
           ) : undefined
         }
         actions={
