@@ -70,6 +70,10 @@ export default function AdminStockRequests() {
     );
   }, [view, page, q]);
   useEffect(load, [load]);
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get("view");
+    if (v === "restock" || v === "done" || v === "request") setView(v);
+  }, []);
 
   async function notify() {
     if (!answering) return;

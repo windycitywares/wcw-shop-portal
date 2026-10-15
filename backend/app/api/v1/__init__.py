@@ -8,6 +8,7 @@ from app.api.v1 import (
     admin_customers,
     admin_environment,
     admin_inbox,
+    admin_notifications,
     admin_orders,
     admin_promotions,
     admin_stock_requests,
@@ -43,6 +44,7 @@ api_router.include_router(admin_customers.router)
 api_router.include_router(admin_environment.router)
 api_router.include_router(admin_backups.router)
 api_router.include_router(admin_inbox.router)
+api_router.include_router(admin_notifications.router)
 api_router.include_router(admin_campaigns.router)
 api_router.include_router(admin_promotions.router)
 api_router.include_router(admin_stock_requests.router)

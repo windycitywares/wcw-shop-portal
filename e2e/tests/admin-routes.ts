@@ -12,6 +12,7 @@ export const ADMIN_ROUTES: { path: string; heading: RegExp; name: string }[] = [
   { path: "/admin/analytics/promotions", heading: /^Promotion results$/, name: "analytics-promotions" },
   { path: "/admin/analytics/inventory", heading: /^Inventory$/, name: "analytics-inventory" },
   { path: "/admin/analytics/catalog", heading: /^Catalog health$/, name: "analytics-catalog" },
+  { path: "/admin/notifications", heading: /^Activity$/, name: "notifications" },
   { path: "/admin/orders", heading: /^Orders$/, name: "orders" },
   { path: "/admin/promotions", heading: /^Promotions$/, name: "promotions" },
   { path: "/admin/promotions?tab=coupons", heading: /^Promotions$/, name: "promotions-coupons" },
