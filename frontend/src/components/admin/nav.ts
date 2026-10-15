@@ -36,11 +36,16 @@ export const NAV: NavGroup[] = [
       { href: "/admin/products", label: "Products", icon: "products", permission: "catalog:view_unpublished" },
       { href: "/admin/categories", label: "Categories", icon: "categories", permission: "category:manage" },
       { href: "/admin/import", label: "Import and export", icon: "import", permission: "catalog:import" },
+      { href: "/admin/reviews", label: "Reviews", icon: "star", permission: "reviews:moderate" },
     ],
   },
   {
     label: "Settings",
-    items: [{ href: "/admin/users", label: "Team and customers", icon: "users", permission: "users:manage" }],
+    items: [
+      { href: "/admin/settings", label: "Store settings", icon: "sliders", permission: "settings:manage" },
+      { href: "/admin/users", label: "Team and customers", icon: "users", permission: "users:manage" },
+      { href: "/admin/audit", label: "Audit log", icon: "shield", permission: "audit:view" },
+    ],
   },
 ];
 
