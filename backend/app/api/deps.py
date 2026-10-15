@@ -5,6 +5,7 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import appmode
 from app.core.config import get_settings
 from app.core.database import get_session
 from app.core.exceptions import AuthenticationError, PermissionDeniedError
@@ -28,6 +29,8 @@ async def get_optional_user(
     except (jwt.PyJWTError, KeyError, ValueError):
         raise AuthenticationError("Invalid or expired token")
     user = await session.get(User, user_id)
+    if payload.get("env", "live") != appmode.current().effective:
+        raise AuthenticationError("The shop was switched between live and test data — please sign in again")
     if not user or not user.is_active:
         raise AuthenticationError("Account not found or disabled")
     if user.password_changed_at and int(payload.get("iat", 0)) < int(user.password_changed_at.timestamp()):

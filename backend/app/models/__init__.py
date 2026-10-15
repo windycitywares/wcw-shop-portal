@@ -3,6 +3,7 @@
 from app.models.account import Address, ContactMessage, ContactReply, PasswordResetToken
 from app.models.analytics import AnalyticsEvent, AnalyticsSession, ConsentDaily
 from app.models.base import Base
+from app.models.system import AppMode
 from app.models.category import Category
 from app.models.commerce import (
     AuditLog,
@@ -23,7 +24,7 @@ from app.models.user import NewsletterSubscriber, User
 
 __all__ = [
     "Address", "AnalyticsEvent", "AnalyticsSession", "AuditLog", "Base", "Campaign", "Cart", "CartRule",
-    "Category", "ConsentDaily", "ContactMessage", "ContactReply", "Coupon", "CouponRedemption", "EmailOutbox",
+    "AppMode", "Category", "ConsentDaily", "ContactMessage", "ContactReply", "Coupon", "CouponRedemption", "EmailOutbox",
     "NewsletterSubscriber", "Order", "OrderEvent", "OrderItem", "PasswordResetToken", "Payment", "Product",
     "Review", "ReviewVote", "Sale", "StockAlert", "StoreSetting", "User", "WishlistItem",
 ]

@@ -108,8 +108,16 @@ def _request(method: str, path: str, data: dict[str, Any] | None, secret: str, i
         raise ProviderError(f"Could not reach Stripe: {exc}") from exc
 
 
+def secret_key() -> str | None:
+    """The live key normally; the Stripe test key while the app is in Test mode (never the live key there)."""
+    from app.core import appmode
+
+    settings = get_settings()
+    return settings.stripe_test_secret_key if appmode.is_test() else settings.stripe_secret_key
+
+
 async def api(method: str, path: str, data: dict[str, Any] | None = None, idempotency_key: str | None = None) -> dict[str, Any]:
-    secret = get_settings().stripe_secret_key
+    secret = secret_key()
     if not secret:
         raise ProviderError("Stripe is not configured")
     return await asyncio.to_thread(_request, method, path, data, secret, idempotency_key)

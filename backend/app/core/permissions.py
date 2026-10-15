@@ -28,6 +28,7 @@ class Permission(StrEnum):
     REVIEWS_MODERATE = "reviews:moderate"
     AUDIT_VIEW = "audit:view"
     MESSAGES_MANAGE = "messages:manage"  # the contact inbox
+    ENVIRONMENT_MANAGE = "environment:manage"  # switch between live and test data
 
 
 _AUTHOR = {

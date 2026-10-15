@@ -9,7 +9,9 @@ class TestProvider:
     name = "test"
 
     async def start(self, order, return_urls: dict[str, str], lang: str, attempt: int = 1) -> PaymentStart:
-        if get_settings().is_production:
+        from app.core import appmode
+
+        if get_settings().is_production and not appmode.is_test():
             raise ProviderError("The test payment provider is disabled in production")
         return PaymentStart(status="paid", provider_ref=f"test_{order.number}")
 

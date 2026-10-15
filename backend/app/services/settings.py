@@ -41,14 +41,17 @@ def tax_config(s: StoreSettings) -> TaxConfig:
 
 def payment_methods(s: StoreSettings) -> list[str]:
     """Payment choices offered at checkout, best first."""
+    from app.core import appmode
+    from app.services.payments.stripe import secret_key
+
     app = get_settings()
     methods: list[str] = []
-    if app.stripe_secret_key:
+    if secret_key():
         methods.append("stripe")
     if s.payments.manual_enabled:
         methods.append("manual")
-    if not app.is_production:
-        methods.append("test")  # no-charge payment for development and the browser tests
+    if not app.is_production or appmode.is_test():
+        methods.append("test")  # no-charge payment for development, the browser tests and Test mode
     return methods
 
 

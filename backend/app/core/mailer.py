@@ -64,7 +64,33 @@ def _send_sync(msg: EmailMessage, s: Settings) -> None:
         server.send_message(msg)
 
 
+def _for_test_mode(mail: Mail) -> Mail | None:
+    """In Test mode the data is a copy of the live shop, with real customers' addresses in it. Nothing may reach
+    them: every email goes to the test inbox set in Admin → Test mode (or nowhere when none is set)."""
+    from dataclasses import replace
+    from html import escape
+
+    from app.core import appmode
+
+    state = appmode.current()
+    if not state.is_test:
+        return mail
+    if not state.test_mail_to:
+        log.warning("Test mode: email to %s (%s) not sent (no test inbox set)", mail.to, mail.subject)
+        return None
+    note = f"Test mode: this email was addressed to {mail.to}."
+    return replace(
+        mail, to=state.test_mail_to, subject=f"[TEST] {mail.subject}", text=f"{note}\n\n{mail.text}",
+        html=f'<p style="background:#fff3cd;padding:8px;font-family:sans-serif">{escape(note)}</p>{mail.html}' if mail.html else None,
+        headers=tuple(h for h in mail.headers if h[0].lower() != "list-unsubscribe"),
+    )
+
+
 async def send(mail: Mail) -> None:
+    redirected = _for_test_mode(mail)
+    if redirected is None:
+        return
+    mail = redirected
     s = get_settings()
     msg = build_message(mail, s)
     if not s.smtp_host:
