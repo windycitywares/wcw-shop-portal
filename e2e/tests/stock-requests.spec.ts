@@ -52,6 +52,10 @@ test.describe("signed in", () => {
       await dialog.getByRole("button", { name: "Notify me" }).click();
       await expect(dialog.getByRole("status")).toContainText("as soon as");
       await expect(dialog.getByRole("link", { name: "See my requests" })).toHaveAttribute("href", "/account#my-stock-requests");
+      const fromApi = await api.get("account/stock-requests");
+      const body = await fromApi.text();
+      expect(fromApi.status(), body).toBe(200);
+      expect(body, "the API lists the new request").toContain(p.title);
       await page.goto("/account");
       const mine = page.locator("#my-stock-requests");
       await expect(mine.getByRole("heading", { name: "My stock requests" })).toBeVisible();
