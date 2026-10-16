@@ -40,12 +40,13 @@ NAME = re.compile(r"^wcw-backup-(\d{8}-\d{6})\.dump\.enc$")
 MAX_ATTEMPTS_PER_DAY = 3
 GITHUB_LIMIT = 95 * 1024 * 1024  # GitHub refuses files over 100 MB
 REPO_PATTERN = re.compile(r"^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$")
+CODE_REPOS = {"windycitywares/wcw-shop-portal", "windycitywares/wcw-portal"}  # the code itself (renamed; the old name still redirects)
 README = """# Windy City Wares database backups
 
 Written automatically by the shop (Admin → Backups). Only the newest few are kept.
 
 Each `backups/wcw-backup-YYYYMMDD-HHMMSS.dump.enc` is the live database, encrypted with the backup passphrase.
-To restore one, see docs/DEPLOYMENT.md → "Backups" in the wcw-portal repository.
+To restore one, see docs/DEPLOYMENT.md → "Backups" in the wcw-shop-portal repository.
 """
 
 
@@ -243,7 +244,7 @@ class BackupService:
         repo = re.sub(r"(?i)^https?://github\.com/|\.git$|/+$", "", (data.get("repo") or "").strip()) or None  # a pasted URL works too
         if repo and not REPO_PATTERN.match(repo):
             raise ValidationFailedError("Enter the repository as owner/name, e.g. windycitywares/wcw-backups")
-        if repo and repo.lower() == "windycitywares/wcw-portal":
+        if repo and repo.lower() in CODE_REPOS:
             raise ValidationFailedError("Use a separate private repository for backups, not the code repository")
         if data.get("enabled") and not repo:
             raise ValidationFailedError("Choose the repository before turning backups on")

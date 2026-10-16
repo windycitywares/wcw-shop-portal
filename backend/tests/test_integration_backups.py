@@ -24,7 +24,8 @@ class BackupApiTests(unittest.TestCase):
         self.assertEqual(w.get("/admin/backups", w.publisher).status_code, 403)
         base = {"enabled": False, "hour": 3, "keep": 5, "branch": "main"}
         self.assertEqual(self.put({**base, "repo": "not a repo"}, w.admin).status_code, 422)
-        self.assertEqual(self.put({**base, "repo": "windycitywares/wcw-portal"}, w.admin).status_code, 422)  # not the code repo
+        self.assertEqual(self.put({**base, "repo": "windycitywares/wcw-shop-portal"}, w.admin).status_code, 422)  # not the code repo
+        self.assertEqual(self.put({**base, "repo": "windycitywares/wcw-portal"}, w.admin).status_code, 422)  # its old name
         self.assertEqual(self.put({**base, "enabled": True, "repo": ""}, w.admin).status_code, 422)
         self.assertEqual(self.put({**base, "keep": 0, "repo": "windycitywares/wcw-backups"}, w.admin).status_code, 422)
 

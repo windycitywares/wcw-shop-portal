@@ -2,8 +2,8 @@
 # Install the latest storefront build (published by GitHub Actions to the `storefront-build`
 # branch) into the cPanel Node.js app, then restart it.
 #
-#   bash ~/repos/wcw-portal/deploy/update-storefront.sh               # always redeploy
-#   bash ~/repos/wcw-portal/deploy/update-storefront.sh --if-changed  # only when there's a new build (cron)
+#   bash ~/repos/wcw-shop-portal/deploy/update-storefront.sh               # always redeploy
+#   bash ~/repos/wcw-shop-portal/deploy/update-storefront.sh --if-changed  # only when there's a new build (cron)
 set -euo pipefail
 
 APP_ROOT="apps/wcw-storefront"          # cPanel Setup Node.js App → application root
@@ -12,13 +12,14 @@ DEST="$HOME/$APP_ROOT"
 # and cPanel's Node selector doesn't allow a real node_modules folder inside the app root.
 MODULES="$HOME/apps/node_modules"
 CACHE="$HOME/repos/wcw-storefront-build"
-REPO="git@github-wcw:windycitywares/wcw-portal.git"
+REPO="git@github-wcw:windycitywares/wcw-shop-portal.git"
 SITE="https://shop.windycitywares.com"
 
 if [ ! -d "$CACHE/.git" ]; then
   git clone -q --depth 1 --branch storefront-build "$REPO" "$CACHE"
 fi
 cd "$CACHE"
+git remote set-url origin "$REPO"   # an older cache still points at the pre-rename address
 git fetch -q --depth 1 origin storefront-build
 NEW=$(git rev-parse FETCH_HEAD)
 OLD=$(cat "$DEST/.deployed_build" 2>/dev/null || echo none)

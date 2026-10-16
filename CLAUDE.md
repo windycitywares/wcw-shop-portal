@@ -2,7 +2,7 @@
 
 Windy City Wares e-commerce platform (windycitywares.com). Full spec: `docs/SPEC.md`. Hosting: HostItBro
 cPanel shared hosting — Python 3.11, Node 20/22, PostgreSQL 13, no DB extensions (see `docs/DEPLOYMENT.md`).
-Product source: Etsy shop WindyCityWaresUS. Repo: github.com/windycitywares/wcw-portal.
+Product source: Etsy shop WindyCityWaresUS. Repo: github.com/windycitywares/wcw-shop-portal (renamed from wcw-portal on 16 Oct 2026; the old URL redirects).
 Rollout: build-out runs on **shop.windycitywares.com** (API on api.windycitywares.com) while the main
 domain keeps its existing `index.html`; move to the main domain at launch (`docs/DEPLOYMENT.md` →
 "Go live"). Keep `NEXT_PUBLIC_ALLOW_INDEXING=false` until then.
