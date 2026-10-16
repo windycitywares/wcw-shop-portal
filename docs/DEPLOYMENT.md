@@ -178,6 +178,11 @@ CFG
 The script uses that alias automatically once it's in `~/.ssh/config`. Without access the log says
 "main site: can't read …" once and the running site stays as it is.
 
+**If windycitywares.com shows "Index of /":** changing the PHP version (MultiPHP Manager) rewrites
+`public_html/.htaccess` and drops the app's Passenger lines. The script checks for this on every
+10-minute run and repairs it by stopping and starting the app (the PHP lines stay; the old file is kept as
+`~/.htaccess-before-repair`). To fix it by hand: Setup Node.js App → windycitywares.com → Stop, then Start.
+
 Deploy right away: `bash ~/repos/wcw-portal/deploy/update-main-site.sh`. Log: `~/logs/wcw-deploy.log`;
 app errors: `~/apps/wcw-main/site/stderr.log`.
 Roll back to the old static page: Setup Node.js App → stop the windycitywares.com app, then

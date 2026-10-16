@@ -42,6 +42,11 @@ SELECTOR=$(command -v cloudlinux-selector || ls /usr/sbin/cloudlinux-selector /u
 if [ -z "$SELECTOR" ] || ! "$SELECTOR" restart --json --interpreter=python --app-root="$APP_ROOT" >/dev/null; then
   mkdir -p "$HOME/$APP_ROOT/tmp" && touch "$HOME/$APP_ROOT/tmp/restart.txt"
 fi
-sleep 3
-code=$(curl -s -m 20 -o /dev/null -w '%{http_code}' https://api.windycitywares.com/health)
-if [ "$code" = "200" ]; then echo "✓ API is up (health 200)"; else echo "✗ health check returned $code — see backend/stderr.log"; exit 1; fi
+# The app can take a while to start after a restart (a 503 meanwhile): retry for up to ~90 seconds.
+code=000
+for _ in $(seq 1 18); do
+  sleep 5
+  code=$(curl -s -m 20 -o /dev/null -w '%{http_code}' https://api.windycitywares.com/health || true)
+  [ "$code" = "200" ] && break
+done
+if [ "$code" = "200" ]; then echo "✓ API is up (health 200)"; else echo "✗ restarted on the new code, but the health check still returns $code after 90 s — see backend/stderr.log"; exit 1; fi

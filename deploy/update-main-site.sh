@@ -22,6 +22,26 @@ NOACCESS="$HOME/.wcw-main-site-noaccess"  # log "no access" once, not every 10 m
 SITE="https://windycitywares.com"
 IF_CHANGED=0; [ "${1:-}" = "--if-changed" ] && IF_CHANGED=1
 
+DOCROOT="$HOME/public_html"
+# Cron runs with a minimal PATH (no /usr/sbin): find the selector explicitly.
+SELECTOR=$(command -v cloudlinux-selector || ls /usr/sbin/cloudlinux-selector /usr/bin/cloudlinux-selector 2>/dev/null | head -1 || true)
+
+# Self-repair: cPanel rewrites public_html/.htaccess when the PHP version is changed (MultiPHP Manager),
+# dropping the Passenger lines that send windycitywares.com to this app — the site then shows a bare
+# "Index of /" listing. Stopping and starting the app makes cPanel write those lines back (the PHP
+# lines stay). Runs on every call, before the "anything new?" check.
+if [ -f "$DEST/server.js" ] && [ -n "$SELECTOR" ] \
+   && ! grep -q "PassengerAppRoot \"$DEST\"" "$DOCROOT/.htaccess" 2>/dev/null; then
+  cp -p "$DOCROOT/.htaccess" "$HOME/.htaccess-before-repair" 2>/dev/null || true
+  "$SELECTOR" stop --json --interpreter=nodejs --app-root="$APP_ROOT" >/dev/null 2>&1 || true
+  if "$SELECTOR" start --json --interpreter=nodejs --app-root="$APP_ROOT" >/dev/null 2>&1 \
+     && grep -q "PassengerAppRoot \"$DEST\"" "$DOCROOT/.htaccess" 2>/dev/null; then
+    echo "$(date '+%F %T') main site: .htaccess had lost the app settings (PHP version change?) — repaired"
+  else
+    echo "$(date '+%F %T') main site: .htaccess is missing the app settings and the repair FAILED — Setup Node.js App → windycitywares.com → Stop, then Start"
+  fi
+fi
+
 if grep -qE '^Host[[:space:]]+github-wcw-main$' "$HOME/.ssh/config" 2>/dev/null; then
   REPO="git@github-wcw-main:windycitywares/wcw-main-site.git"
 else
@@ -66,13 +86,17 @@ find "$DEST" -mindepth 1 -maxdepth 1 ! -name tmp ! -name node_modules ! -name .d
 tar -C "$CACHE" --exclude=./.git --exclude=./node_modules -cf - . | tar -C "$DEST" -xf -
 echo "$NEW" > "$DEST/.deployed_build"
 
-# Cron runs with a minimal PATH (no /usr/sbin): find the selector explicitly, else use Passenger's restart.txt.
-SELECTOR=$(command -v cloudlinux-selector || ls /usr/sbin/cloudlinux-selector /usr/bin/cloudlinux-selector 2>/dev/null | head -1 || true)
+# Restart: the selector if available, else Passenger's restart.txt.
 if [ -z "$SELECTOR" ] || ! "$SELECTOR" restart --json --interpreter=nodejs --app-root="$APP_ROOT" >/dev/null 2>&1; then
   mkdir -p "$DEST/tmp" && touch "$DEST/tmp/restart.txt"
 fi
-sleep 3
-code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' "$SITE/" || true)
+# The app can take a while to start after a restart: retry for up to ~90 seconds.
+code=000
+for _ in $(seq 1 18); do
+  sleep 5
+  code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' "$SITE/" || true)
+  [ "$code" = "200" ] && break
+done
 if [ "$code" = "200" ]; then
   echo "$(date '+%F %T') main site: live (${NEW:0:7})"
 else
