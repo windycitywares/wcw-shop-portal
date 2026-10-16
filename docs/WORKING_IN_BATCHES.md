@@ -67,6 +67,15 @@ Admin:
 | 7a | Contact inbox API (migration 0009) | #42 |
 | 7b | Contact inbox admin page | #43 (stacked on #42) |
 
+## CRM sync (with crm.windycitywares.com, started 2026-10-16)
+
+The CRM's plan is in `wcw-crm-portal/docs/WORKING_IN_BATCHES.md` (M2); these are the shop-side batches.
+
+| # | Batch | Contents | PR |
+|---|-------|----------|----|
+| 1 | Events to the CRM | `crm_outbox` (migration 0014), ORM hook records order/account/newsletter changes in the same transaction, `crm_sync` job signs and posts them with retries; off until `CRM_WEBHOOK_URL`/`CRM_WEBHOOK_SECRET` are set — `docs/CRM_SYNC.md` | open |
+| 2 | Read API for the CRM | read-only API token (Admin → Settings) for the CRM's backfill and order-history views | — |
+
 Still open after these: Stripe live keys and the Illinois sales-tax rate (owner, in Settings), owner review of the
 returns/privacy/terms drafts, drag-and-drop category tree, marketplace API sync (Etsy/Amazon).
 

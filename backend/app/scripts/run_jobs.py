@@ -35,6 +35,12 @@ async def _outbox(session: AsyncSession, now: datetime, args: argparse.Namespace
     return await emails.process_outbox(session)
 
 
+async def _crm_sync(session: AsyncSession, now: datetime, args: argparse.Namespace) -> Any:
+    from app.services.crm_sync import CrmSync
+
+    return await CrmSync(session).deliver_due()
+
+
 async def _cart_reminders(session: AsyncSession, now: datetime, args: argparse.Namespace) -> Any:
     from app.services.carts import CartRecoveryJob
 
@@ -87,6 +93,7 @@ async def _backup(session: AsyncSession, now: datetime, args: argparse.Namespace
 
 JOBS: dict[str, Job] = {
     "outbox": _outbox,
+    "crm_sync": _crm_sync,
     "cart_reminders": _cart_reminders,
     "review_requests": _review_requests,
     "back_in_stock": _back_in_stock,

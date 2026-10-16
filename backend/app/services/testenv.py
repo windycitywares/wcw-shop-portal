@@ -88,6 +88,10 @@ async def _clone(conn: AsyncConnection) -> dict[str, Any]:
             f"ALTER TABLE {BUILDING}.{_ident(d['tbl'])} ALTER COLUMN {_ident(d['col'])} SET DEFAULT nextval('{BUILDING}.{_ident(seq)}'::regclass)"
         ))
 
+    # Changes waiting to go to the CRM belong to the live data; the copy never sends them.
+    if "crm_outbox" in tables:
+        await conn.execute(text(f"UPDATE {BUILDING}.crm_outbox SET status = 'skipped' WHERE status = 'pending'"))
+
     # Emails that were waiting to go to real customers must not be sent from the copy.
     if "email_outbox" in tables:
         await conn.execute(text(

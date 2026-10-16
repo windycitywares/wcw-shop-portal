@@ -110,6 +110,15 @@ class Settings(BaseSettings):
     # Analytics ignores crawlers and headless browsers; the browser tests turn this on.
     analytics_accept_bots: bool = False
 
+    # CRM sync (docs/CRM_SYNC.md): changes to customers, orders and newsletter consent are posted, signed, to the
+    # CRM. Off while either is unset. The secret is generated in the CRM (Administration → Integrations).
+    crm_webhook_url: str | None = None  # https://crm-api.windycitywares.com/api/v1/integrations/shop/webhook
+    crm_webhook_secret: str | None = None
+
+    @property
+    def crm_sync_enabled(self) -> bool:
+        return bool(self.crm_webhook_url and self.crm_webhook_secret)
+
     @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
