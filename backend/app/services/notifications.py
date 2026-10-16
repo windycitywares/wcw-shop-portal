@@ -17,13 +17,15 @@ from app.core.permissions import Permission, has_permission
 from app.models.user import User
 
 WINDOW_DAYS = 30
+PAID_STATES = ("paid", "partially_refunded", "refunded")  # as in services/orders.py
 MAX_UNREAD = 99
 
 # Every source returns the same columns: type, ref (id), at, title, detail, extra, state.
 SOURCES: dict[str, tuple[Permission, str]] = {
     "order": (Permission.ORDERS_MANAGE, """
         SELECT 'order' AS type, o.id::text AS ref, COALESCE(o.placed_at, o.created_at) AS at, o.number::text AS title,
-               COALESCE(o.customer_name, o.email)::text AS detail, o.grand_total::text AS extra, o.payment_status::text AS state
+               COALESCE(o.customer_name, o.email)::text AS detail, o.grand_total::text AS extra,
+               CASE WHEN o.status = 'cancelled' THEN 'cancelled' ELSE o.payment_status::text END AS state
         FROM orders o WHERE COALESCE(o.placed_at, o.created_at) >= :since"""),
     "refund": (Permission.ORDERS_MANAGE, """
         SELECT 'refund', o.id::text, p.created_at, o.number::text, COALESCE(o.customer_name, o.email)::text, p.amount::text, p.status::text
@@ -64,7 +66,10 @@ def present(row: dict[str, Any]) -> dict[str, Any]:
     """Turn a raw row into what the bell shows: a sentence, a second line and where clicking goes."""
     t, ref, title, detail, extra, state = row["type"], row["ref"], row["title"], row["detail"], row["extra"], row["state"]
     if t == "order":
-        paid = state == "paid"
+        # The state is the order's payment now, not when it was placed: a refunded order was still paid for.
+        if state == "cancelled":
+            return {"title": f"Cancelled order {title}", "detail": f"{detail} · {_money(extra)}", "href": f"/admin/orders/{ref}", "tone": "neutral"}
+        paid = state in PAID_STATES
         return {"title": f"{'New order' if paid else 'Order waiting for payment'} {title}", "detail": f"{detail} · {_money(extra)}",
                 "href": f"/admin/orders/{ref}", "tone": "success" if paid else "warning"}
     if t == "refund":
