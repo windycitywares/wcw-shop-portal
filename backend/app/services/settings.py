@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import captcha
 from app.core.config import get_settings
 from app.core.exceptions import NotFoundError, ValidationFailedError
 from app.domain.pricing import ShippingConfig, TaxConfig
@@ -87,7 +88,7 @@ def public_config(s: StoreSettings, lang: str) -> PublicConfig:
         max_quantity_per_line=s.general.max_quantity_per_line,
         low_stock_threshold=s.general.low_stock_threshold,
         analytics_enabled=s.analytics.enabled,
-        turnstile_site_key=app.turnstile_site_key,
+        turnstile_site_key=captcha.public_site_key(app),
     )
 
 
