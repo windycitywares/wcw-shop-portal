@@ -142,14 +142,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           track(q.coupon.applied ? "coupon_applied" : "coupon_failed", { data: { reason: q.coupon.reason ?? "ok" } });
         }
         setQuoteError(false);
-        // Keep the remembered unit prices in step with the server (sale started or ended, price changed).
+        // Keep the remembered lines in step with the server: unit prices (a sale started or ended, a price changed)
+        // and quantities the server lowered (only N left, or the most of one item per order). Without the quantity,
+        // the cart would keep showing the old number and its line total while checkout stays blocked.
         setLines((prev) => {
           let changed = false;
           const next = prev.map((l) => {
             const match = q.lines.find((ql) => lineKey(ql.product_id, ql.options) === lineKey(l.productId, l.options ?? {}));
-            if (match && match.unit_price !== l.price) {
+            if (!match) return l;
+            const price = match.unit_price;
+            const quantity = match.quantity > 0 && match.quantity < l.quantity ? match.quantity : l.quantity;
+            if (price !== l.price || quantity !== l.quantity) {
               changed = true;
-              return { ...l, price: match.unit_price };
+              return { ...l, price, quantity };
             }
             return l;
           });
