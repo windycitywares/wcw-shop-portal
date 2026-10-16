@@ -76,6 +76,30 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def order_payload(o: Order) -> dict[str, Any]:
+    """An order as the CRM reads it (events and the read API share this shape)."""
+    return {
+        "id": o.id, "number": o.number, "user_id": o.user_id, "email": o.email, "customer_name": o.customer_name,
+        "phone": o.phone, "status": str(o.status), "payment_status": o.payment_status, "currency": o.currency,
+        "grand_total": _money(o.grand_total), "refunded_total": _money(o.refunded_total),
+        "placed_at": _iso(o.placed_at or o.created_at), "updated_at": _iso(o.updated_at),
+        "marketing_opt_in": bool(o.marketing_opt_in),
+        "billing_address": o.billing_address, "shipping_address": o.shipping_address,
+    }
+
+
+def customer_payload(u: User) -> dict[str, Any]:
+    return {"id": u.id, "email": u.email, "full_name": u.full_name}
+
+
+def newsletter_event(s: NewsletterSubscriber) -> tuple[str, dict[str, Any]] | None:
+    if s.unsubscribed_at is not None:
+        return "newsletter.unsubscribed", {"email": s.email}
+    if s.source in SERVICE_ONLY_SOURCES:
+        return None  # a row kept only for service-email unsubscribe links: not a subscriber
+    return "newsletter.subscribed", {"email": s.email, "source": s.source}
+
+
 class CrmSync:
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -83,33 +107,15 @@ class CrmSync:
     # ---- payloads ------------------------------------------------------------------------
     async def build(self, kind: str, ref_id: int) -> tuple[str, dict[str, Any]] | None:
         """(event type, data) for the record as it is now, or None when there is nothing to tell."""
+        model = {"order": Order, "customer": User, "newsletter": NewsletterSubscriber}.get(kind)
+        row = await self.session.get(model, ref_id) if model else None
+        if row is None:
+            return None
         if kind == "order":
-            o = await self.session.get(Order, ref_id)
-            if o is None:
-                return None
-            return "order.updated", {
-                "id": o.id, "number": o.number, "user_id": o.user_id, "email": o.email, "customer_name": o.customer_name,
-                "phone": o.phone, "status": str(o.status), "payment_status": o.payment_status, "currency": o.currency,
-                "grand_total": _money(o.grand_total), "refunded_total": _money(o.refunded_total),
-                "placed_at": _iso(o.placed_at or o.created_at), "updated_at": _iso(o.updated_at),
-                "marketing_opt_in": bool(o.marketing_opt_in),
-                "billing_address": o.billing_address, "shipping_address": o.shipping_address,
-            }
+            return "order.updated", order_payload(row)
         if kind == "customer":
-            u = await self.session.get(User, ref_id)
-            if u is None or u.role != UserRole.CUSTOMER:
-                return None
-            return "customer.upserted", {"id": u.id, "email": u.email, "full_name": u.full_name}
-        if kind == "newsletter":
-            s = await self.session.get(NewsletterSubscriber, ref_id)
-            if s is None:
-                return None
-            if s.unsubscribed_at is not None:
-                return "newsletter.unsubscribed", {"email": s.email}
-            if s.source in SERVICE_ONLY_SOURCES:
-                return None  # a row kept only for service-email unsubscribe links: not a subscriber
-            return "newsletter.subscribed", {"email": s.email, "source": s.source}
-        return None
+            return ("customer.upserted", customer_payload(row)) if row.role == UserRole.CUSTOMER else None
+        return newsletter_event(row)
 
     # ---- sending ---------------------------------------------------------------------------
     def _retry_later(self, rows: list[CrmOutbox], error: str, now: datetime) -> None:

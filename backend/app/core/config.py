@@ -114,6 +114,9 @@ class Settings(BaseSettings):
     # CRM. Off while either is unset. The secret is generated in the CRM (Administration → Integrations).
     crm_webhook_url: str | None = None  # https://crm-api.windycitywares.com/api/v1/integrations/shop/webhook
     crm_webhook_secret: str | None = None
+    # Lets the CRM read customers, orders and newsletter consent (backfill, order history): a long random value
+    # also saved in CRM → Administration → Integrations → Shop API token. Unset = the read API answers 404.
+    crm_api_token: str | None = None
 
     @property
     def crm_sync_enabled(self) -> bool:
