@@ -33,7 +33,7 @@ export function Sparkline({
       aria-hidden="true"
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
-      className={cn("block min-w-0 flex-1 overflow-hidden", className)}
+      className={cn("block min-w-0 flex-1 overflow-visible", className)}
       style={box}
     >
       <path d={d} fill="none" stroke={color} strokeWidth={1.75} strokeLinejoin="round" strokeLinecap="round" opacity={0.9} vectorEffect="non-scaling-stroke" />

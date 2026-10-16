@@ -79,7 +79,7 @@ export function MetricStrip({ items, compareLabel, className }: { items: MetricI
               )}
             </dt>
             {/* The figure keeps its width; the sparkline takes what is left (up to 88px) and stays inside the cell. */}
-            <dd className="mt-1 flex min-w-0 items-end justify-between gap-3 overflow-hidden">
+            <dd className="flex min-w-0 items-end justify-between gap-3 overflow-hidden py-1 pr-1">
               <span className="num shrink-0 text-[1.625rem] font-semibold leading-none tracking-tight">{m.value}</span>
               {m.spark && <Sparkline values={m.spark} className="ml-auto" />}
             </dd>
