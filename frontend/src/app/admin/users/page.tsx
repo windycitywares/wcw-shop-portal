@@ -6,7 +6,7 @@ import { apiFetch } from "@/lib/client-api";
 import type { Page, Role, User } from "@/lib/types";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
 import { Icon } from "@/components/admin/ui/Icon";
-import { Modal } from "@/components/admin/ui/Modal";
+import { ConfirmDialog, Modal } from "@/components/admin/ui/Modal";
 import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { Panel } from "@/components/admin/ui/Panel";
 import { Pill } from "@/components/admin/ui/Pill";
@@ -23,6 +23,11 @@ const ROLE_HELP: Record<Role, string> = {
   customer: "Shops, and sees their own orders and addresses.",
 };
 
+/** A change waiting for "are you sure?": a new role, or switching the account on or off. */
+type Pending = { user: User; role: Role } | { user: User; active: boolean };
+
+const who = (u: User) => u.full_name || u.email;
+
 export default function UsersAdmin() {
   const { user: me } = useAuth();
   const { push } = useToast();
@@ -31,6 +36,8 @@ export default function UsersAdmin() {
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
   const [formError, setFormError] = useState("");
+  const [pending, setPending] = useState<Pending | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -44,14 +51,26 @@ export default function UsersAdmin() {
     void load();
   }, [load]);
 
-  async function update(id: number, body: Record<string, unknown>) {
+  /** Save the confirmed change, then reload the list so every row shows what the server now has. */
+  async function confirmPending() {
+    if (!pending) return;
+    const { user } = pending;
+    const body = "role" in pending ? { role: pending.role } : { is_active: pending.active };
+    setSaving(true);
     setError("");
     try {
-      await apiFetch(`/users/${id}`, { method: "PATCH", body: JSON.stringify(body) });
-      push({ title: "Saved" });
+      await apiFetch(`/users/${user.id}`, { method: "PATCH", body: JSON.stringify(body) });
+      if ("role" in pending) {
+        push({ title: "Role changed", description: `${who(user)} is now ${pending.role === "admin" ? "an" : "a"} ${pending.role}.` });
+      } else {
+        push({ title: pending.active ? "Account switched on" : "Account switched off", description: who(user) });
+      }
+      setPending(null);
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Update failed");
+      push({ title: "Not changed", description: e instanceof Error ? e.message : undefined, tone: "danger" });
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -110,7 +129,10 @@ export default function UsersAdmin() {
             id={`role-${u.id}`}
             value={u.role}
             disabled={u.id === me?.id}
-            onChange={(e) => update(u.id, { role: e.target.value })}
+            onChange={(e) => {
+              const role = e.target.value as Role;
+              if (role !== u.role) setPending({ user: u, role });
+            }}
             className="h-8 w-36 py-0 capitalize"
           >
             {ROLES.map((r) => (
@@ -131,7 +153,7 @@ export default function UsersAdmin() {
             type="checkbox"
             checked={u.is_active}
             disabled={u.id === me?.id}
-            onChange={(e) => update(u.id, { is_active: e.target.checked })}
+            onChange={(e) => setPending({ user: u, active: e.target.checked })}
             className="size-4 accent-[var(--color-accent)]"
           />
           <span className="sr-only">Account active for {u.email}</span>
@@ -234,6 +256,39 @@ export default function UsersAdmin() {
           </dl>
         </form>
       </Modal>
+      <ConfirmDialog
+        open={!!pending}
+        title={pending && "role" in pending ? "Change role?" : pending && "active" in pending && !pending.active ? "Switch this account off?" : "Switch this account on?"}
+        tone={pending && "role" in pending && (pending.role === "admin" || pending.user.role === "admin") ? "danger" : pending && "active" in pending && !pending.active ? "danger" : "primary"}
+        confirmLabel={pending && "role" in pending ? `Make ${pending.role}` : pending && "active" in pending && !pending.active ? "Switch off" : "Switch on"}
+        busy={saving}
+        onCancel={() => setPending(null)}
+        onConfirm={() => void confirmPending()}
+        message={
+          pending &&
+          ("role" in pending ? (
+            <div className="space-y-2">
+              <p>
+                Change <strong className="text-ink">{who(pending.user)}</strong> ({pending.user.email}) from{" "}
+                <strong className="capitalize text-ink">{pending.user.role}</strong> to <strong className="capitalize text-ink">{pending.role}</strong>?
+              </p>
+              <p>
+                <span className="capitalize">{pending.role}</span>: {ROLE_HELP[pending.role]}
+              </p>
+              <p>It applies straight away. If they are signed in, their admin menu changes the next time they open a page.</p>
+            </div>
+          ) : pending.active ? (
+            <p>
+              <strong className="text-ink">{who(pending.user)}</strong> ({pending.user.email}) can sign in again with their password.
+            </p>
+          ) : (
+            <p>
+              <strong className="text-ink">{who(pending.user)}</strong> ({pending.user.email}) is signed out everywhere and can&apos;t sign in until you switch the
+              account back on. Their orders and details are kept.
+            </p>
+          ))
+        }
+      />
     </div>
   );
 }

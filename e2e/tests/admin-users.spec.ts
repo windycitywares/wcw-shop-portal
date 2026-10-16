@@ -25,12 +25,31 @@ test("add a team member, change their role and switch the account off", async ({
   await expect(row).toHaveCount(1);
   await expect(row.getByText("Active", { exact: true })).toBeVisible();
 
-  await row.getByLabel(`Role for ${email}`).selectOption("publisher");
-  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+  // Changing a role asks first; cancelling keeps the old one.
+  const role = row.getByLabel(`Role for ${email}`);
+  await role.selectOption("publisher");
+  const confirm = page.getByRole("dialog", { name: "Change role?" });
+  await expect(confirm).toContainText("from author to publisher", { ignoreCase: true });
+  await confirm.getByRole("button", { name: "Cancel" }).click();
+  await expect(confirm).toBeHidden();
+  await expect(role).toHaveValue("author");
+
+  await role.selectOption("publisher");
+  await confirm.getByRole("button", { name: "Make publisher" }).click();
+  await expect(page.getByText("Role changed", { exact: true })).toBeVisible();
+  await expect(confirm).toBeHidden();
+  await expect(role).toHaveValue("publisher");
+  // Saved on the server, not just in the page.
+  await page.reload();
+  await adminReady(page);
+  await page.getByRole("searchbox", { name: "Search people" }).fill(email);
+  await page.getByRole("button", { name: "Search" }).click();
   await expect(row.getByLabel(`Role for ${email}`)).toHaveValue("publisher");
 
-  // A controlled checkbox: it flips once the API has saved, so click and wait for the result.
+  // Switching the account off asks too; the checkbox only flips once it is saved.
   await row.getByLabel(`Account active for ${email}`).click();
+  const off = page.getByRole("dialog", { name: "Switch this account off?" });
+  await off.getByRole("button", { name: "Switch off" }).click();
   await expect(row.getByText("Disabled")).toBeVisible();
   await expect(row.getByLabel(`Account active for ${email}`)).not.toBeChecked();
   seen.expectClean();
