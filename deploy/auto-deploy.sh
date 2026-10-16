@@ -17,7 +17,7 @@ if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
   echo "$(date '+%F %T') API: updating to $(git log --oneline -1 origin/main)"
   # Run the copy from origin/main so script changes take effect immediately.
   git show origin/main:deploy/update-api.sh > "$HOME/.wcw-update-api.sh"
-  bash "$HOME/.wcw-update-api.sh" main || echo "$(date '+%F %T') API update FAILED — previous version still running"
+  bash "$HOME/.wcw-update-api.sh" main || echo "$(date '+%F %T') API update FAILED — see the ✗ line above for whether the old or new code is running"
 fi
 
 bash "$REPO/deploy/update-storefront.sh" --if-changed || echo "$(date '+%F %T') storefront update FAILED"

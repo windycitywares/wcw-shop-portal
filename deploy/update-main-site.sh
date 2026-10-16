@@ -90,8 +90,13 @@ echo "$NEW" > "$DEST/.deployed_build"
 if [ -z "$SELECTOR" ] || ! "$SELECTOR" restart --json --interpreter=nodejs --app-root="$APP_ROOT" >/dev/null 2>&1; then
   mkdir -p "$DEST/tmp" && touch "$DEST/tmp/restart.txt"
 fi
-sleep 3
-code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' "$SITE/" || true)
+# The app can take a while to start after a restart: retry for up to ~90 seconds.
+code=000
+for _ in $(seq 1 18); do
+  sleep 5
+  code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' "$SITE/" || true)
+  [ "$code" = "200" ] && break
+done
 if [ "$code" = "200" ]; then
   echo "$(date '+%F %T') main site: live (${NEW:0:7})"
 else
