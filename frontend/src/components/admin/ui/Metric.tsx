@@ -67,7 +67,7 @@ export function MetricStrip({ items, compareLabel, className }: { items: MetricI
           // stretched link inside the <dt>, so the whole cell is clickable.
           <div
             key={m.label}
-            className={cn("relative border-l border-t border-line px-5 py-4", m.href && "hover:bg-canvas has-[a:focus-visible]:bg-canvas")}
+            className={cn("relative min-w-0 border-l border-t border-line px-5 py-4", m.href && "hover:bg-canvas has-[a:focus-visible]:bg-canvas")}
           >
             <dt className="text-sm text-muted">
               {m.href ? (
@@ -78,9 +78,10 @@ export function MetricStrip({ items, compareLabel, className }: { items: MetricI
                 m.label
               )}
             </dt>
-            <dd className="mt-1 flex items-end justify-between gap-2">
-              <span className="num text-[1.625rem] font-semibold leading-none tracking-tight">{m.value}</span>
-              {m.spark && <Sparkline values={m.spark} />}
+            {/* The figure keeps its width; the sparkline takes what is left (up to 88px) and stays inside the cell. */}
+            <dd className="flex min-w-0 items-end justify-between gap-3 overflow-hidden py-1 pr-1">
+              <span className="num shrink-0 text-[1.625rem] font-semibold leading-none tracking-tight">{m.value}</span>
+              {m.spark && <Sparkline values={m.spark} className="ml-auto" />}
             </dd>
             {m.change !== undefined && (
               <dd className="mt-2">
