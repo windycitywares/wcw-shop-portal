@@ -3,7 +3,6 @@ from fastapi import APIRouter, Request, Response, status
 from app.api.deps import CurrentUser, OptionalUser, SessionDep
 from app.api.v1.auth import client_ip, no_store
 from app.core import captcha
-from app.core.config import get_settings
 from app.core.exceptions import TooManyRequestsError
 from app.core.rate_limit import contact_by_ip
 from app.schemas.account import AddressIn, AddressOut, ContactIn, SiteConfig
@@ -75,4 +74,4 @@ async def environment(response: Response) -> dict[str, bool]:
 async def site_config(response: Response):
     """Public, non-secret settings the storefront needs at runtime (e.g. the Turnstile site key)."""
     response.headers["Cache-Control"] = "public, max-age=300"
-    return SiteConfig(turnstile_site_key=get_settings().turnstile_site_key)
+    return SiteConfig(turnstile_site_key=captcha.public_site_key())

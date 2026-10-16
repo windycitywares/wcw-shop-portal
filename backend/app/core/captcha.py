@@ -22,6 +22,19 @@ def _post(secret: str, token: str, ip: str | None) -> dict:
         return json.loads(resp.read())
 
 
+def public_site_key(settings=None) -> str | None:
+    """The Turnstile site key to show the widget with, or None.
+
+    Only when the secret is set too: with a site key alone the server skips the check anyway, and a widget that
+    can't be verified (a key not yet set up for this domain, or a browser Cloudflare won't clear) would stop
+    guests from checking out or sending a message for nothing.
+    """
+    settings = settings or get_settings()
+    if settings.turnstile_site_key and settings.turnstile_secret:
+        return settings.turnstile_site_key
+    return None
+
+
 async def verify(token: str | None, ip: str | None = None, *, action: str, post=_post) -> None:
     """Raise ValidationFailedError unless the Turnstile token is valid, was issued for this `action`
     (the form it was solved on) and, in production, for one of our hostnames.
