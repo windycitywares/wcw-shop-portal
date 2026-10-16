@@ -141,3 +141,42 @@ class CrmSyncTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@skip_unless_db
+class CrmReadApiTests(unittest.TestCase):
+    TOKEN = "r" * 40
+
+    def setUp(self):
+        from app.core.config import get_settings
+
+        self.w = world()
+        self.cfg = get_settings()
+        self.cfg.crm_api_token = self.TOKEN
+        self.auth = {"Authorization": f"Bearer {self.TOKEN}"}
+
+    def tearDown(self):
+        self.cfg.crm_api_token = None
+
+    def test_token_and_paging(self):
+        self.assertEqual(self.w.get("/integrations/crm/customers").status_code, 401)
+        self.assertEqual(self.w.get("/integrations/crm/customers", {"Authorization": "Bearer wrong"}).status_code, 401)
+        self.assertEqual(self.w.get("/integrations/crm/customers", self.w.admin).status_code, 401)  # a staff login isn't enough
+        self.cfg.crm_api_token = None
+        self.assertEqual(self.w.get("/integrations/crm/customers", self.auth).status_code, 404)
+        self.cfg.crm_api_token = self.TOKEN
+
+        email, headers = self.w.register("reader", name="Rita Reader")
+        user_id = self.w.value("SELECT id FROM users WHERE email = :e", e=email)
+        self.w.place(email, [item(self.w.product())], headers)
+
+        page = self.w.get("/integrations/crm/customers", self.auth, after_id=user_id - 1, limit=1).json()
+        self.assertEqual(page["items"], [{"id": user_id, "email": email, "full_name": "Rita Reader"}])
+        self.assertEqual(page["next_after_id"], user_id)
+        staff = {r["email"] for r in self.w.get("/integrations/crm/customers", self.auth, limit=500).json()["items"]}
+        self.assertNotIn(self.w.admin_email, staff)
+
+        orders = self.w.get("/integrations/crm/orders", self.auth, email=email.upper()).json()
+        self.assertEqual(len(orders["items"]), 1)
+        self.assertEqual(orders["items"][0]["user_id"], user_id)
+        self.assertIsNone(orders["next_after_id"])

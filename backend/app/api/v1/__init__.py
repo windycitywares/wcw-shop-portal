@@ -16,6 +16,7 @@ from app.api.v1 import (
     admin_system,
     auth,
     categories,
+    crm_read,
     engagement,
     events,
     imports,
@@ -50,3 +51,4 @@ api_router.include_router(admin_promotions.router)
 api_router.include_router(admin_stock_requests.router)
 api_router.include_router(admin_system.router)
 api_router.include_router(admin_reports.router)
+api_router.include_router(crm_read.router)  # read-only API for the CRM (token, not a login)

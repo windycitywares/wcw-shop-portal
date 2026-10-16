@@ -26,7 +26,20 @@ Raw SQL updates (e.g. `UPDATE orders …`) are not seen; change orders, users an
 3. Restart the shop API (Setup Python App → Restart). From then on changes are recorded and sent on the next job
    run (every 10 minutes with the deploy cron). Check CRM → Integrations → *Recent events*.
 
-Existing customers and orders from before the switch-on are brought in by the CRM's backfill (CRM M2 batch 5).
+## Read API (for the CRM's backfill)
+
+`GET /api/v1/integrations/crm/{customers|orders|newsletter}?after_id=0&limit=200` (max 500), header
+`Authorization: Bearer <CRM_API_TOKEN>`. Pages by id: pass the answer's `next_after_id` until it is `null`.
+`orders` also takes `email=`. Items have the same shape as the events' `data`; newsletter items add `type`
+(`newsletter.subscribed` / `newsletter.unsubscribed`). Always live data. Answers 404 while `CRM_API_TOKEN` is unset;
+bad tokens are rate-limited per IP.
+
+To switch it on, add a long random value to the shop's `backend/.env` and the same value in CRM → Integrations →
+*Shop API token*:
+```ini
+CRM_API_TOKEN=<python -c "import secrets; print(secrets.token_urlsafe(36))">
+```
+The CRM uses it to bring in customers and orders from before the sync was switched on.
 
 ## Checking
 
