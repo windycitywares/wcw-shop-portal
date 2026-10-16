@@ -1,14 +1,23 @@
 #!/bin/bash
 # Update the API on HostItBro to the latest code from GitHub.
-# Run in cPanel → Terminal:   bash ~/repos/wcw-portal/deploy/update-api.sh [branch]
+# Run in cPanel → Terminal:   bash ~/repos/wcw-shop-portal/deploy/update-api.sh [branch]
 # If installing or the tests fail, the previous code is restored and the running app is untouched.
 set -euo pipefail
 BRANCH="${1:-main}"
-APP_ROOT="repos/wcw-portal/backend"
+# Where this checkout lives: ~/repos/wcw-shop-portal (or ~/repos/wcw-portal on a server set up before the rename).
+# auto-deploy.sh passes it on in WCW_REPO_DIR; run by hand, the script works it out from its own location.
+REPO_DIR="${WCW_REPO_DIR:-}"
+if [ -z "$REPO_DIR" ]; then
+  HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  if [ -f "$HERE/deploy/auto-deploy.sh" ]; then REPO_DIR="$HERE"           # run from inside the checkout
+  elif [ -d "$HOME/repos/wcw-shop-portal/.git" ]; then REPO_DIR="$HOME/repos/wcw-shop-portal"
+  else REPO_DIR="$HOME/repos/wcw-portal"; fi                                 # run from a copy (auto-deploy)
+fi
+APP_ROOT="${REPO_DIR#"$HOME"/}/backend"   # cPanel Setup Python App → application root
 VENV="$HOME/virtualenv/$APP_ROOT/3.11/bin/activate"
 RESTARTED=0
 
-cd "$HOME/repos/wcw-portal"
+cd "$REPO_DIR"
 PREV=$(git rev-parse HEAD)
 rollback() {
   if [ "$RESTARTED" = "0" ]; then

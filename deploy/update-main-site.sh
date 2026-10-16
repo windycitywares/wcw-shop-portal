@@ -3,8 +3,8 @@
 # The build is made by GitHub Actions in repo windycitywares/wcw-main-site and published to its
 # `site-build` branch (a ready-to-run Next.js standalone bundle).
 #
-#   bash ~/repos/wcw-portal/deploy/update-main-site.sh               # always redeploy
-#   bash ~/repos/wcw-portal/deploy/update-main-site.sh --if-changed  # only when there's a new build (cron)
+#   bash ~/repos/wcw-shop-portal/deploy/update-main-site.sh               # always redeploy
+#   bash ~/repos/wcw-shop-portal/deploy/update-main-site.sh --if-changed  # only when there's a new build (cron)
 #
 # Access: GitHub deploy keys work for one repo only, so wcw-main-site has its own key and an ssh alias
 # `github-wcw-main` (docs/DEPLOYMENT.md → "Main site"). Without that alias plain HTTPS is used, which

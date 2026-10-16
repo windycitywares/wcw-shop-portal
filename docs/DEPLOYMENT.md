@@ -27,7 +27,7 @@ ready, follow [Go live on the main domain](#go-live-on-the-main-domain).
 |---|---|---|---|
 | `https://windycitywares.com` | existing `index.html` | `public_html` | unchanged until launch |
 | `https://shop.windycitywares.com` | Next.js storefront (Node 20) | `~/apps/wcw-storefront` | build-out |
-| `https://api.windycitywares.com` | FastAPI (Python 3.11) | `~/repos/wcw-portal/backend` | build-out → stays |
+| `https://api.windycitywares.com` | FastAPI (Python 3.11) | `~/repos/wcw-shop-portal/backend` | build-out → stays |
 
 ## 1. Database
 
@@ -36,6 +36,12 @@ user to the database with **ALL PRIVILEGES**.
 Connection string: `postgresql+asyncpg://windycit_wcw:PASSWORD@localhost:5432/windycit_wcw`
 
 ## 2. Get the code from GitHub (private repo)
+
+> **Renamed on 16 Oct 2026:** the repo is now `windycitywares/wcw-shop-portal` (it was `wcw-portal`; GitHub
+> redirects the old address). The live server was set up before the rename, so its checkout is still
+> `~/repos/wcw-portal` with app root `repos/wcw-portal/backend` — that's fine: the deploy scripts find their
+> own folder, and `auto-deploy.sh` points the git remote at the new name by itself. Renaming the server
+> folder too is optional: see [Renaming the server folder](#renaming-the-server-folder-optional).
 
 1. cPanel → **Terminal**: `ssh-keygen -t ed25519 -f ~/.ssh/wcw_deploy -N ""` and `cat ~/.ssh/wcw_deploy.pub`.
 2. GitHub → repo **Settings → Deploy keys → Add deploy key**: paste it, leave *write access* off.
@@ -47,26 +53,26 @@ Connection string: `postgresql+asyncpg://windycit_wcw:PASSWORD@localhost:5432/wi
      User git
      IdentityFile ~/.ssh/wcw_deploy
    CFG
-   mkdir -p ~/repos && cd ~/repos && git clone git@github-wcw:windycitywares/wcw-portal.git
+   mkdir -p ~/repos && cd ~/repos && git clone git@github-wcw:windycitywares/wcw-shop-portal.git
    ```
    (cPanel → Git Version Control will now list the repo too.)
 
 ## 3. API (Setup Python App)
 
 > **Live since 2026-10-11** at `https://api.windycitywares.com` — database `windycit_wcw`, user
-> `windycit_wcwapp`, app root `repos/wcw-portal/backend`, startup file `wsgi.py`. Secrets are in
+> `windycit_wcwapp`, app root `repos/wcw-shop-portal/backend`, startup file `wsgi.py`. Secrets are in
 > `backend/.env` and `~/.wcw-secrets` (both chmod 600, never committed).
 
 1. cPanel → **Domains** → create `api.windycitywares.com` (document root e.g. `api.windycitywares.com`).
 2. **Setup Python App** → Create application:
-   - Python version **3.11.17** · Application root `repos/wcw-portal/backend`
+   - Python version **3.11.17** · Application root `repos/wcw-shop-portal/backend`
    - Application URL `api.windycitywares.com` · Startup file **`wsgi.py`** · Entry point `application`
    - (cPanel writes its own `passenger_wsgi.py` that loads `wsgi.py` — don't name our file `passenger_wsgi.py`,
      or the generated loader imports itself and every request fails with a RecursionError.)
 3. Copy the "source …/activate" command it shows, then in Terminal:
    ```bash
-   source /home2/windycit/virtualenv/repos/wcw-portal/backend/3.11/bin/activate   # path shown by cPanel
-   cd ~/repos/wcw-portal/backend
+   source /home2/windycit/virtualenv/repos/wcw-shop-portal/backend/3.11/bin/activate   # path shown by cPanel
+   cd ~/repos/wcw-shop-portal/backend
    pip install -r requirements.txt
    cp .env.example .env && nano .env
    #   ENVIRONMENT=production
@@ -97,7 +103,7 @@ One-time server setup (already done):
 1. cPanel → Domains → `shop.windycitywares.com`.
 2. `cloudlinux-selector create --interpreter=nodejs --version=20 --app-root=apps/wcw-storefront
    --domain=shop.windycitywares.com --app-uri=/ --app-mode=production --startup-file=server.js`
-3. `bash ~/repos/wcw-portal/deploy/update-storefront.sh` — installs the latest build and restarts.
+3. `bash ~/repos/wcw-shop-portal/deploy/update-storefront.sh` — installs the latest build and restarts.
 
 Check: `https://shop.windycitywares.com/robots.txt` says `Disallow: /` while building.
 
@@ -106,7 +112,7 @@ Check: `https://shop.windycitywares.com/robots.txt` says `Disallow: /` while bui
 A cron job runs every 10 minutes (`crontab -l`):
 
 ```
-*/10 * * * * bash $HOME/repos/wcw-portal/deploy/auto-deploy.sh >> $HOME/logs/wcw-deploy.log 2>&1
+*/10 * * * * bash $HOME/repos/wcw-shop-portal/deploy/auto-deploy.sh >> $HOME/logs/wcw-deploy.log 2>&1
 ```
 
 - **API** — when `main` has new commits it runs `deploy/update-api.sh`: install packages, run the
@@ -128,9 +134,9 @@ back-in-stock emails, expiry of unpaid card orders, the Monday 7am owner digest 
 clean-up of analytics older than the retention period. It is safe to run by hand and two runs never overlap.
 
 ```bash
-bash ~/repos/wcw-portal/deploy/run-jobs.sh                 # whatever is due
-bash ~/repos/wcw-portal/deploy/run-jobs.sh --only outbox   # just some jobs
-bash ~/repos/wcw-portal/deploy/run-jobs.sh --force-digest  # send the weekly email now
+bash ~/repos/wcw-shop-portal/deploy/run-jobs.sh                 # whatever is due
+bash ~/repos/wcw-shop-portal/deploy/run-jobs.sh --only outbox   # just some jobs
+bash ~/repos/wcw-shop-portal/deploy/run-jobs.sh --force-digest  # send the weekly email now
 ```
 
 It prints a line to `~/logs/wcw-deploy.log` only when it did something or a job failed.
@@ -153,8 +159,8 @@ So: **merge to wcw-main-site `main` → live within ~10–15 minutes.**
 One-time server setup (after the first `site-build` exists):
 
 ```bash
-git -C ~/repos/wcw-portal fetch -q origin main
-git -C ~/repos/wcw-portal show origin/main:deploy/update-main-site.sh > ~/.wcw-update-main-site.sh
+git -C ~/repos/wcw-shop-portal fetch -q origin main
+git -C ~/repos/wcw-shop-portal show origin/main:deploy/update-main-site.sh > ~/.wcw-update-main-site.sh
 bash ~/.wcw-update-main-site.sh                                # installs the build into apps/wcw-main/site
 cloudlinux-selector create --interpreter=nodejs --version=20 --app-root=apps/wcw-main/site \
   --domain=windycitywares.com --app-uri=/ --app-mode=production --startup-file=server.js
@@ -183,7 +189,7 @@ The script uses that alias automatically once it's in `~/.ssh/config`. Without a
 10-minute run and repairs it by stopping and starting the app (the PHP lines stay; the old file is kept as
 `~/.htaccess-before-repair`). To fix it by hand: Setup Node.js App → windycitywares.com → Stop, then Start.
 
-Deploy right away: `bash ~/repos/wcw-portal/deploy/update-main-site.sh`. Log: `~/logs/wcw-deploy.log`;
+Deploy right away: `bash ~/repos/wcw-shop-portal/deploy/update-main-site.sh`. Log: `~/logs/wcw-deploy.log`;
 app errors: `~/apps/wcw-main/site/stderr.log`.
 Roll back to the old static page: Setup Node.js App → stop the windycitywares.com app, then
 `mv ~/public_html/index.static.html ~/public_html/index.html`.
@@ -234,7 +240,7 @@ its full path if needed.
 Restore by hand (e.g. if the admin itself is down):
 ```bash
 # download backups/wcw-backup-YYYYMMDD-HHMMSS.dump.enc from the GitHub repository, then on the server:
-cd ~/repos/wcw-portal/backend && source ~/virtualenv/repos/wcw-portal/backend/3.11/bin/activate
+cd ~/repos/wcw-shop-portal/backend && source ~/virtualenv/repos/wcw-shop-portal/backend/3.11/bin/activate
 python -m app.scripts.backup decrypt wcw-backup-YYYYMMDD-HHMMSS.dump.enc restore.dump
 pg_restore --clean --if-exists --no-owner --no-privileges -h localhost -U <db user> -d <database> restore.dump
 rm restore.dump   # it holds customer data
@@ -315,3 +321,29 @@ The API, database, admin users and products don't change at launch — only the 
 
 `NEXT_OUTPUT=export npm run build` writes plain files to `out/` for `public_html`. Pages are then
 fixed at build time (no live search/filters or new products until you rebuild).
+
+## Renaming the server folder (optional)
+
+Only needed if you want the server folder to match the repo name. The API is briefly down (a minute or two)
+while the Python app is recreated, so do it at a quiet time. In cPanel:
+
+1. **Terminal** — move the checkout (the `.env` and uploaded files inside it move along):
+   ```bash
+   mv ~/repos/wcw-portal ~/repos/wcw-shop-portal
+   git -C ~/repos/wcw-shop-portal remote set-url origin git@github-wcw:windycitywares/wcw-shop-portal.git
+   ```
+2. **Setup Python App** — the application root of an existing app can't be changed, so: note the old app's
+   settings, **delete** it (this doesn't delete files), then **create** it again with application root
+   `repos/wcw-shop-portal/backend`, URL `api.windycitywares.com`, startup file `wsgi.py`, entry point
+   `application`, Python 3.11.17.
+3. **Terminal** — install the packages into the new virtualenv and restart:
+   ```bash
+   source ~/virtualenv/repos/wcw-shop-portal/backend/3.11/bin/activate
+   cd ~/repos/wcw-shop-portal/backend && pip install -r requirements.txt
+   cloudlinux-selector restart --json --interpreter=python --app-root=repos/wcw-shop-portal/backend
+   ```
+4. **Cron Jobs** — change the auto-deploy line to
+   `*/10 * * * * bash $HOME/repos/wcw-shop-portal/deploy/auto-deploy.sh >> $HOME/logs/wcw-deploy.log 2>&1`.
+5. Check `https://api.windycitywares.com/health` and the shop, then remove the old virtualenv
+   (`rm -rf ~/virtualenv/repos/wcw-portal`).
+
