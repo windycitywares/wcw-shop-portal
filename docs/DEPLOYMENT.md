@@ -107,13 +107,26 @@ One-time server setup (already done):
 
 Check: `https://shop.windycitywares.com/robots.txt` says `Disallow: /` while building.
 
-## Updating (automatic)
+## Updating (automatic) — Admin → Deployments
 
-A cron job runs every 10 minutes (`crontab -l`):
+A cron job runs **every minute** (`crontab -l`):
 
 ```
-*/10 * * * * bash $HOME/repos/wcw-shop-portal/deploy/auto-deploy.sh >> $HOME/logs/wcw-deploy.log 2>&1
+* * * * * bash $HOME/repos/wcw-shop-portal/deploy/auto-deploy.sh >> $HOME/logs/wcw-deploy.log 2>&1
 ```
+
+(Servers set up earlier had `*/10 * * * *`; that still works, but *Deploy now* then waits up to 10 minutes.
+Change it in cPanel → **Cron Jobs**.)
+
+Each run first asks **Admin → Deployments** whether to look for updates now:
+
+- **Automatic** — every N minutes (default 10).
+- **At set times** — e.g. `02:00` only (store time, America/Chicago); a time missed while the server was down is
+  caught up on the next run.
+- **Paused** — never on its own.
+- **Deploy now** — on the next run (within a minute), whatever the mode. *Cancel* takes it back before it starts.
+
+When it looks:
 
 - **API** — when `main` has new commits it runs `deploy/update-api.sh`: install packages, run the
   tests, run migrations, restart, check `/health`. If install or tests fail, the previous code is
@@ -121,14 +134,19 @@ A cron job runs every 10 minutes (`crontab -l`):
 - **Storefront** — when Actions has published a new build it runs `deploy/update-storefront.sh`.
 - **Main site** — when [wcw-main-site](https://github.com/windycitywares/wcw-main-site) Actions has
   published a new build it runs `deploy/update-main-site.sh` (see [Main site](#main-site-windycitywarescom)).
-- History: `~/logs/wcw-deploy.log`. Run any of these scripts by hand in cPanel → Terminal to deploy
-  immediately.
+- The result ("API updated to …", "storefront build …", "already up to date" or what failed) is shown on
+  Admin → Deployments, with the versions now live and the last lines of the log.
 
-So the release flow is: **merge a PR into `main` → live within ~10 minutes.**
+If the gate can't answer (the database is down, or the API code is older than the gate), the script looks for
+updates anyway, so deploys never get stuck. Gate errors go to `~/logs/wcw-deploy-gate.err`.
+History: `~/logs/wcw-deploy.log`. Run any of these scripts by hand in cPanel → Terminal to deploy immediately.
+
+So the release flow is: **merge a PR into `main` → live at the next check (default within 10 minutes), or click
+*Deploy now* (within a minute).**
 
 ## Background jobs
 
-The same cron line also runs `deploy/run-jobs.sh` after every update check (every 10 minutes), which calls
+The same cron line also runs `deploy/run-jobs.sh` every 5 minutes and after every update check, which calls
 `python -m app.scripts.run_jobs`: queued emails and retries, abandoned-cart reminders, review requests,
 back-in-stock emails, expiry of unpaid card orders, the Monday 7am owner digest (Settings → Digest) and a nightly
 clean-up of analytics older than the retention period. It is safe to run by hand and two runs never overlap.
@@ -343,7 +361,7 @@ while the Python app is recreated, so do it at a quiet time. In cPanel:
    cloudlinux-selector restart --json --interpreter=python --app-root=repos/wcw-shop-portal/backend
    ```
 4. **Cron Jobs** — change the auto-deploy line to
-   `*/10 * * * * bash $HOME/repos/wcw-shop-portal/deploy/auto-deploy.sh >> $HOME/logs/wcw-deploy.log 2>&1`.
+   `* * * * * bash $HOME/repos/wcw-shop-portal/deploy/auto-deploy.sh >> $HOME/logs/wcw-deploy.log 2>&1`.
 5. Check `https://api.windycitywares.com/health` and the shop, then remove the old virtualenv
    (`rm -rf ~/virtualenv/repos/wcw-portal`).
 

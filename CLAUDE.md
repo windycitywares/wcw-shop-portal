@@ -74,8 +74,9 @@ npm run typecheck
 - Email: `app/core/mailer.py` (`await mailer.send(Mail(...))`); CAPTCHA: `await captcha.verify(token, ip)`.
   Both skip when unconfigured in development — see docs/DEPLOYMENT.md → "Email and CAPTCHA".
 - Server entry point is `backend/wsgi.py` (cPanel generates `passenger_wsgi.py` to load it — never commit one).
-- Deploys are automatic: merge to `main` → Actions builds the storefront → server cron (`deploy/auto-deploy.sh`)
-  updates API + storefront within ~10 min. Frontend changes must pass `npm run build` + `tsc` in Actions.
+- Deploys: merge to `main` → Actions builds the storefront → server cron (`deploy/auto-deploy.sh`, every minute) asks
+  Admin → Deployments (auto every N min / set times / paused / Deploy now), then
+  updates API, storefront and main site. Frontend changes must pass `npm run build` + `tsc` in Actions.
 
 ## Not built yet
 
