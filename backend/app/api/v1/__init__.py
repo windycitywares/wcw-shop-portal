@@ -6,6 +6,7 @@ from app.api.v1 import (
     admin_campaigns,
     admin_carts,
     admin_customers,
+    admin_deploy,
     admin_environment,
     admin_inbox,
     admin_notifications,
@@ -44,6 +45,7 @@ api_router.include_router(admin_carts.router)
 api_router.include_router(admin_customers.router)
 api_router.include_router(admin_environment.router)
 api_router.include_router(admin_backups.router)
+api_router.include_router(admin_deploy.router)
 api_router.include_router(admin_inbox.router)
 api_router.include_router(admin_notifications.router)
 api_router.include_router(admin_campaigns.router)
