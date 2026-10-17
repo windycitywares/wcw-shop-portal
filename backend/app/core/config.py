@@ -107,6 +107,12 @@ class Settings(BaseSettings):
     backup_pg_dump: str = "pg_dump"
     backup_pg_restore: str | None = None  # default: pg_restore next to pg_dump
 
+    # Admin → Deployments: where the server keeps the checkout, the two Node apps and the deploy log.
+    deploy_repo_dir: str = str(BACKEND_DIR.parent)
+    storefront_app_dir: str = str(Path.home() / "apps" / "wcw-storefront")
+    main_site_app_dir: str = str(Path.home() / "apps" / "wcw-main" / "site")
+    deploy_log: str = str(Path.home() / "logs" / "wcw-deploy.log")
+
     # Analytics ignores crawlers and headless browsers; the browser tests turn this on.
     analytics_accept_bots: bool = False
 
