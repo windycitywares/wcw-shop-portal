@@ -55,6 +55,7 @@ export const NAV: NavGroup[] = [
       { href: "/admin/audit", label: "Audit log", icon: "shield", permission: "audit:view" },
       { href: "/admin/environment", label: "Test mode", icon: "flask", permission: "environment:manage" },
       { href: "/admin/backups", label: "Backups", icon: "archive", permission: "backups:manage" },
+      { href: "/admin/deployments", label: "Deployments", icon: "download", permission: "settings:manage" },
     ],
   },
 ];
