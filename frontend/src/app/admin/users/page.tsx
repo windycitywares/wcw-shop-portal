@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { apiFetch } from "@/lib/client-api";
+import { API_URL, apiFetch } from "@/lib/client-api";
 import type { Page, Role, User } from "@/lib/types";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
 import { Icon } from "@/components/admin/ui/Icon";
@@ -28,6 +28,14 @@ type Pending = { user: User; role: Role } | { user: User; active: boolean };
 
 const who = (u: User) => u.full_name || u.email;
 
+/** A readable temporary password (no look-alike characters) the admin can pass on. */
+function suggestPassword(length = 14): string {
+  const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = new Uint32Array(length);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => chars[b % chars.length]).join("");
+}
+
 export default function UsersAdmin() {
   const { user: me } = useAuth();
   const { push } = useToast();
@@ -38,6 +46,9 @@ export default function UsersAdmin() {
   const [formError, setFormError] = useState("");
   const [pending, setPending] = useState<Pending | null>(null);
   const [saving, setSaving] = useState(false);
+  const [resetting, setResetting] = useState<User | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [testMode, setTestMode] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -50,6 +61,34 @@ export default function UsersAdmin() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // In Test mode a new password only changes the test copy of the account; say so in the dialog.
+  useEffect(() => {
+    fetch(`${API_URL}/environment`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { test: false }))
+      .then((d: { test?: boolean }) => setTestMode(Boolean(d.test)))
+      .catch(() => undefined);
+  }, []);
+
+  function openReset(u: User) {
+    setNewPassword(suggestPassword());
+    setResetting(u);
+  }
+
+  async function setPassword(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!resetting) return;
+    setSaving(true);
+    try {
+      await apiFetch(`/users/${resetting.id}`, { method: "PATCH", body: JSON.stringify({ password: newPassword }) });
+      push({ title: "Password set", description: `Share it with ${who(resetting)} securely. They're signed out on other devices.` });
+      setResetting(null);
+    } catch (err) {
+      push({ title: "Password not set", description: err instanceof Error ? err.message : undefined, tone: "danger" });
+    } finally {
+      setSaving(false);
+    }
+  }
 
   /** Save the confirmed change, then reload the list so every row shows what the server now has. */
   async function confirmPending() {
@@ -161,6 +200,19 @@ export default function UsersAdmin() {
         </label>
       ),
     },
+    {
+      key: "password",
+      header: "Password",
+      cell: (u) =>
+        u.id === me?.id ? (
+          <span className="text-xs text-muted">In Your account</span>
+        ) : (
+          <Button size="sm" variant="secondary" className="h-8" onClick={() => openReset(u)}>
+            Set password
+            <span className="sr-only"> for {u.email}</span>
+          </Button>
+        ),
+    },
   ];
 
   return (
@@ -256,6 +308,54 @@ export default function UsersAdmin() {
           </dl>
         </form>
       </Modal>
+      <Modal
+        open={!!resetting}
+        onClose={() => setResetting(null)}
+        title="Set a new password"
+        description={resetting ? `For ${who(resetting)} (${resetting.email}), e.g. when they've lost theirs.` : undefined}
+        footer={
+          <>
+            <Button variant="ghost" size="sm" className="h-9" onClick={() => setResetting(null)}>
+              Cancel
+            </Button>
+            <Button type="submit" form="set-password-form" size="sm" className="h-9" disabled={saving || newPassword.length < 8}>
+              {saving ? "Setting…" : "Set password"}
+            </Button>
+          </>
+        }
+      >
+        <form id="set-password-form" onSubmit={setPassword} className="space-y-4">
+          {testMode && (
+            <Alert tone="danger">
+              Test mode is on: this changes the password in the test copy only. To change the real account, switch back to live data first (Admin → Test mode).
+            </Alert>
+          )}
+          <Field label="New password" hint="At least 8 characters. Copy it now and share it securely; they can change it in Your account → Password.">
+            {(p) => (
+              <div className="flex gap-2">
+                <Input
+                  {...p}
+                  name="new-password"
+                  type="text"
+                  autoComplete="new-password"
+                  spellCheck={false}
+                  minLength={8}
+                  maxLength={72}
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="font-mono"
+                />
+                <Button type="button" variant="secondary" size="sm" className="h-11 shrink-0" onClick={() => setNewPassword(suggestPassword())}>
+                  New suggestion
+                </Button>
+              </div>
+            )}
+          </Field>
+          <p className="text-sm text-muted">They are signed out on every device and sign in again with this password.</p>
+        </form>
+      </Modal>
+
       <ConfirmDialog
         open={!!pending}
         title={pending && "role" in pending ? "Change role?" : pending && "active" in pending && !pending.active ? "Switch this account off?" : "Switch this account on?"}
