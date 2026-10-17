@@ -23,7 +23,7 @@ from app.models.order import Order
 from app.models.user import NewsletterSubscriber, User
 from app.repositories.user import NewsletterRepository, UserRepository
 from app.schemas.user import RegisterIn, TokenOut, UserCreate, UserMe, UserUpdate
-from app.services import emails
+from app.services import audit, emails
 from app.services.promotions import issue_coupon
 from app.services.settings import SettingsService
 
@@ -92,6 +92,14 @@ class UserService(AuthService):
             changes.get("is_active") is False or ("role" in changes and changes["role"] != user.role)
         ):
             raise PermissionDeniedError("You can't change your own role or disable your own account")
+        password = changes.pop("password", None)
+        if password is not None:
+            if user.id == acting.id:
+                raise PermissionDeniedError("Change your own password in Your account → Password")
+            user.hashed_password = hash_password(password)
+            user.password_changed_at = datetime.now(timezone.utc)  # older sign-ins stop working
+            audit.record(self.session, acting, "user.password_set", "user", user.id,
+                         f"Set a new password for {user.email}")
         for field, value in changes.items():
             if value is not None or field == "full_name":
                 setattr(user, field, value)
