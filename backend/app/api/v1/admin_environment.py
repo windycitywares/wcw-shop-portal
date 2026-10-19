@@ -9,7 +9,7 @@ from app.core.config import get_settings
 from app.core.database import engine
 from app.core.permissions import Permission
 from app.models.user import User
-from app.schemas.environment import EnvironmentOut, MailToIn, ModeIn
+from app.schemas.environment import EnvironmentOut, LoginsIn, MailToIn, ModeIn
 from app.services.testenv import TestEnvironment
 
 router = APIRouter(prefix="/admin/environment", tags=["admin: environment"])
@@ -60,4 +60,12 @@ async def set_mail_to(session: SessionDep, user: Admin, data: MailToIn):
     """Where every email goes while test mode is on (none: emails are not sent at all)."""
     await _release(session)
     await TestEnvironment(engine).set_mail_to(str(data.email).lower() if data.email else None, user)
+    return await _out()
+
+
+@router.put("/test-logins", response_model=EnvironmentOut)
+async def set_test_logins(session: SessionDep, user: Admin, data: LoginsIn):
+    """Which copied shoppers may sign in while the shop is on test data (staff always may)."""
+    await _release(session)
+    await TestEnvironment(engine).set_logins([str(email).lower() for email in data.emails], user)
     return await _out()

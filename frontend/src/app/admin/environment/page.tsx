@@ -11,7 +11,7 @@ import { Panel, PanelBody, PanelHeader } from "@/components/admin/ui/Panel";
 import { Pill } from "@/components/admin/ui/Pill";
 import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Field";
+import { Input, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
 
 interface Environment {
@@ -20,6 +20,7 @@ interface Environment {
   test_exists: boolean;
   test_synced_at: string | null;
   test_mail_to: string | null;
+  test_login_emails: string[];
   test_size_bytes: number | null;
   out_of_date: boolean;
   changed_at: string | null;
@@ -67,6 +68,7 @@ export default function AdminEnvironment() {
   const router = useRouter();
   const [env, setEnv] = useState<Environment | null>(null);
   const [mailTo, setMailTo] = useState("");
+  const [logins, setLogins] = useState("");
   const [confirm, setConfirm] = useState<Confirm>(null);
   const [busy, setBusy] = useState(false);
   const [switched, setSwitched] = useState<"live" | "test" | null>(null);
@@ -77,6 +79,7 @@ export default function AdminEnvironment() {
       (d) => {
         setEnv(d);
         setMailTo(d.test_mail_to ?? "");
+        setLogins(d.test_login_emails.join("\n"));
         setError("");
       },
       (e) => setError(e.message),
@@ -125,6 +128,28 @@ export default function AdminEnvironment() {
   }
 
   const test = env?.effective === "test";
+
+  async function saveLogins(e: React.FormEvent) {
+    e.preventDefault();
+    const emails = logins.split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean);
+    setBusy(true);
+    try {
+      const d = await apiFetch<Environment>("/admin/environment/test-logins", {
+        method: "PUT",
+        body: JSON.stringify({ emails }),
+      });
+      setEnv(d);
+      setLogins(d.test_login_emails.join("\n"));
+      push({
+        title: d.test_login_emails.length ? "Sign-ins saved" : "Only staff may sign in on the test data",
+        description: d.test_login_emails.length ? `${d.test_login_emails.length} customer address(es)` : undefined,
+      });
+    } catch (err) {
+      push({ title: "That didn't work", description: err instanceof Error ? err.message : undefined, tone: "danger" });
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <div>
@@ -215,19 +240,47 @@ export default function AdminEnvironment() {
           </PanelBody>
         </Panel>
         <Panel>
-          <PanelHeader title="While test mode is on" />
+          <PanelHeader
+            title="Who can sign in"
+            description="On the copy, staff always can. A real customer copied into the test data cannot sign in until their address is listed here: the copy holds their password. Anyone who signs up while testing can sign in again."
+          />
           <PanelBody>
-            <ul className="list-disc space-y-1.5 pl-5 text-sm">
-              <li>Every page shows a &ldquo;Test mode&rdquo; banner.</li>
-              <li>No card is charged: Stripe test cards or the no-charge test payment.</li>
-              <li>No email reaches a customer.</li>
-              <li>New ids and order numbers start 1,000,000 above live, so test records stand out.</li>
-              <li>Testers sign up and use the shop like customers; staff accounts work with their usual passwords.</li>
-              <li>Real shoppers visiting meanwhile also see the copy, so test before launch or at quiet times.</li>
-            </ul>
+            <form onSubmit={saveLogins} className="space-y-2">
+              <label htmlFor="test-logins" className="sr-only">
+                Customer addresses that may sign in on the test data
+              </label>
+              <Textarea
+                id="test-logins"
+                value={logins}
+                onChange={(e) => setLogins(e.target.value)}
+                rows={4}
+                placeholder={"ana@example.com\nlee@example.com"}
+                className="min-h-24 font-mono text-xs"
+              />
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs text-muted">One address per line. Leave empty for staff only.</p>
+                <Button type="submit" size="sm" variant="secondary" disabled={busy}>
+                  Save sign-ins
+                </Button>
+              </div>
+            </form>
           </PanelBody>
         </Panel>
       </div>
+
+      <Panel className="mt-6">
+        <PanelHeader title="While test mode is on" />
+        <PanelBody>
+          <ul className="list-disc space-y-1.5 pl-5 text-sm">
+            <li>Every page shows a &ldquo;Test mode&rdquo; banner.</li>
+            <li>No card is charged: Stripe test cards or the no-charge test payment.</li>
+            <li>No email reaches a customer.</li>
+            <li>New ids and order numbers start 1,000,000 above live, so test records stand out.</li>
+            <li>Staff sign in with their usual password; copied shoppers only if their address is listed above.</li>
+            <li>Real shoppers visiting meanwhile also see the copy, so test before launch or at quiet times.</li>
+          </ul>
+        </PanelBody>
+      </Panel>
 
       {confirm && (
         <ConfirmDialog

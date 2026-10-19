@@ -20,6 +20,7 @@ class TestModeTests(unittest.TestCase):
         # Whatever happened, leave the shared database on live data with no copy, for the other test modules.
         w = self.w
         admin = w.login(w.admin_email, "admin-password-1")
+        w.client.put(w.url("/admin/environment/test-logins"), json={"emails": []}, headers=admin)
         w.client.put(w.url("/admin/environment/mode"), json={"mode": "live"}, headers=admin)
         admin = w.login(w.admin_email, "admin-password-1")
         w.delete("/admin/environment/test-data", admin)
@@ -46,11 +47,21 @@ class TestModeTests(unittest.TestCase):
 
         # Tokens from the live data don't work on the copy (an id there may be someone else)
         self.assertEqual(w.get("/auth/me", live_customer).status_code, 401)
-        admin = w.login(w.admin_email, "admin-password-1")  # the copy has the same accounts
+        admin = w.login(w.admin_email, "admin-password-1")  # the copy has the same accounts, and staff may sign in
+        # A copied shopper cannot: the copy holds every live customer and their password.
+        denied = w.client.post(w.url("/auth/login"), data={"username": live_customer_email, "password": PASSWORD})
+        self.assertEqual(denied.status_code, 401, denied.text)
+        self.assertIn("test data", denied.json()["detail"])
+        # Listed addresses may sign in (the list lives with the switch, so a fresh copy keeps it).
+        r = self.put("/admin/environment/test-logins", {"emails": [live_customer_email]}, admin)
+        w.admin = admin  # now signed in on the copy
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["test_login_emails"], [live_customer_email])
         w.login(live_customer_email, PASSWORD)
 
         # A tester signs up and orders on the copy; emails go to the test inbox, never the customer
         tester_email, tester = w.register("tester")
+        w.login(tester_email, PASSWORD)  # an account made on the copy is a tester, so it may sign in again
         w.sent.clear()
         order = w.place(tester_email, [item(p)], tester)["order"]
         self.assertGreaterEqual(order["id"], 1_000_000)  # ids in the copy can't collide with live ones

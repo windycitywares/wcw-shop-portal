@@ -110,7 +110,7 @@ are the order they were written in, with the original list kept in the PR that s
 | 5 | Remove **"pay later"** from checkout | checkout 1 | this PR |
 | 6 | A **welcome email** on registration | email 1 | this PR |
 | 7 | **Forgot password** isn't working: the reset email now goes through the outbox (retried), and a throttled request is answered honestly instead of pretending | email 1 | this PR |
-| 8 | In **Test mode** only allowed people may sign in (not every copied customer) | test mode 1 | to do |
+| 8 | In **Test mode** only allowed people may sign in (not every copied customer) | test mode 1 | this PR |
 | 9 | **Email *and* site notification on order activity** for the customer (a bell in the account) | notifications 1 | to do |
 | 10 | **Review and rating after delivery** — prompted from the order, not only from the product page | reviews 1 | to do |
 | 11 | **Team and customers apart** in the admin (staff list separate from shoppers) | admin 1 | to do |

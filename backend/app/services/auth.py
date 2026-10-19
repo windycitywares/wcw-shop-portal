@@ -6,6 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import appmode
 from app.core.enums import OrderStatus, UserRole
 from app.core.exceptions import (
     AuthenticationError,
@@ -40,6 +41,21 @@ def to_me(user: User) -> UserMe:
     )
 
 
+def may_sign_in(user: User) -> bool:
+    """Whether this account may sign in right now.
+
+    On live data, everyone active may. On the test copy, the copy holds every live customer and their
+    password, so only staff, the addresses the owner listed, and accounts made inside the copy (someone
+    signing up while testing) may sign in.
+    """
+    if user.role != UserRole.CUSTOMER or not appmode.is_test():
+        return True
+    state = appmode.current()
+    if user.email.strip().lower() in state.login_emails:
+        return True
+    return bool(state.test_synced_at and user.created_at and user.created_at > state.test_synced_at)
+
+
 class AuthService:
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -55,6 +71,11 @@ class AuthService:
             raise AuthenticationError("Incorrect email or password")
         if not user.is_active:
             raise AuthenticationError("This account is disabled")
+        if not may_sign_in(user):
+            raise AuthenticationError(
+                "This account can't sign in while the shop is on test data. Ask the shop owner to add "
+                "your email to the test sign-ins, or switch the shop back to live."
+            )
         return self.issue_token(user)
 
     async def register(self, data: RegisterIn) -> TokenOut:

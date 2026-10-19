@@ -130,7 +130,7 @@ class TestEnvironment:
     async def status(self) -> dict[str, Any]:
         async with self.engine.connect() as conn:
             await conn.execute(text("SET search_path TO public"))
-            mode = (await _rows(conn, "SELECT mode, test_mail_to, test_synced_at, changed_at, changed_by_email FROM public.app_mode WHERE id = 1")) or [{}]
+            mode = (await _rows(conn, "SELECT mode, test_mail_to, test_synced_at, test_login_emails, changed_at, changed_by_email FROM public.app_mode WHERE id = 1")) or [{}]
             row = mode[0]
             exists = bool((await conn.execute(text("SELECT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = :s)"), {"s": SCHEMA})).scalar_one())
             live_version = (await conn.execute(text("SELECT version_num FROM public.alembic_version LIMIT 1"))).scalar_one_or_none()
@@ -149,6 +149,7 @@ class TestEnvironment:
             "test_exists": exists,
             "test_synced_at": row.get("test_synced_at"),
             "test_mail_to": row.get("test_mail_to"),
+            "test_login_emails": list(appmode.login_emails(row.get("test_login_emails"))),
             "test_size_bytes": size,
             "out_of_date": bool(exists and test_version != live_version),
             "changed_at": row.get("changed_at"),
@@ -207,6 +208,21 @@ class TestEnvironment:
             await conn.execute(text("SET search_path TO public"))
             await conn.execute(text("UPDATE public.app_mode SET test_mail_to = :e WHERE id = 1"), {"e": email})
             await _audit(conn, user, "environment.mail_to", f"Test emails now go to {email}" if email else "Test emails are no longer sent")
+            await conn.commit()
+        appmode.forget()
+
+    async def set_logins(self, emails: list[str], user: User) -> None:
+        """Who may sign in as a shopper on the copy. Staff always may; the list is for copied customers."""
+        clean = appmode.login_emails(",".join(emails))
+        async with self.engine.connect() as conn:
+            await conn.execute(text("SET search_path TO public"))
+            await conn.execute(
+                text("UPDATE public.app_mode SET test_login_emails = :e WHERE id = 1"), {"e": ",".join(clean)}
+            )
+            await _audit(
+                conn, user, "environment.test_logins",
+                f"{len(clean)} address(es) may sign in on the test data" if clean else "Only staff may sign in on the test data",
+            )
             await conn.commit()
         appmode.forget()
 
