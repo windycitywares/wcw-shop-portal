@@ -332,6 +332,8 @@ class StockAlertService:
             ).on_conflict_do_nothing().returning(StockAlert.id)
         )
         created = result.scalar_one_or_none() is not None
+        from app.services.contacts import ContactService
+        await ContactService(self.session).upsert(user.email.strip().lower(), full_name=user.full_name, source="stock_alert", user_id=user.id)
         await self.session.commit()
         return {"kind": target.kind, "options": chosen, "already": not created}
 

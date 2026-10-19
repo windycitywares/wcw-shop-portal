@@ -145,6 +145,8 @@ class ContactService:
             subject=data.subject, message=data.message.strip(), order_number=data.order_number,
             locale=data.locale, ip_address=ip,
         ))
+        from app.services.contacts import ContactService as _ContactService
+        await _ContactService(self.session).upsert(str(data.email).lower(), full_name=data.name, source="contact_form")
         await self.session.commit()  # keep the message even if the email below fails
 
         settings = get_settings()

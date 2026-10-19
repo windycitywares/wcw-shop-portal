@@ -31,6 +31,7 @@ from app.core.config import get_settings
 from app.core.enums import UserRole
 from app.domain.contacts import SERVICE_ONLY_SOURCES
 from app.models.account import ContactMessage
+from app.models.contact import Contact
 from app.models.crm import CrmOutbox
 from app.models.order import Order
 from app.models.user import NewsletterSubscriber, User
@@ -94,6 +95,14 @@ def customer_payload(u: User) -> dict[str, Any]:
     return {"id": u.id, "email": u.email, "full_name": u.full_name}
 
 
+def contact_record_payload(c: Contact) -> dict[str, Any]:
+    return {
+        "id": c.id, "email": c.email, "full_name": c.full_name, "phone": c.phone,
+        "source": c.source, "user_id": c.user_id, "marketing_opt_in": c.marketing_opt_in,
+        "created_at": _iso(c.created_at), "updated_at": _iso(c.updated_at),
+    }
+
+
 def newsletter_event(s: NewsletterSubscriber) -> tuple[str, dict[str, Any]] | None:
     if s.unsubscribed_at is not None:
         return "newsletter.unsubscribed", {"email": s.email}
@@ -119,7 +128,7 @@ class CrmSync:
     async def build(self, kind: str, ref_id: int) -> tuple[str, dict[str, Any]] | None:
         """(event type, data) for the record as it is now, or None when there is nothing to tell."""
         model = {"order": Order, "customer": User, "newsletter": NewsletterSubscriber,
-                 "contact": ContactMessage}.get(kind)
+                 "contact": ContactMessage, "contact_record": Contact}.get(kind)
         row = await self.session.get(model, ref_id) if model else None
         if row is None:
             return None
@@ -127,6 +136,8 @@ class CrmSync:
             return "order.updated", order_payload(row)
         if kind == "customer":
             return ("customer.upserted", customer_payload(row)) if row.role == UserRole.CUSTOMER else None
+        if kind == "contact_record":
+            return "contact.upserted", contact_record_payload(row)
         if kind == "contact":
             return "contact_message.created", contact_payload(row)
         return newsletter_event(row)

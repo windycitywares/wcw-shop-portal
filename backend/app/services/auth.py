@@ -80,6 +80,8 @@ class AuthService:
 
     async def register(self, data: RegisterIn) -> TokenOut:
         user = await self._create(data.email, data.password, data.full_name, UserRole.CUSTOMER)
+        from app.services.contacts import ContactService
+        await ContactService(self.session).upsert(data.email, full_name=data.full_name, source="signup", user_id=user.id, marketing_opt_in=False)
         locale = data.locale if data.locale in LANGUAGES else "en"
         queued = [emails.enqueue(
             self.session, "account_welcome", user.email,
@@ -193,6 +195,8 @@ class NewsletterService:
             row.source, row.unsubscribed_at, row.locale = source, None, locale
         else:
             row = self.repo.add(NewsletterSubscriber(email=email, locale=locale, source=source, unsubscribe_token=secrets.token_urlsafe(24)))
+        from app.services.contacts import ContactService
+        await ContactService(self.session).upsert(email, source="newsletter", marketing_opt_in=True)
         queued = []
         settings = await SettingsService(self.session).load()
         if welcome and settings.welcome.enabled and not await self._has_ordered(email):

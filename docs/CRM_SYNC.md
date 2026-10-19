@@ -32,7 +32,7 @@ ORM.
 
 ## Read API (for the CRM's backfill)
 
-`GET /api/v1/integrations/crm/{customers|orders|newsletter|products}?after_id=0&limit=200` (max 500), header
+`GET /api/v1/integrations/crm/{contacts|customers|orders|newsletter|products}?after_id=0&limit=200` (max 500), header
 `Authorization: Bearer <CRM_API_TOKEN>`. Pages by id: pass the answer's `next_after_id` until it is `null`.
 `orders` also takes `email=`. Items have the same shape as the events' `data`; newsletter items add `type`
 (`newsletter.subscribed` / `newsletter.unsubscribed`). Always live data. Answers 404 while `CRM_API_TOKEN` is unset;
