@@ -6,7 +6,6 @@ import { apiFetch } from "@/lib/client-api";
 import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { Panel, PanelBody, PanelHeader } from "@/components/admin/ui/Panel";
 import { Pill } from "@/components/admin/ui/Pill";
-import { Tabs } from "@/components/admin/ui/Tabs";
 import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
@@ -323,21 +322,30 @@ export default function AdminSettings() {
           </PanelBody>
         </Panel>
       )}
-      <Tabs
-        tabs={GROUPS.map((g) => ({ id: g.id, label: g.label }))}
-        value={tab}
-        onChange={(id) => {
-          setTab(id);
-          window.history.replaceState(null, "", `?tab=${id}`);
-        }}
-        label="Settings group"
-        className="mb-4"
-      />
-      {data ? (
-        <GroupForm key={group.id} group={group} initial={data.settings[group.id] ?? {}} onSaved={(settings) => setData({ ...data, settings })} />
-      ) : (
-        <div className="skeleton h-64" />
-      )}
+      <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
+        <nav aria-label="Settings groups" className="space-y-1">
+          {GROUPS.map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              onClick={() => {
+                setTab(g.id);
+                window.history.replaceState(null, "", `?tab=${g.id}`);
+              }}
+              className={`block w-full rounded-[var(--radius-control)] px-3 py-2 text-left text-sm ${tab === g.id ? "bg-sand font-medium text-ink" : "text-muted hover:bg-sand/60 hover:text-ink"}`}
+            >
+              {g.label}
+            </button>
+          ))}
+        </nav>
+        <div>
+          {data ? (
+            <GroupForm key={group.id} group={group} initial={data.settings[group.id] ?? {}} onSaved={(settings) => setData({ ...data, settings })} />
+          ) : (
+            <div className="skeleton h-64" />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
