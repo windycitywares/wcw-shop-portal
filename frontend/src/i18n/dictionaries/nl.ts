@@ -140,12 +140,10 @@ const nl: Dictionary = {
     payment: "Betaling",
     methods: {
       stripe: "Kaart",
-      manual: "Later betalen",
       test: "Testbetaling (gratis)",
     },
     methodHints: {
       stripe: "Je vult je kaart in op de beveiligde pagina van Stripe. Wij zien je kaartnummer nooit.",
-      manual: "We mailen je hoe je kunt betalen. Intussen houden we je artikelen voor je vast.",
       test: "Alleen om te testen. Nooit beschikbaar in de echte winkel.",
     },
     marketing: "Mail me nieuws en aanbiedingen. Je kunt je altijd afmelden.",

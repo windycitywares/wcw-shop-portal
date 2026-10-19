@@ -92,7 +92,7 @@ class Settings(BaseSettings):
     max_addresses_per_user: int = 10
 
     # Card payments through Stripe Checkout. Both stay on the server (backend/.env). Without a secret key,
-    # checkout offers "pay later" (if enabled in Settings) and, outside production, a no-charge test payment.
+    # checkout offers only the no-charge test payment, and only outside production (or in Test mode).
     stripe_secret_key: str | None = None
     stripe_webhook_secret: str | None = None
     # Used instead of the two above while Admin → Test mode is on (Stripe "test mode" keys: no real charges).

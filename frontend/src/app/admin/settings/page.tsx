@@ -61,10 +61,10 @@ const GROUPS: Group[] = [
   {
     id: "payments",
     label: "Payments",
-    description: "Card payments switch on by themselves once the Stripe keys are on the server.",
+    description:
+      "Card payments switch on by themselves once the Stripe keys are on the server. “Pay later” is no longer offered at checkout; orders placed before that change still show these instructions.",
     fields: [
-      { key: "manual_enabled", label: "Offer “Pay later” (you collect payment yourself)", type: "bool" },
-      { key: "manual_instructions", label: "How to pay later", hint: "Shown after ordering and in the email: bank details, Zelle, check address…", type: "langs", long: true },
+      { key: "manual_instructions", label: "Instructions for an order that is waiting for money", hint: "Bank details, Zelle, check address… Shown on older “pay later” orders and in their email.", type: "langs", long: true },
     ],
   },
   {

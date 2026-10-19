@@ -189,7 +189,7 @@ class CheckoutService:
             order = await service.mark_paid(order.id, provider=order.payment_provider or "test", reference=start.provider_ref)
             return CheckoutOut(order=await public_out(self.session, order, lang), payment=PaymentActionOut(provider=order.payment_provider or "", status="paid"))
         rows = []
-        if start.status == "pending":  # pay later: tell the customer how, and the owner that an order is waiting
+        if start.status == "pending":  # an order that waits for money (only an older "pay later" order gets here)
             rows.append(await service.customer_mail(order, "order_received", settings))
             admin_row = await service.admin_mail(order, settings)
             if admin_row is not None:

@@ -145,12 +145,10 @@ const es: Dictionary = {
     payment: "Pago",
     methods: {
       stripe: "Tarjeta",
-      manual: "Pagar después",
       test: "Pago de prueba (sin cargo)",
     },
     methodHints: {
       stripe: "Introducirás tu tarjeta en la página segura de Stripe. Nunca vemos el número de tu tarjeta.",
-      manual: "Te enviaremos por email cómo pagar. Mientras tanto, reservamos tus artículos.",
       test: "Solo para pruebas. Nunca se ofrece en la tienda real.",
     },
     marketing: "Envíame novedades y ofertas por email. Puedes darte de baja cuando quieras.",
