@@ -181,6 +181,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                       <p className="mt-1 text-xs capitalize text-muted">{user.role} access</p>
                     </div>
                     <div className="border-t border-line pt-1">
+                      <Link href="/admin/settings" onClick={close} className="flex items-center gap-2.5 rounded-[var(--radius-control)] px-3 py-2 text-sm hover:bg-sand">
+                        <Icon name="sliders" className="size-4 text-muted" />
+                        Settings
+                      </Link>
                       <Link href="/account" onClick={close} className="flex items-center gap-2.5 rounded-[var(--radius-control)] px-3 py-2 text-sm hover:bg-sand">
                         <Icon name="customers" className="size-4 text-muted" />
                         Your account
