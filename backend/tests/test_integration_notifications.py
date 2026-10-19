@@ -1,4 +1,5 @@
-"""Admin bell against PostgreSQL: activity from several sources, per-role filtering, unread count, links."""
+"""The bells against PostgreSQL: the admin activity list (per-role, many sources) and the shopper's
+own order bell, both unread-until-opened."""
 
 import unittest
 
@@ -51,6 +52,54 @@ class NotificationTests(unittest.TestCase):
         after = w.get("/admin/notifications", w.admin).json()
         self.assertEqual(after["unread"], 0)
         self.assertFalse(any(i["unread"] for i in after["items"]))
+
+
+@skip_unless_db
+class ShopperBellTests(unittest.TestCase):
+    """The customer-side bell: their own order milestones, unread until they open it."""
+
+    def setUp(self):
+        reset_limits()
+        self.w = world()
+
+    def test_the_bell_follows_the_shopper_s_own_orders(self):
+        w = self.w
+        email, shopper = w.register("bell-shopper")
+        self.assertEqual(w.get("/account/notifications", shopper).json()["items"], [])
+        self.assertEqual(w.get("/account/notifications").status_code, 401)  # not signed in, no bell
+
+        order = w.place(email, [item(w.product("25.00"))], shopper)["order"]
+        feed = w.get("/account/notifications", shopper).json()
+        self.assertEqual([i["kind"] for i in feed["items"]], ["placed"])  # paid in the same breath: one line
+        self.assertEqual(feed["unread"], 1)
+        self.assertTrue(feed["items"][0]["unread"])
+        self.assertEqual(feed["items"][0]["number"], order["number"])
+        self.assertEqual(feed["items"][0]["id"], f"placed:{order['id']}")
+
+        w.post(f"/admin/orders/{order['id']}/ship", {"carrier": "usps", "tracking_number": "9400 1000"}, w.admin)
+        w.post(f"/admin/orders/{order['id']}/status", {"status": "delivered"}, w.admin)
+        feed = w.get("/account/notifications", shopper).json()
+        self.assertEqual([i["kind"] for i in feed["items"]], ["delivered", "shipped", "placed"])
+        self.assertEqual(feed["unread"], 3)
+        self.assertEqual(len(w.mails_to(email, "on its way")), 1)
+        self.assertEqual(len(w.mails_to(email, "was delivered")), 1)  # the milestone emails the shopper too
+
+        w.post("/account/notifications/seen", None, shopper)
+        after = w.get("/account/notifications", shopper).json()
+        self.assertEqual(after["unread"], 0)
+        self.assertFalse(any(i["unread"] for i in after["items"]))
+
+        # Someone else's order (placed as a guest) never shows in this bell
+        guest = w.place(w.email("not-mine"), [item(w.product("10.00"))])["order"]
+        mine = {i["number"] for i in w.get("/account/notifications", shopper).json()["items"]}
+        self.assertNotIn(guest["number"], mine)
+
+        # A refund appears as its own line, with the amount
+        w.post(f"/admin/orders/{order['id']}/refund", {"amount": 5}, w.admin)
+        refunds = [i for i in w.get("/account/notifications", shopper).json()["items"] if i["kind"] == "refunded"]
+        self.assertEqual(len(refunds), 1)
+        self.assertEqual(refunds[0]["amount"], 5.0)
+        self.assertEqual(refunds[0]["number"], order["number"])
 
 
 if __name__ == "__main__":

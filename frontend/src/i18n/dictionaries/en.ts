@@ -512,6 +512,18 @@ const en = {
     changeFailed: "Could not change the password.",
     signOut: "Sign out",
   },
+  notifications: {
+    title: "Order updates",
+    empty: "Nothing yet. When an order moves, it shows up here.",
+    markSeen: "Mark all as read",
+    placed: "Order {number} received",
+    paid: "Payment received for order {number}",
+    shipped: "Order {number} is on its way",
+    delivered: "Order {number} was delivered",
+    cancelled: "Order {number} was cancelled",
+    refunded: "Refund of {amount} on order {number}",
+    viewAll: "See your orders",
+  },
   /** Product detail names and values from the catalog. Unknown ones are shown as stored. */
   attributes: {
     keys: {

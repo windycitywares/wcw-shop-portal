@@ -510,6 +510,19 @@ const nl: Dictionary = {
     changeFailed: "Het wachtwoord kon niet worden gewijzigd.",
     signOut: "Uitloggen",
   },
+  notifications: {
+    title: "Bestellingsupdates",
+    empty: "Nog niets. Zodra een bestelling opschiet, zie je het hier.",
+    markSeen: "Alles als gelezen markeren",
+    placed: "Bestelling {number} ontvangen",
+    paid: "Betaling ontvangen voor bestelling {number}",
+    shipped: "Bestelling {number} is onderweg",
+    delivered: "Bestelling {number} is bezorgd",
+    cancelled: "Bestelling {number} is geannuleerd",
+    refunded: "Terugbetaling van {amount} voor bestelling {number}",
+    viewAll: "Bekijk je bestellingen",
+  },
+
   attributes: {
     keys: {
       Material: "Materiaal",
