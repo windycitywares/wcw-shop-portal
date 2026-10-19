@@ -115,6 +115,6 @@ are the order they were written in, with the original list kept in the PR that s
 | 10 | **Review and rating after delivery** — prompted from the order, not only from the product page | reviews 1 | this PR |
 | 11 | **Team and customers apart** in the admin (staff list separate from shoppers) | admin 1 | this PR |
 | 12 | **Every account visible and editable** in the admin (today the list is capped, and only role/active/password) | admin 1 | this PR |
-| 13 | **Help content on each admin screen** (what it does, what to watch for) | admin 2 | to do |
+| 13 | **Help content on each admin screen** (what it does, what to watch for) | admin 2 | this PR |
 | 14 | Subscribe copy **generic**, and the signed-in shopper's email **pre-filled** | newsletter 1 | this PR |
 | 15 | **Abandoned carts** aren't working — a reminder may only go to shoppers who ticked a box; make that configurable | cart reminders 1 | this PR |

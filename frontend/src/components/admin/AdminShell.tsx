@@ -11,6 +11,7 @@ import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { TestModeBanner } from "@/components/TestModeBanner";
 import { NotificationBell } from "./notifications/NotificationBell";
 import { NAV, isActive, titleFor } from "./nav";
+import { HelpButton } from "./HelpButton";
 import { Icon } from "./ui/Icon";
 import { Popover } from "@/components/ui/Popover";
 import { ToastProvider } from "./ui/Toast";
@@ -155,6 +156,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
             <div className="ml-auto flex items-center gap-1">
               <NotificationBell />
+              <HelpButton />
               <ThemeSwitcher />
               <Popover
                 label="Account menu"
