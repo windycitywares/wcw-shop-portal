@@ -103,18 +103,18 @@ are the order they were written in, with the original list kept in the PR that s
 
 | # | What the owner asked for | Batch | State |
 |---|--------------------------|-------|-------|
-| 1 | The profile **name** top right, not just an icon | header and account menu | this PR |
-| 2 | The **wishlist** reachable from the top right | header and account menu | this PR |
-| 3 | A **tooltip** on every icon | header and account menu | this PR |
-| 4 | The user menu offers **profile and sign out** | header and account menu | this PR |
-| 5 | Remove **"pay later"** from checkout | checkout 1 | this PR |
-| 6 | A **welcome email** on registration | email 1 | this PR |
-| 7 | **Forgot password** isn't working: the reset email now goes through the outbox (retried), and a throttled request is answered honestly instead of pretending | email 1 | this PR |
-| 8 | In **Test mode** only allowed people may sign in (not every copied customer) | test mode 1 | this PR |
-| 9 | **Email *and* site notification on order activity** for the customer (a bell in the account) | notifications 1 | this PR |
-| 10 | **Review and rating after delivery** — prompted from the order, not only from the product page | reviews 1 | this PR |
-| 11 | **Team and customers apart** in the admin (staff list separate from shoppers) | admin 1 | this PR |
-| 12 | **Every account visible and editable** in the admin (today the list is capped, and only role/active/password) | admin 1 | this PR |
-| 13 | **Help content on each admin screen** (what it does, what to watch for) | admin 2 | this PR |
-| 14 | Subscribe copy **generic**, and the signed-in shopper's email **pre-filled** | newsletter 1 | this PR |
-| 15 | **Abandoned carts** aren't working — a reminder may only go to shoppers who ticked a box; make that configurable | cart reminders 1 | this PR |
+| 1 | The profile **name** top right, not just an icon | header and account menu | #75 (merged) |
+| 2 | The **wishlist** reachable from the top right | header and account menu | #75 (merged) |
+| 3 | A **tooltip** on every icon | header and account menu | #75 (merged) |
+| 4 | The user menu offers **profile and sign out** | header and account menu | #75 (merged) |
+| 5 | Remove **"pay later"** from checkout | checkout 1 | #77 (merged) |
+| 6 | A **welcome email** on registration | email 1 | #76 (merged) |
+| 7 | **Forgot password** isn't working: the reset email now goes through the outbox (retried), and a throttled request is answered honestly instead of pretending | email 1 | #76 (merged) |
+| 8 | In **Test mode** only allowed people may sign in (not every copied customer) | test mode 1 | #79 (merged) |
+| 9 | **Email *and* site notification on order activity** for the customer (a bell in the account) | notifications 1 | #81 (merged) |
+| 10 | **Review and rating after delivery** — prompted from the order, not only from the product page | reviews 1 | #82 (merged) |
+| 11 | **Team and customers apart** in the admin (staff list separate from shoppers) | admin 1 | #83 (merged) |
+| 12 | **Every account visible and editable** in the admin (today the list is capped, and only role/active/password) | admin 1 | #83 (merged) |
+| 13 | **Help content on each admin screen** (what it does, what to watch for) | admin 2 | #84 (merged) |
+| 14 | Subscribe copy **generic**, and the signed-in shopper's email **pre-filled** | newsletter 1 | #78 (merged) |
+| 15 | **Abandoned carts** aren't working — a reminder may only go to shoppers who ticked a box; make that configurable | cart reminders 1 | #80 (merged) |
