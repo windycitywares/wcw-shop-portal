@@ -10,12 +10,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core import mailer
 from app.core.config import get_settings
 from app.core.exceptions import NotFoundError, ValidationFailedError
+from app.core.i18n import LANGUAGES
 from app.core.security import hash_password
 from app.models.account import Address, ContactMessage, PasswordResetToken
 from app.models.user import User
 from app.repositories.account import AddressRepository, ContactRepository, PasswordResetRepository
 from app.repositories.user import UserRepository
 from app.schemas.account import AddressIn, ContactIn
+from app.services import emails
 
 log = logging.getLogger("wcw.account")
 
@@ -26,22 +28,6 @@ def hash_token(token: str) -> str:
 
 def localized_path(locale: str, path: str) -> str:
     return path if locale == "en" else f"/{locale}{path}"
-
-
-RESET_EMAIL = {
-    "en": ("Reset your WindyCityWares password",
-           "Hi{name},\n\nWe received a request to reset the password for your WindyCityWares account.\n"
-           "Choose a new password here (the link works once and expires in {minutes} minutes):\n\n{link}\n\n"
-           "If you didn't ask for this, you can ignore this email — your password won't change.\n\n— WindyCityWares"),
-    "es": ("Restablece tu contraseña de WindyCityWares",
-           "Hola{name}:\n\nRecibimos una solicitud para restablecer la contraseña de tu cuenta de WindyCityWares.\n"
-           "Elige una nueva contraseña aquí (el enlace funciona una vez y caduca en {minutes} minutos):\n\n{link}\n\n"
-           "Si no lo solicitaste, puedes ignorar este correo: tu contraseña no cambiará.\n\n— WindyCityWares"),
-    "nl": ("Stel je WindyCityWares-wachtwoord opnieuw in",
-           "Hallo{name},\n\nWe hebben een verzoek ontvangen om het wachtwoord van je WindyCityWares-account opnieuw in te stellen.\n"
-           "Kies hier een nieuw wachtwoord (de link werkt één keer en verloopt na {minutes} minuten):\n\n{link}\n\n"
-           "Heb je dit niet aangevraagd? Dan kun je deze e-mail negeren; je wachtwoord blijft hetzelfde.\n\n— WindyCityWares"),
-}
 
 
 class PasswordResetService:
@@ -63,16 +49,15 @@ class PasswordResetService:
             user_id=user.id, token_hash=hash_token(token),
             expires_at=now + timedelta(minutes=settings.password_reset_minutes),
         ))
-        await self.session.commit()
-
-        subject, body = RESET_EMAIL.get(locale, RESET_EMAIL["en"])
+        locale = locale if locale in LANGUAGES else "en"
         link = f"{settings.site_url.rstrip('/')}{localized_path(locale, '/reset-password')}?token={token}"
-        text = body.format(name=f" {user.full_name.split()[0]}" if user.full_name else "",
-                           minutes=settings.password_reset_minutes, link=link)
-        try:
-            await mailer.send(mailer.Mail(to=user.email, subject=subject, text=text))
-        except mailer.MailError:
-            pass  # logged by the mailer; the response stays the same so accounts can't be probed
+        queued = [emails.enqueue(
+            self.session, "password_reset", user.email,
+            {"name": user.full_name or "", "link": link, "minutes": settings.password_reset_minutes},
+            locale=locale, related_type="user", related_id=user.id,
+        )]
+        await self.session.commit()
+        await emails.deliver(self.session, queued)
 
     async def reset(self, token: str, new_password: str) -> None:
         now = datetime.now(timezone.utc)

@@ -266,6 +266,49 @@ def _welcome_offer(ctx: dict[str, Any]) -> Rendered:
     return _render(subject, blocks)
 
 
+def _account_welcome(ctx: dict[str, Any]) -> Rendered:
+    """The hello that follows a new account. Not marketing: the address did not opt in, so no unsubscribe footer."""
+    l = loc(ctx.get("locale"))
+    subject = {"en": "Welcome to WindyCityWares", "es": "Bienvenido a WindyCityWares",
+               "nl": "Welkom bij WindyCityWares"}[l]
+    intro = {
+        "en": "Your account is ready. Keep the designs you love in your wishlist, follow your orders, and check out faster next time.",
+        "es": "Tu cuenta está lista. Guarda los diseños que te gustan en tu lista de deseos, sigue tus pedidos y paga más rápido la próxima vez.",
+        "nl": "Je account is klaar. Bewaar de ontwerpen die je mooi vindt op je verlanglijst, volg je bestellingen en reken de volgende keer sneller af.",
+    }[l]
+    forgot = {
+        "en": "If you ever forget your password, use \"Forgot password\" on the sign-in page and we'll email you a link to set a new one.",
+        "es": "Si alguna vez olvidas tu contraseña, usa \"Olvidé mi contraseña\" en la página de inicio de sesión y te enviaremos un enlace para crear una nueva.",
+        "nl": "Als je je wachtwoord vergeet, gebruik dan \"Wachtwoord vergeten\" op de inlogpagina. We sturen je dan een link om een nieuw wachtwoord in te stellen.",
+    }[l]
+    blocks: list[Block] = [("p", _greet(ctx)), ("p", intro),
+                           ("button", {"en": "Visit your account", "es": "Ver tu cuenta", "nl": "Naar je account"}[l], ctx["account_url"]),
+                           ("p", forgot), ("p", s("questions", l)), ("p", s("thanks_sign", l))]
+    return _render(subject, blocks)
+
+
+def _password_reset(ctx: dict[str, Any]) -> Rendered:
+    """The one-time reset link. Short and to the point: the link is the whole message."""
+    l = loc(ctx.get("locale"))
+    subject = {"en": "Reset your WindyCityWares password", "es": "Restablece tu contraseña de WindyCityWares",
+               "nl": "Stel je WindyCityWares-wachtwoord opnieuw in"}[l]
+    intro = {
+        "en": "Someone asked to reset the password for this address. Set a new one with the button below.",
+        "es": "Alguien pidió restablecer la contraseña de esta dirección. Crea una nueva con el botón de abajo.",
+        "nl": "Iemand vroeg om het wachtwoord van dit adres opnieuw in te stellen. Stel hieronder een nieuw wachtwoord in.",
+    }[l]
+    note = {
+        "en": "The link works once and expires in {minutes} minutes. If it wasn't you, you can ignore this email: nothing has changed.",
+        "es": "El enlace funciona una sola vez y caduca en {minutes} minutos. Si no fuiste tú, puedes ignorar este correo: nada ha cambiado.",
+        "nl": "De link werkt één keer en verloopt na {minutes} minuten. Was jij dit niet? Dan kun je deze e-mail negeren: er is niets veranderd.",
+    }[l].format(minutes=ctx["minutes"])
+    blocks: list[Block] = [("p", _greet(ctx)), ("p", intro),
+                           ("button", {"en": "Set a new password", "es": "Crear una contraseña nueva",
+                                       "nl": "Nieuw wachtwoord instellen"}[l], ctx["link"]),
+                           ("p", note), ("p", s("thanks_sign", l))]
+    return _render(subject, blocks)
+
+
 def _abandoned_cart(ctx: dict[str, Any]) -> Rendered:
     l = loc(ctx.get("locale"))
     second = ctx.get("step", 1) >= 2
@@ -363,6 +406,8 @@ RENDERERS = {
     "order_cancelled": _order_cancelled,
     "order_refunded": _order_refunded,
     "welcome_offer": _welcome_offer,
+    "account_welcome": _account_welcome,
+    "password_reset": _password_reset,
     "abandoned_cart": _abandoned_cart,
     "review_request": _review_request,
     "back_in_stock": _back_in_stock,

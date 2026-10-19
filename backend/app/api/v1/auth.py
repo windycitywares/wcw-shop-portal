@@ -74,9 +74,14 @@ async def forgot_password(request: Request, session: SessionDep, data: ForgotPas
     if reset_requests_by_ip.is_blocked(ip_key):
         raise TooManyRequestsError("Too many requests. Please wait an hour and try again.")
     reset_requests_by_ip.hit(ip_key)
-    if not reset_requests_by_email.is_blocked(email_key):
-        reset_requests_by_email.hit(email_key)
-        await PasswordResetService(session).request(email_key, data.locale)
+    if reset_requests_by_email.is_blocked(email_key):
+        # Say so plainly. A quiet "we've sent a link" here is exactly how "forgot password is broken" starts.
+        raise TooManyRequestsError(
+            "We've already sent a reset link to that address. Check your inbox and your spam folder, "
+            "or try again in an hour."
+        )
+    reset_requests_by_email.hit(email_key)
+    await PasswordResetService(session).request(email_key, data.locale)
     return Message(detail="If an account exists for that email, we've sent a link to reset the password.")
 
 
