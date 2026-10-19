@@ -224,6 +224,9 @@ data again" refreshes it; after switching back to live the copy can be deleted.
 
 While test mode is on:
 - every page shows a "Test mode" banner; everyone is signed out by a switch and signs in again;
+- only staff and the customer addresses listed on the Test mode page ("Who can sign in") can sign in: the copy
+  holds every live customer and their password, so a copied shopper is otherwise refused. Accounts created while
+  testing (a tester signing up) can sign in again;
 - emails never reach customers: all of them go to the test inbox set on the Test mode page (or nowhere);
 - card payments use `STRIPE_TEST_SECRET_KEY` / `STRIPE_TEST_WEBHOOK_SECRET` from `backend/.env` (no real charges;
   without them only the no-charge "Test payment" is offered). Live Stripe events still update the live data;
