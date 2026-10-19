@@ -1,19 +1,23 @@
 # CRM sync (shop → crm.windycitywares.com)
 
-The shop tells the CRM about customer accounts, orders and newsletter consent, so the team sees each customer's
-orders and consent in the CRM. The event format is defined by the CRM: `wcw-crm-portal/docs/SHOP_EVENTS.md`.
+The shop tells the CRM about customer accounts, orders, newsletter consent and contact-form messages, so the team
+sees each customer's orders and consent in the CRM — and a message sent through the contact page opens a support
+ticket there (SPEC 3.5). The event format is defined by the CRM: `wcw-crm-portal/docs/SHOP_EVENTS.md`.
 
 ## How it works
 
-1. **Recording** — `app/core/crm_events.py` hooks every database session. When an order, a customer account or a
-   newsletter row is written through the ORM, it adds a `crm_outbox` row ("order 987 changed") **in the same
-   transaction**. Nothing is recorded while the sync is off or while Admin → Test mode is on.
+1. **Recording** — `app/core/crm_events.py` hooks every database session. When an order, a customer account, a
+   newsletter row or a contact message is written through the ORM, it adds a `crm_outbox` row ("order 987 changed")
+   **in the same transaction**. Nothing is recorded while the sync is off or while Admin → Test mode is on. A
+   contact message is recorded once, when it arrives: opening, replying to or closing it is the shop's own
+   bookkeeping and does not send anything (the CRM already has the ticket).
 2. **Sending** — the `crm_sync` job (`python -m app.scripts.run_jobs --only crm_sync`, run by the deploy cron) reads
    each changed record *as it is now*, signs the event (HMAC-SHA256 with the shared secret) and posts it. Several
    changes to the same record go out as one event. Failures retry with backoff (1 min … 6 h, 12 tries); a body the
    CRM rejects (400/413/422) is marked `failed` and logged. Sent rows are purged after 30 days.
 
-Raw SQL updates (e.g. `UPDATE orders …`) are not seen; change orders, users and subscribers through the ORM.
+Raw SQL updates (e.g. `UPDATE orders …`) are not seen; change orders, users, subscribers and messages through the
+ORM.
 
 ## Switching it on
 
