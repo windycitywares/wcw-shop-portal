@@ -374,9 +374,9 @@ const en = {
   },
   footer: {
     findOrder: "Find my order",
-    subscribed: "Thanks for subscribing! If you're new here, your welcome offer is on its way to your inbox.",
+    subscribed: "Thanks, you're on the list. Unsubscribe whenever you like.",
     newsletterTitle: "Hear about new designs",
-    newsletterText: "New urns and keepsakes, a few times a year. Nothing else.",
+    newsletterText: "A few emails a year: new designs, the occasional offer, and nothing else.",
     email: "Email address",
     emailPlaceholder: "you@example.com",
     subscribe: "Subscribe",
