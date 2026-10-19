@@ -103,7 +103,7 @@ class Rendering(unittest.TestCase):
 
     def test_registry_covers_all_kinds(self):
         self.assertEqual(set(emailtext.RENDERERS), {
-            "order_received", "order_confirmation", "order_shipped", "order_cancelled", "order_refunded", "welcome_offer",
+            "order_received", "order_confirmation", "order_shipped", "order_delivered", "order_cancelled", "order_refunded", "welcome_offer",
             "account_welcome", "password_reset",
             "abandoned_cart", "review_request", "back_in_stock", "request_available", "campaign", "admin_new_order", "digest",
         })

@@ -516,6 +516,19 @@ const es: Dictionary = {
     changeFailed: "No se pudo cambiar la contraseña.",
     signOut: "Cerrar sesión",
   },
+  notifications: {
+    title: "Novedades de tus pedidos",
+    empty: "Todavía no hay nada. Cuando un pedido avance, lo verás aquí.",
+    markSeen: "Marcar todo como leído",
+    placed: "Pedido {number} recibido",
+    paid: "Pago recibido del pedido {number}",
+    shipped: "El pedido {number} va en camino",
+    delivered: "El pedido {number} se ha entregado",
+    cancelled: "El pedido {number} fue cancelado",
+    refunded: "Reembolso de {amount} en el pedido {number}",
+    viewAll: "Ver tus pedidos",
+  },
+
   attributes: {
     keys: {
       Material: "Material",

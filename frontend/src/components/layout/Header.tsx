@@ -6,6 +6,7 @@ import { Container } from "@/components/ui/misc";
 import { Logo } from "@/components/ui/Logo";
 import { CartButton } from "@/components/cart/CartButton";
 import { AccountMenu } from "./AccountMenu";
+import { NotificationBell } from "./NotificationBell";
 import { WishlistLink } from "./WishlistLink";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeSwitcher } from "./ThemeSwitcher";
@@ -34,6 +35,7 @@ export async function Header({ locale }: { locale: Locale }) {
           <LanguageSwitcher className="hidden sm:block" />
           <ThemeSwitcher className="hidden sm:block" />
           <WishlistLink />
+          <NotificationBell />
           <AccountMenu />
           <CartButton />
         </div>

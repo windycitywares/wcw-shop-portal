@@ -537,7 +537,9 @@ class OrderService:
             raise ConflictError("Only shipped orders can be marked delivered.")
         order.status, order.delivered_at = OrderStatus.DELIVERED, utcnow()
         self._event(order, "delivered", note or "Delivered", actor)
+        row = await self.customer_mail(order, "order_delivered", await SettingsService(self.session).load())
         await self.session.commit()
+        await emails.deliver(self.session, [row])
         return order
 
     async def add_note(self, order_id: int, message: str, actor: User) -> None:

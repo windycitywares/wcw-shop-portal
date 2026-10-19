@@ -226,6 +226,18 @@ def _order_shipped(ctx: dict[str, Any]) -> Rendered:
     return _render(subject, blocks)
 
 
+def _order_delivered(ctx: dict[str, Any]) -> Rendered:
+    l = loc(ctx.get("locale"))
+    subject = {"en": "Your order {number} was delivered", "es": "Tu pedido {number} se ha entregado",
+               "nl": "Je bestelling {number} is bezorgd"}[l].format(**ctx)
+    intro = {"en": "Your order should be with you now. We hope you love it.",
+             "es": "Tu pedido ya debería estar contigo. Esperamos que te encante.",
+             "nl": "Je bestelling zou nu bij je moeten zijn. We hopen dat je er blij mee bent."}[l]
+    blocks: list[Block] = [("p", _greet(ctx)), ("p", intro)]
+    blocks += [("button", s("view_order", l), ctx["link"]), ("p", s("questions", l)), ("p", s("thanks_sign", l))]
+    return _render(subject, blocks)
+
+
 def _order_cancelled(ctx: dict[str, Any]) -> Rendered:
     l = loc(ctx.get("locale"))
     subject = {"en": "Your order {number} was cancelled", "es": "Tu pedido {number} fue cancelado", "nl": "Je bestelling {number} is geannuleerd"}[l].format(**ctx)
@@ -403,6 +415,7 @@ RENDERERS = {
     "order_received": _order_received,
     "order_confirmation": _order_confirmation,
     "order_shipped": _order_shipped,
+    "order_delivered": _order_delivered,
     "order_cancelled": _order_cancelled,
     "order_refunded": _order_refunded,
     "welcome_offer": _welcome_offer,

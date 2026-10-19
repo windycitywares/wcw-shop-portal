@@ -252,6 +252,24 @@ class OrderSummaryOut(ORMModel):
     access_token: str | None = None
 
 
+class OrderNotificationOut(BaseModel):
+    """One order milestone for the shopper's bell. The storefront turns `kind` into words."""
+
+    id: str  # "shipped:42": kind and order, stable across reloads
+    kind: Literal["placed", "paid", "shipped", "delivered", "cancelled", "refunded"]
+    order_id: int
+    number: str
+    token: str | None = None
+    at: datetime
+    amount: float | None = None  # the refunded amount, for `refunded`
+    unread: bool
+
+
+class OrderNotificationsOut(BaseModel):
+    items: list[OrderNotificationOut]
+    unread: int
+
+
 class CheckoutOut(BaseModel):
     order: OrderPublicOut
     payment: PaymentActionOut
