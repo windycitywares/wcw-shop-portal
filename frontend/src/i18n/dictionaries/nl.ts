@@ -372,9 +372,9 @@ const nl: Dictionary = {
   },
   footer: {
     findOrder: "Mijn bestelling zoeken",
-    subscribed: "Bedankt voor je aanmelding! Ben je nieuw, dan is je welkomstkorting onderweg naar je inbox.",
+    subscribed: "Bedankt, je staat op de lijst. Je kunt je altijd afmelden.",
     newsletterTitle: "Hoor als er nieuwe ontwerpen zijn",
-    newsletterText: "Nieuwe urnen en mini-urnen, een paar keer per jaar. Verder niets.",
+    newsletterText: "Een paar e-mails per jaar: nieuwe ontwerpen, af en toe een actie en verder niets.",
     email: "E-mailadres",
     emailPlaceholder: "jij@voorbeeld.nl",
     subscribe: "Aanmelden",
