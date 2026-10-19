@@ -59,6 +59,14 @@ class AuthService:
 
     async def register(self, data: RegisterIn) -> TokenOut:
         user = await self._create(data.email, data.password, data.full_name, UserRole.CUSTOMER)
+        locale = data.locale if data.locale in LANGUAGES else "en"
+        queued = [emails.enqueue(
+            self.session, "account_welcome", user.email,
+            {"name": user.full_name or "", "account_url": emails.site_link("/account", locale)},
+            locale=locale, related_type="user", related_id=user.id,
+        )]
+        await self.session.commit()
+        await emails.deliver(self.session, queued)
         return self.issue_token(user)
 
     async def _create(self, email: str, password: str, full_name: str | None, role: UserRole) -> User:

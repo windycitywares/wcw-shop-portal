@@ -101,6 +101,33 @@ class AccountFlowTests(unittest.TestCase):
         self.assertEqual(bad.status_code, 401)
         self.assertEqual(self.client.get(f"{self.api}/auth/me", headers=old_auth).status_code, 401)
 
+    def test_a_new_account_gets_a_welcome_email(self):
+        self.sent.clear()
+        email = f"t-{uuid.uuid4().hex[:10]}@example.com"
+        r = self.client.post(
+            f"{self.api}/auth/register",
+            json={"email": email, "password": "first-password-1", "full_name": "Nora New", "locale": "es"},
+            headers={"X-Forwarded-For": "198.51.100.10"},
+        )
+        self.assertEqual(r.status_code, 201, r.text)
+        self.assertEqual(len(self.sent), 1)
+        mail = self.sent[0]
+        self.assertEqual(mail.to, email)
+        self.assertIn("Bienvenido", mail.subject)  # the email follows the language the shopper was reading
+        self.assertIn("Nora", mail.text)
+        self.assertIn("/es/account", mail.text)
+
+    def test_forgot_password_admits_when_it_is_throttled(self):
+        """Three requests an hour per address. The fourth says so, instead of a quiet nothing."""
+        email = f"t-{uuid.uuid4().hex[:10]}@example.com"
+        headers = {"X-Forwarded-For": "198.51.100.9"}
+        for _ in range(3):
+            r = self.client.post(f"{self.api}/auth/forgot-password", json={"email": email}, headers=headers)
+            self.assertEqual(r.status_code, 202, r.text)
+        r = self.client.post(f"{self.api}/auth/forgot-password", json={"email": email}, headers=headers)
+        self.assertEqual(r.status_code, 429, r.text)
+        self.assertIn("already sent", r.json()["detail"])
+
     def test_contact(self):
         self.sent.clear()
         body = {"name": "Ana", "email": "ana@example.com", "subject": "Question about sizes",

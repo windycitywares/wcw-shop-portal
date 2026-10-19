@@ -26,6 +26,8 @@ class RegisterIn(BaseModel):
     email: EmailStr
     password: str = Password
     full_name: str | None = Field(default=None, max_length=200)
+    # The storefront's language, so the welcome email arrives in the language the shopper is reading.
+    locale: str | None = Field(default=None, max_length=5)
 
 
 class SignUpIn(RegisterIn):

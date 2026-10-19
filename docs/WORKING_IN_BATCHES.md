@@ -108,8 +108,8 @@ are the order they were written in, with the original list kept in the PR that s
 | 3 | A **tooltip** on every icon | header and account menu | this PR |
 | 4 | The user menu offers **profile and sign out** | header and account menu | this PR |
 | 5 | Remove **"pay later"** from checkout | checkout 1 | to do |
-| 6 | A **welcome email** on registration | email 1 | to do |
-| 7 | **Forgot password** isn't working — find out why, and make an unconfigured mailbox visible | email 1 | to do |
+| 6 | A **welcome email** on registration | email 1 | this PR |
+| 7 | **Forgot password** isn't working: the reset email now goes through the outbox (retried), and a throttled request is answered honestly instead of pretending | email 1 | this PR |
 | 8 | In **Test mode** only allowed people may sign in (not every copied customer) | test mode 1 | to do |
 | 9 | **Email *and* site notification on order activity** for the customer (a bell in the account) | notifications 1 | to do |
 | 10 | **Review and rating after delivery** — prompted from the order, not only from the product page | reviews 1 | to do |

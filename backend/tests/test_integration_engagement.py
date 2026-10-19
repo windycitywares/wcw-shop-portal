@@ -131,7 +131,7 @@ class WishlistAndStockAlertTests(unittest.TestCase):
             return await StockAlertService(session).notify_back_in_stock()
 
         run_job(notify)
-        self.assertEqual(w.mails_to(email), [])  # still sold out: nothing sent
+        self.assertEqual(w.mails_to(email, "back in stock"), [])  # still sold out: nothing sent
         w.sql("UPDATE products SET stock_status = 'in_stock', stock_quantity = 3 WHERE id = :id", id=p["id"])
         run_job(notify)
         run_job(notify)
@@ -249,7 +249,7 @@ class StockRequestTests(unittest.TestCase):
         self.assertEqual((special["options"], special["note"], special["product_id"]), ({"Size": "Large", "Wood": "Walnut"}, "Could you make this?", parent["id"]))
 
         self.notify()  # the back-in-stock job never answers special requests
-        self.assertEqual(w.mails_to(email), [])
+        self.assertEqual(w.mails_to(email, "back in stock"), [])
         r = w.post(f"/admin/stock-requests/{special['id']}/notify", {"message": "We can make it, ships in a week."}, w.admin)
         self.assertEqual(r.status_code, 204, r.text)
         mail = w.mails_to(email, "Good news")[0]

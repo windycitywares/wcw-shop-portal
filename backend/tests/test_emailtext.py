@@ -44,6 +44,8 @@ class Rendering(unittest.TestCase):
             "order_cancelled": {**BASE},
             "order_refunded": {**BASE, "amount": "$20.00"},
             "welcome_offer": {"name": "", "percent": 10, "expires": "Nov 1", "code": "WELCOME-ABCD", "shop_url": "https://shop.example", "unsubscribe_url": "https://shop.example/u/1"},
+            "account_welcome": {"name": "Ana", "account_url": "https://shop.example/account"},
+            "password_reset": {"name": "Ana", "link": "https://shop.example/reset-password?token=abc", "minutes": 60},
             "abandoned_cart": {"name": "Ana", "items": ITEMS, "link": "https://shop.example/cart", "step": 1, "unsubscribe_url": "https://shop.example/u/1"},
             "review_request": {"name": "Ana", "items": [{"title": "Oak urn", "url": "https://shop.example/p/oak#reviews"}], "unsubscribe_url": "https://shop.example/u/1"},
             "back_in_stock": {"name": "", "title": "Oak urn", "link": "https://shop.example/p/oak"},
@@ -102,6 +104,7 @@ class Rendering(unittest.TestCase):
     def test_registry_covers_all_kinds(self):
         self.assertEqual(set(emailtext.RENDERERS), {
             "order_received", "order_confirmation", "order_shipped", "order_cancelled", "order_refunded", "welcome_offer",
+            "account_welcome", "password_reset",
             "abandoned_cart", "review_request", "back_in_stock", "request_available", "campaign", "admin_new_order", "digest",
         })
 
