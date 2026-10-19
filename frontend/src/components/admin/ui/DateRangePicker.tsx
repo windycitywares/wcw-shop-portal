@@ -4,7 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "./Icon";
-import { Popover } from "./Popover";
+import { Popover } from "@/components/ui/Popover";
 import { PRESET_LABEL, isoDate, presetRange, rangeLabel, type DateRange, type RangePreset } from "./dateRange";
 
 const PRESETS: Exclude<RangePreset, "custom">[] = ["7d", "30d", "90d", "mtd", "ytd"];

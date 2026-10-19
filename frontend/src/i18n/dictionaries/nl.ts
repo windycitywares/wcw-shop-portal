@@ -28,6 +28,8 @@ const nl: Dictionary = {
     searchPlaceholder: "Zoek urnen en mini-urnen",
     signIn: "Inloggen",
     account: "Je account",
+    accountMenu: "Accountmenu",
+    wishlist: "Verlanglijst",
     admin: "Beheeromgeving",
     language: "Taal",
     themes: "Thema's",

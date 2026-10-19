@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/client-api";
 import { Icon } from "../ui/Icon";
-import { Popover } from "../ui/Popover";
+import { Popover } from "@/components/ui/Popover";
 import { ActivityRow, type Feed } from "./shared";
 
 const POLL_MS = 60_000;
@@ -38,6 +38,7 @@ export function NotificationBell() {
   return (
     <Popover
       label={unread ? `Notifications, ${unread} new` : "Notifications"}
+      title="Notifications"
       onOpenChange={opened}
       trigger={
         <span className="relative grid place-items-center">

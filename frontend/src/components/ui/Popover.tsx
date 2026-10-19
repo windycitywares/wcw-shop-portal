@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 export function Popover({
   trigger,
   label,
+  title,
   children,
   align = "right",
   className,
@@ -20,6 +21,8 @@ export function Popover({
   trigger: React.ReactNode;
   /** Accessible name for the button when `trigger` is only an icon. */
   label?: string;
+  /** Tooltip shown on hover (often the same words as the accessible name). */
+  title?: string;
   children: React.ReactNode | ((close: () => void) => React.ReactNode);
   align?: "left" | "right";
   className?: string;
@@ -51,6 +54,7 @@ export function Popover({
   return (
     <details ref={ref} className={cn("relative", className)} onToggle={(e) => onOpenChange?.(e.currentTarget.open)}>
       <summary
+        title={title}
         className={cn(
           "flex h-9 cursor-pointer list-none items-center gap-2 rounded-[var(--radius-control)] border border-line bg-surface px-3 text-sm font-medium hover:border-ink/40 [&::-webkit-details-marker]:hidden",
           triggerClassName,
