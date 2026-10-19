@@ -41,26 +41,41 @@ export default function UsersAdmin() {
   const { push } = useToast();
   const [data, setData] = useState<Page<User> | null>(null);
   const [q, setQ] = useState("");
+  const [view, setView] = useState<"team" | "customers">("team");
+  const [page, setPage] = useState(1);
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
   const [formError, setFormError] = useState("");
   const [pending, setPending] = useState<Pending | null>(null);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState<User | null>(null);
+  const [editing, setEditing] = useState<User | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [testMode, setTestMode] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      setData(await apiFetch<Page<User>>(`/users?page_size=100${q ? `&q=${encodeURIComponent(q)}` : ""}`));
+      const params = new URLSearchParams();
+      params.set("page_size", "25");
+      params.set("page", String(page));
+      if (q) params.set("q", q);
+      if (view === "team") params.set("staff", "true");
+      else params.set("staff", "false");
+      setData(await apiFetch<Page<User>>(`/users?${params.toString()}`));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load users");
     }
-  }, [q]);
+  }, [q, view, page]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [q, view]);
 
   // In Test mode a new password only changes the test copy of the account; say so in the dialog.
   useEffect(() => {
@@ -73,6 +88,32 @@ export default function UsersAdmin() {
   function openReset(u: User) {
     setNewPassword(suggestPassword());
     setResetting(u);
+  }
+
+  function openEdit(u: User) {
+    setEditName(u.full_name ?? "");
+    setEditEmail(u.email);
+    setEditing(u);
+  }
+
+  async function saveEdit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!editing) return;
+    setSaving(true);
+    setError("");
+    try {
+      await apiFetch(`/users/${editing.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ full_name: editName.trim() || null, email: editEmail.trim() }),
+      });
+      push({ title: "Account updated", description: who(editing) });
+      setEditing(null);
+      await load();
+    } catch (err) {
+      push({ title: "Not updated", description: err instanceof Error ? err.message : undefined, tone: "danger" });
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function setPassword(e: React.FormEvent<HTMLFormElement>) {
@@ -201,6 +242,16 @@ export default function UsersAdmin() {
       ),
     },
     {
+      key: "edit",
+      header: "",
+      cell: (u) => (
+        <Button size="sm" variant="ghost" className="h-8" onClick={() => openEdit(u)}>
+          Edit
+          <span className="sr-only"> {u.email}</span>
+        </Button>
+      ),
+    },
+    {
       key: "password",
       header: "Password",
       cell: (u) =>
@@ -233,6 +284,19 @@ export default function UsersAdmin() {
         </Alert>
       )}
 
+      <div className="mb-4 flex gap-1 rounded-[var(--radius-control)] border border-line bg-surface p-1">
+        {(["team", "customers"] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setView(v)}
+            className={`rounded-[var(--radius-control)] px-3 py-1.5 text-sm font-medium capitalize ${view === v ? "bg-canvas text-ink" : "text-muted hover:text-ink"}`}
+          >
+            {v === "team" ? "Team" : "Customers"}
+          </button>
+        ))}
+      </div>
+
       <Panel>
         <form
           role="search"
@@ -260,6 +324,21 @@ export default function UsersAdmin() {
           </Button>
         </form>
         <DataTable caption="Accounts" columns={columns} rows={data ? data.items : null} rowKey={(u) => u.id} empty="No one matches that search." />
+        {data && data.total > data.page_size && (
+          <div className="flex items-center justify-between border-t border-line px-4 py-3 text-sm">
+            <span className="text-muted">
+              {(data.page - 1) * data.page_size + 1}–{Math.min(data.page * data.page_size, data.total)} of {data.total}
+            </span>
+            <div className="flex gap-2">
+              <Button size="sm" variant="secondary" className="h-8" disabled={data.page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                Previous
+              </Button>
+              <Button size="sm" variant="secondary" className="h-8" disabled={data.page * data.page_size >= data.total} onClick={() => setPage((p) => p + 1)}>
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </Panel>
 
       <Modal
@@ -353,6 +432,32 @@ export default function UsersAdmin() {
             )}
           </Field>
           <p className="text-sm text-muted">They are signed out on every device and sign in again with this password.</p>
+        </form>
+      </Modal>
+
+      <Modal
+        open={!!editing}
+        onClose={() => setEditing(null)}
+        title="Edit account"
+        description={editing ? `Name and email for ${who(editing)}.` : undefined}
+        footer={
+          <>
+            <Button variant="ghost" size="sm" className="h-9" onClick={() => setEditing(null)}>
+              Cancel
+            </Button>
+            <Button type="submit" form="edit-user-form" size="sm" className="h-9" disabled={saving}>
+              {saving ? "Saving…" : "Save"}
+            </Button>
+          </>
+        }
+      >
+        <form id="edit-user-form" onSubmit={saveEdit} className="space-y-4">
+          <Field label="Name">
+            {(p) => <Input {...p} value={editName} onChange={(e) => setEditName(e.target.value)} />}
+          </Field>
+          <Field label="Email">
+            {(p) => <Input {...p} type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} required />}
+          </Field>
         </form>
       </Modal>
 
