@@ -2,7 +2,12 @@ from app.services.payments.base import PaymentStart
 
 
 class ManualProvider:
-    """"Pay later": the order is saved and the owner collects payment (invoice, bank transfer, phone) then marks it paid."""
+    """The old "pay later" flow: the order is saved and the owner collects payment, then marks it paid.
+
+    Checkout no longer offers it (an order should not be placed before it is paid), but orders taken
+    while it did are still waiting, and staff still use the same path to record a payment that arrived
+    outside the card flow (bank transfer, cash, check).
+    """
 
     name = "manual"
 

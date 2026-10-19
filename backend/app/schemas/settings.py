@@ -58,8 +58,9 @@ class TaxSettings(_Group):
 
 
 class PaymentSettings(_Group):
-    manual_enabled: bool = Field(default=True, description="Offer 'pay later' (you collect payment yourself)")
-    manual_instructions: dict[str, str] = Field(default_factory=dict, description="Shown to the customer after ordering")
+    # "Pay later" is gone from checkout. The instructions stay so an order placed while it was offered
+    # still tells the customer how to pay.
+    manual_instructions: dict[str, str] = Field(default_factory=dict, description="Shown on older orders that wait for payment")
 
     @field_validator("manual_instructions")
     @classmethod

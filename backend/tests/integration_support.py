@@ -190,6 +190,18 @@ class World:
             raise AssertionError(f"checkout answered {r.status_code}, expected {expect}: {r.text}")
         return r.json()
 
+    def place_unpaid(self, email: str, items: list[dict], **over: Any) -> dict[str, Any]:
+        """An order that waits for money.
+
+        Checkout no longer offers "pay later", but orders taken while it did are still in the database (and
+        a payment can still arrive outside the card flow), so the tests still need one. They pretend the
+        option is there rather than writing the order by hand.
+        """
+        from unittest.mock import patch
+
+        with patch("app.services.checkout.payment_methods", return_value=["manual", "test"]):
+            return self.place(email, items, payment_method="manual", **over)
+
     def stock(self, product: dict[str, Any]) -> dict[str, Any]:
         return self.sql("SELECT stock_quantity, stock_status::text AS status, units_sold FROM products WHERE id = :id", id=product["id"])[0]
 

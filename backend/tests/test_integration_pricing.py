@@ -52,7 +52,8 @@ class QuoteTests(unittest.TestCase):
         self.assertEqual(cfg["currency"], "USD")
         self.assertEqual(cfg["flat_shipping_rate"], 8.95)
         self.assertEqual(cfg["free_shipping_threshold"], 100.0)
-        self.assertIn("manual", cfg["payment_methods"])
+        self.assertNotIn("manual", cfg["payment_methods"])  # "pay later" was removed from checkout
+        self.assertIn("test", cfg["payment_methods"])  # the no-charge payment is what the browser tests use
         self.assertIn("max-age", r.headers["cache-control"])
         self.assertEqual(self.w.get("/shop/config", lang="es").status_code, 200)
         self.assertEqual(self.w.get("/shop/config", lang="fr").status_code, 422)

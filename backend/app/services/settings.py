@@ -49,8 +49,6 @@ def payment_methods(s: StoreSettings) -> list[str]:
     methods: list[str] = []
     if secret_key():
         methods.append("stripe")
-    if s.payments.manual_enabled:
-        methods.append("manual")
     if not app.is_production or appmode.is_test():
         methods.append("test")  # no-charge payment for development, the browser tests and Test mode
     return methods

@@ -142,12 +142,10 @@ const en = {
     payment: "Payment",
     methods: {
       stripe: "Card",
-      manual: "Pay later",
       test: "Test payment (no charge)",
     },
     methodHints: {
       stripe: "You'll enter your card on Stripe's secure page. We never see your card number.",
-      manual: "We'll email you how to pay. Your items are held for you meanwhile.",
       test: "For testing only. Never offered on the live shop.",
     },
     marketing: "Email me news and offers. You can unsubscribe at any time.",
