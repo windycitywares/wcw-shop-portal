@@ -75,7 +75,8 @@ The CRM's plan is in `wcw-crm-portal/docs/WORKING_IN_BATCHES.md` (M2); these are
 |---|-------|----------|----|
 | 1 | Events to the CRM | `crm_outbox` (migration 0014), ORM hook records order/account/newsletter changes in the same transaction, `crm_sync` job signs and posts them with retries; off until `CRM_WEBHOOK_URL`/`CRM_WEBHOOK_SECRET` are set — `docs/CRM_SYNC.md` | #67 (merged) |
 | 2 | Read API for the CRM | `/integrations/crm/{customers,orders,newsletter}` paged by id, `CRM_API_TOKEN` bearer token (server setting) | #68 (merged) |
-| 3 | Products for the CRM | `/integrations/crm/products` — the published catalog paged by id, `q` searches name/SKU/slug; `price` is the base price. Unblocks the CRM's deal-line picker (its M4 4c) | this PR |
+| 3 | Products for the CRM | `/integrations/crm/products` — the published catalog paged by id, `q` searches name/SKU/slug; `price` is the base price. Unblocks the CRM's deal-line picker (its M4 4c) | #73 (merged) |
+| 4 | Contact messages to the CRM | A message from the contact page is recorded (kind `contact`) and sent as `contact_message.created`, so the CRM opens a support ticket for it. Sent once, when it arrives; later status/emailed changes send nothing | this PR |
 
 Still open after these: Stripe live keys and the Illinois sales-tax rate (owner, in Settings), owner review of the
 returns/privacy/terms drafts, drag-and-drop category tree, marketplace API sync (Etsy/Amazon).

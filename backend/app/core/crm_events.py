@@ -1,9 +1,10 @@
 """Record changes the CRM must hear about, in the same transaction as the change (transactional outbox).
 
-A Session `after_flush` hook looks at the orders, customer accounts and newsletter rows that were just written
-and adds one `crm_outbox` row per changed record ("order 987 changed"). Every code path that writes through the
-ORM is covered (checkout, Stripe webhooks, admin edits, refunds, the expiry job …) without each one having to
-remember. `app/services/crm_sync.py` sends them later with the record's state at that moment.
+A Session `after_flush` hook looks at the orders, customer accounts, newsletter rows and contact-form messages
+that were just written and adds one `crm_outbox` row per changed record ("order 987 changed"). Every code path
+that writes through the ORM is covered (checkout, Stripe webhooks, admin edits, refunds, the expiry job, the
+contact page …) without each one having to remember. `app/services/crm_sync.py` sends them later with the
+record's state at that moment.
 
 Nothing is recorded while the CRM isn't configured, or while the shop works on its Test copy of the data.
 """
@@ -30,6 +31,7 @@ def _changed(obj: Any, fields: tuple[str, ...]) -> bool:
 
 def _kind_for(obj: Any, is_new: bool) -> str | None:
     from app.core.enums import UserRole
+    from app.models.account import ContactMessage
     from app.models.order import Order
     from app.models.user import NewsletterSubscriber, User
 
@@ -42,6 +44,10 @@ def _kind_for(obj: Any, is_new: bool) -> str | None:
         return "customer" if is_new or _changed(obj, USER_FIELDS) else None
     if isinstance(obj, NewsletterSubscriber):
         return "newsletter" if is_new or _changed(obj, SUBSCRIBER_FIELDS) else None
+    if isinstance(obj, ContactMessage):
+        # Sent once, when it is written: "open", "closed" and the emailed flag are the shop's own bookkeeping
+        # and the CRM has the ticket already, so a later change is not news (and never a second ticket).
+        return "contact" if is_new else None
     return None
 
 
