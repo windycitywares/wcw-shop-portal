@@ -150,6 +150,7 @@ const en = {
     },
     marketing: "Email me news and offers. You can unsubscribe at any time.",
     reminders: "Email me a reminder if I don't finish this order.",
+    reminderNotice: "If you don't finish, we'll email you a reminder. You can unsubscribe at any time.",
     saveAddress: "Save this address to my account",
     summary: "Your order",
     place: "Place order",

@@ -148,6 +148,7 @@ const nl: Dictionary = {
     },
     marketing: "Mail me nieuws en aanbiedingen. Je kunt je altijd afmelden.",
     reminders: "Stuur me een herinnering als ik deze bestelling niet afrond.",
+    reminderNotice: "Rond je het niet af, dan sturen we je een herinnering. Je kunt je altijd afmelden.",
     saveAddress: "Dit adres in mijn account bewaren",
     summary: "Je bestelling",
     place: "Bestelling plaatsen",

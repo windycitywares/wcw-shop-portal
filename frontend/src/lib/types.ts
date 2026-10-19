@@ -89,6 +89,7 @@ export interface ShopConfig {
   welcome_percent: number | null;
   payment_methods: string[];
   guest_checkout: boolean;
+  reminders_opt_in: boolean;
   max_quantity_per_line: number;
   low_stock_threshold: number;
   analytics_enabled: boolean;
