@@ -129,6 +129,14 @@ class UserService(AuthService):
             user.password_changed_at = datetime.now(timezone.utc)  # older sign-ins stop working
             audit.record(self.session, acting, "user.password_set", "user", user.id,
                          f"Set a new password for {user.email}")
+        if "email" in changes and changes["email"] is not None:
+            new_email = str(changes["email"]).strip().lower()
+            if new_email != user.email:
+                existing = await self.users.get_by_email(new_email)
+                if existing is not None and existing.id != user.id:
+                    raise ConflictError("That email address is already in use")
+                user.email = new_email
+                changes.pop("email")
         for field, value in changes.items():
             if value is not None or field == "full_name":
                 setattr(user, field, value)

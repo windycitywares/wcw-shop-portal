@@ -113,8 +113,8 @@ are the order they were written in, with the original list kept in the PR that s
 | 8 | In **Test mode** only allowed people may sign in (not every copied customer) | test mode 1 | this PR |
 | 9 | **Email *and* site notification on order activity** for the customer (a bell in the account) | notifications 1 | this PR |
 | 10 | **Review and rating after delivery** — prompted from the order, not only from the product page | reviews 1 | this PR |
-| 11 | **Team and customers apart** in the admin (staff list separate from shoppers) | admin 1 | to do |
-| 12 | **Every account visible and editable** in the admin (today the list is capped, and only role/active/password) | admin 1 | to do |
+| 11 | **Team and customers apart** in the admin (staff list separate from shoppers) | admin 1 | this PR |
+| 12 | **Every account visible and editable** in the admin (today the list is capped, and only role/active/password) | admin 1 | this PR |
 | 13 | **Help content on each admin screen** (what it does, what to watch for) | admin 2 | to do |
 | 14 | Subscribe copy **generic**, and the signed-in shopper's email **pre-filled** | newsletter 1 | this PR |
 | 15 | **Abandoned carts** aren't working — a reminder may only go to shoppers who ticked a box; make that configurable | cart reminders 1 | this PR |
