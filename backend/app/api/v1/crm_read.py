@@ -18,6 +18,7 @@ from app.core import appmode
 from app.core.config import get_settings
 from app.core.enums import ContentStatus, UserRole
 from app.core.rate_limit import RateLimiter
+from app.models.contact import Contact
 from app.models.order import Order
 from app.models.product import Product
 from app.models.user import NewsletterSubscriber, User
@@ -55,6 +56,15 @@ def _page(items: list[dict[str, Any]], ids: list[int], limit: int) -> dict[str, 
     return {"items": items, "next_after_id": ids[-1] if len(ids) == limit else None}
 
 
+def contact_payload(c: Contact) -> dict[str, Any]:
+    return {
+        "id": c.id, "email": c.email, "full_name": c.full_name, "phone": c.phone,
+        "source": c.source, "user_id": c.user_id, "marketing_opt_in": c.marketing_opt_in,
+        "created_at": c.created_at.isoformat() if c.created_at else None,
+        "updated_at": c.updated_at.isoformat() if c.updated_at else None,
+    }
+
+
 def _image(p: Product) -> str | None:
     first = (p.images or [None])[0]
     return first.get("url") if isinstance(first, dict) else None
@@ -72,6 +82,13 @@ def product_payload(p: Product) -> dict[str, Any]:
     }
 
 
+@router.get("/contacts", dependencies=[Token])
+async def contacts(session: SessionDep, after_id: AfterId = 0, limit: Limit = 200) -> dict[str, Any]:
+    with appmode.use(appmode.LIVE):
+        rows = list((await session.execute(
+            select(Contact).where(Contact.id > after_id).order_by(Contact.id).limit(limit)
+        )).scalars())
+    return _page([contact_payload(c) for c in rows], [c.id for c in rows], limit)
 @router.get("/customers", dependencies=[Token])
 async def customers(session: SessionDep, after_id: AfterId = 0, limit: Limit = 200) -> dict[str, Any]:
     with appmode.use(appmode.LIVE):
