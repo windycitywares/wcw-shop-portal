@@ -28,11 +28,16 @@ Raw SQL updates (e.g. `UPDATE orders …`) are not seen; change orders, users an
 
 ## Read API (for the CRM's backfill)
 
-`GET /api/v1/integrations/crm/{customers|orders|newsletter}?after_id=0&limit=200` (max 500), header
+`GET /api/v1/integrations/crm/{customers|orders|newsletter|products}?after_id=0&limit=200` (max 500), header
 `Authorization: Bearer <CRM_API_TOKEN>`. Pages by id: pass the answer's `next_after_id` until it is `null`.
 `orders` also takes `email=`. Items have the same shape as the events' `data`; newsletter items add `type`
 (`newsletter.subscribed` / `newsletter.unsubscribed`). Always live data. Answers 404 while `CRM_API_TOKEN` is unset;
 bad tokens are rate-limited per IP.
+
+`products` is the published catalog, for the CRM's deal-line picker: `q` searches name, SKU or slug (case-insensitive).
+Each item carries `id` (the line's `shop_product_id`), `sku`, `name`, `slug`, `price`, `compare_at_price`, `currency`,
+`status`, `stock_status`, `parent_id` (set on a variant) and `image`. `price` is the base price — a starting unit price
+the salesperson can adjust on the deal.
 
 To switch it on, add a long random value to the shop's `backend/.env` and the same value in CRM → Integrations →
 *Shop API token*:

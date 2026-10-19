@@ -180,3 +180,29 @@ class CrmReadApiTests(unittest.TestCase):
         self.assertEqual(len(orders["items"]), 1)
         self.assertEqual(orders["items"][0]["user_id"], user_id)
         self.assertIsNone(orders["next_after_id"])
+
+    def test_products_are_paged_and_searchable(self):
+        product = self.w.product(price="42.50", title="Walnut bowl")
+        sku = self.w.value("SELECT sku FROM products WHERE id = :id", id=product["id"])
+
+        page = self.w.get("/integrations/crm/products", self.auth, after_id=product["id"] - 1, limit=1).json()
+        self.assertEqual(page["items"], [{
+            "id": product["id"], "parent_id": None, "sku": sku, "name": product["title"], "slug": product["slug"],
+            "price": "42.50", "compare_at_price": None, "currency": "USD", "status": "published",
+            "stock_status": "in_stock", "image": "https://media.example.com/test.jpg",
+        }])
+        self.assertEqual(page["next_after_id"], product["id"])
+
+        found = self.w.get("/integrations/crm/products", self.auth, q=sku.lower()).json()["items"]
+        self.assertIn(product["id"], [p["id"] for p in found])  # search ignores case
+        empty = self.w.get("/integrations/crm/products", self.auth, q="nothing-matches-this").json()
+        self.assertEqual(empty["items"], [])
+
+    def test_only_published_products_are_listed(self):
+        live = self.w.product(title="Visible item")
+        draft = self.w.product(title="Draft item")
+        self.w.sql("UPDATE products SET status = 'draft' WHERE id = :id", id=draft["id"])
+        ids = [p["id"] for p in self.w.get("/integrations/crm/products", self.auth, after_id=live["id"] - 1,
+                                           limit=500).json()["items"]]
+        self.assertIn(live["id"], ids)
+        self.assertNotIn(draft["id"], ids)
