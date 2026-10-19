@@ -30,6 +30,8 @@ const en = {
     searchPlaceholder: "Search urns and keepsakes",
     signIn: "Sign in",
     account: "Your account",
+    accountMenu: "Account menu",
+    wishlist: "Wishlist",
     admin: "Admin dashboard",
     language: "Language",
     themes: "Themes",

@@ -28,6 +28,8 @@ const es: Dictionary = {
     searchPlaceholder: "Buscar urnas y recuerdos",
     signIn: "Iniciar sesión",
     account: "Tu cuenta",
+    accountMenu: "Menú de la cuenta",
+    wishlist: "Lista de deseos",
     admin: "Panel de administración",
     language: "Idioma",
     themes: "Temas",

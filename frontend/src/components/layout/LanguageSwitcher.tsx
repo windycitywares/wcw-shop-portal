@@ -60,7 +60,7 @@ export function LanguageSwitcher({ className, variant = "menu" }: { className?: 
 
   return (
     <details ref={ref} className={cn("relative", className)}>
-      <summary className="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-full px-3 text-sm hover:bg-sand [&::-webkit-details-marker]:hidden">
+      <summary className="flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-full px-3 text-sm hover:bg-sand [&::-webkit-details-marker]:hidden" title={t.nav.language}>
         <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.6">
           <circle cx="12" cy="12" r="9" />
           <path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18" />

@@ -12,7 +12,7 @@ import { TestModeBanner } from "@/components/TestModeBanner";
 import { NotificationBell } from "./notifications/NotificationBell";
 import { NAV, isActive, titleFor } from "./nav";
 import { Icon } from "./ui/Icon";
-import { Popover } from "./ui/Popover";
+import { Popover } from "@/components/ui/Popover";
 import { ToastProvider } from "./ui/Toast";
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
@@ -158,6 +158,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <ThemeSwitcher />
               <Popover
                 label="Account menu"
+                title="Account menu"
                 trigger={
                   <>
                     <span aria-hidden="true" className="grid size-6 place-items-center rounded-full bg-accent text-xs font-semibold text-on-accent">

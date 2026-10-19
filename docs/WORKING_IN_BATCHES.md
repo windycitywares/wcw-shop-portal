@@ -95,3 +95,26 @@ Lessons from these batches (check before pushing):
   fails with "base invalid". Merge `main` into the next branch and open it against `main` instead.
 - Frontend can't be type-checked in the sandbox (npm is blocked); CI's `build` job is the type check. Watch for
   union types on shared components (e.g. Turnstile `action`).
+
+## Owner review notes (2026-10-19)
+
+Things the owner asked for after walking through the shop. One small batch each, in this order. The numbers below
+are the order they were written in, with the original list kept in the PR that started this section.
+
+| # | What the owner asked for | Batch | State |
+|---|--------------------------|-------|-------|
+| 1 | The profile **name** top right, not just an icon | header and account menu | this PR |
+| 2 | The **wishlist** reachable from the top right | header and account menu | this PR |
+| 3 | A **tooltip** on every icon | header and account menu | this PR |
+| 4 | The user menu offers **profile and sign out** | header and account menu | this PR |
+| 5 | Remove **"pay later"** from checkout | checkout 1 | to do |
+| 6 | A **welcome email** on registration | email 1 | to do |
+| 7 | **Forgot password** isn't working — find out why, and make an unconfigured mailbox visible | email 1 | to do |
+| 8 | In **Test mode** only allowed people may sign in (not every copied customer) | test mode 1 | to do |
+| 9 | **Email *and* site notification on order activity** for the customer (a bell in the account) | notifications 1 | to do |
+| 10 | **Review and rating after delivery** — prompted from the order, not only from the product page | reviews 1 | to do |
+| 11 | **Team and customers apart** in the admin (staff list separate from shoppers) | admin 1 | to do |
+| 12 | **Every account visible and editable** in the admin (today the list is capped, and only role/active/password) | admin 1 | to do |
+| 13 | **Help content on each admin screen** (what it does, what to watch for) | admin 2 | to do |
+| 14 | Subscribe copy **generic**, and the signed-in shopper's email **pre-filled** | newsletter 1 | to do |
+| 15 | **Abandoned carts** aren't working — a reminder may only go to shoppers who ticked a box; make that configurable | cart reminders 1 | to do |
