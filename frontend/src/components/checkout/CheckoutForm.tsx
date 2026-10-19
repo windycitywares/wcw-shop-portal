@@ -161,7 +161,8 @@ export function CheckoutForm() {
     return () => clearTimeout(timer);
   }, [items, coupon, address.country, address.region, address.postal_code, validEmail, email, locale]);
 
-  // A cart snapshot for the "you left something" reminder — only with the shopper's permission.
+  // A cart snapshot for the "you left something" reminder. The address is kept only when the shopper
+  // ticks the box, or when the shop is set to email everyone who leaves one.
   useEffect(() => {
     if (!items.length) return;
     const timer = setTimeout(() => {
@@ -171,7 +172,7 @@ export function CheckoutForm() {
           token: readToken() ?? undefined,
           items,
           coupon: coupon || undefined,
-          email: reminders && validEmail ? email.trim() : undefined,
+          email: validEmail ? email.trim() : undefined,
           reminders_ok: reminders && validEmail,
           checkout_started: true,
           locale,
@@ -293,10 +294,14 @@ export function CheckoutForm() {
             <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} className="mt-0.5 size-4 accent-[var(--color-accent)]" />
             <span>{t.checkout.marketing}</span>
           </label>
-          <label className="flex items-start gap-3 text-sm">
-            <input type="checkbox" checked={reminders} onChange={(e) => setReminders(e.target.checked)} className="mt-0.5 size-4 accent-[var(--color-accent)]" />
-            <span>{t.checkout.reminders}</span>
-          </label>
+          {config?.reminders_opt_in === false ? (
+            <p className="text-sm text-muted">{t.checkout.reminderNotice}</p>
+          ) : (
+            <label className="flex items-start gap-3 text-sm">
+              <input type="checkbox" checked={reminders} onChange={(e) => setReminders(e.target.checked)} className="mt-0.5 size-4 accent-[var(--color-accent)]" />
+              <span>{t.checkout.reminders}</span>
+            </label>
+          )}
         </fieldset>
 
         <fieldset className="space-y-4" disabled={busy}>

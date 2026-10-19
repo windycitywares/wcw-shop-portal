@@ -77,6 +77,10 @@ class WelcomeSettings(_Group):
 
 class CartRecoverySettings(_Group):
     enabled: bool = True
+    email_everyone: bool = Field(
+        default=False,
+        description="Email every shopper who leaves an address at checkout, not only those who tick the reminder box",
+    )
     first_delay_hours: int = Field(default=24, ge=1, le=720)
     second_delay_hours: int = Field(default=96, ge=2, le=1440)
     max_reminders: int = Field(default=2, ge=0, le=3)
@@ -147,6 +151,9 @@ class PublicConfig(BaseModel):
     welcome_percent: int | None
     payment_methods: list[str]
     guest_checkout: bool
+    # True: checkout shows "email me a reminder" and only a ticked box may be emailed. False: the shop
+    # emails every shopper who leaves an address, so the form says so instead of asking.
+    reminders_opt_in: bool = True
     max_quantity_per_line: int
     low_stock_threshold: int
     analytics_enabled: bool

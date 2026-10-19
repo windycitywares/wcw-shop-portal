@@ -153,6 +153,7 @@ const es: Dictionary = {
     },
     marketing: "Envíame novedades y ofertas por email. Puedes darte de baja cuando quieras.",
     reminders: "Envíame un recordatorio si no termino este pedido.",
+    reminderNotice: "Si no terminas, te enviaremos un recordatorio. Puedes darte de baja cuando quieras.",
     saveAddress: "Guardar esta dirección en mi cuenta",
     summary: "Tu pedido",
     place: "Realizar pedido",

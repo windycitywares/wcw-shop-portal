@@ -308,6 +308,16 @@ class NewsletterAndCartTests(unittest.TestCase):
         no_consent = w.post("/cart/sync", {"items": [item(p)], "email": w.email("quiet")}).json()["token"]
         self.assertIsNone(w.value("SELECT email FROM carts WHERE token = :t", t=no_consent))  # no consent, no address kept
 
+        # Off by default. With "email every shopper" on, the address left at checkout is the permission.
+        self.assertTrue(w.get("/shop/config").json()["reminders_opt_in"])
+        w.put("/admin/settings/cart_recovery", {"email_everyone": True}, w.admin)
+        self.assertFalse(w.get("/shop/config").json()["reminders_opt_in"])
+        everyone = w.email("everyone")
+        token_everyone = w.post("/cart/sync", {"items": [item(p)], "email": everyone, "locale": "en"}).json()["token"]
+        self.assertEqual(w.value("SELECT email FROM carts WHERE token = :t", t=token_everyone), everyone)
+        self.assertTrue(w.value("SELECT reminders_ok FROM carts WHERE token = :t", t=token_everyone))
+        w.put("/admin/settings/cart_recovery", {"email_everyone": False}, w.admin)
+
         w.sql("UPDATE carts SET last_activity_at = now() - interval '25 hours' WHERE token = :t", t=token)
 
         async def remind(session):
