@@ -10,6 +10,7 @@ import { Logo } from "@/components/ui/Logo";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { TestModeBanner } from "@/components/TestModeBanner";
 import { NotificationBell } from "./notifications/NotificationBell";
+import { SETTINGS_GROUPS } from "@/lib/settingsGroups";
 import { NAV, isActive, titleFor } from "./nav";
 import { HelpButton } from "./HelpButton";
 import { Icon } from "./ui/Icon";
@@ -181,11 +182,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                       <p className="mt-1 text-xs capitalize text-muted">{user.role} access</p>
                     </div>
                     <div className="border-t border-line pt-1">
-                      <Link href="/admin/settings" onClick={close} className="flex items-center gap-2.5 rounded-[var(--radius-control)] px-3 py-2 text-sm hover:bg-sand">
-                        <Icon name="sliders" className="size-4 text-muted" />
-                        Settings
-                      </Link>
-                      <Link href="/account" onClick={close} className="flex items-center gap-2.5 rounded-[var(--radius-control)] px-3 py-2 text-sm hover:bg-sand">
+                      <p className="px-3 py-1 text-xs font-medium text-muted">Settings</p>
+                      {SETTINGS_GROUPS.map((g) => (
+                        <Link
+                          key={g.id}
+                          href={`/admin/settings?tab=${g.id}`}
+                          onClick={close}
+                          className="block rounded-[var(--radius-control)] px-3 py-1.5 text-sm hover:bg-sand"
+                        >
+                          {g.label}
+                        </Link>
+                      ))}
+                      <Link href="/account" onClick={close} className="mt-1 flex items-center gap-2.5 rounded-[var(--radius-control)] px-3 py-2 text-sm hover:bg-sand">
                         <Icon name="customers" className="size-4 text-muted" />
                         Your account
                       </Link>
