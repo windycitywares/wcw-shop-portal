@@ -282,7 +282,7 @@ export default function AdminSettings() {
   const [error, setError] = useState("");
 
   const adminSections = (NAV.find((g) => g.label === "Settings")?.items ?? []).filter(
-    (i) => i.href !== "/admin/settings" && (!i.permission || can(i.permission)),
+    (i) => i.hidden && i.href !== "/admin/settings" && (!i.permission || can(i.permission)),
   );
 
   useEffect(() => {
