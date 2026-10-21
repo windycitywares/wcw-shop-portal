@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/client-api";
 import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { Panel, PanelBody, PanelHeader } from "@/components/admin/ui/Panel";
 import { Pill } from "@/components/admin/ui/Pill";
 import { useToast } from "@/components/admin/ui/Toast";
+import { Icon } from "@/components/admin/ui/Icon";
+import { NAV } from "@/components/admin/nav";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
@@ -273,10 +276,14 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function AdminSettings() {
   const { push } = useToast();
-  const { user } = useAuth();
+  const { user, can } = useAuth();
   const [tab, setTab] = useState("shipping");
   const [data, setData] = useState<{ settings: Settings; status: Record<string, boolean> } | null>(null);
   const [error, setError] = useState("");
+
+  const adminSections = (NAV.find((g) => g.label === "Settings")?.items ?? []).filter(
+    (i) => i.href !== "/admin/settings" && (!i.permission || can(i.permission)),
+  );
 
   useEffect(() => {
     apiFetch<{ settings: Settings; status: Record<string, boolean> }>("/admin/settings").then(setData, (e) => setError(e.message));
@@ -287,7 +294,7 @@ export default function AdminSettings() {
   const group = GROUPS.find((g) => g.id === tab) ?? GROUPS[0];
   return (
     <div>
-      <PageHeader title="Settings" description="Shipping, tax, payments, emails and the rules the shop runs by. Every change is recorded in the audit log." />
+      <PageHeader title="Settings" description="Everything the shop runs by: shipping, tax, payments, emails and rules, plus the audit log, test mode, backups and deployments." />
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}
@@ -323,7 +330,7 @@ export default function AdminSettings() {
         </Panel>
       )}
       <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
-        <nav aria-label="Settings groups" className="space-y-1">
+        <nav aria-label="Settings sections" className="space-y-1">
           {GROUPS.map((g) => (
             <button
               key={g.id}
@@ -337,6 +344,21 @@ export default function AdminSettings() {
               {g.label}
             </button>
           ))}
+          {adminSections.length > 0 && (
+            <>
+              <p className="px-3 pb-1 pt-4 text-xs font-medium uppercase tracking-wide text-muted">Admin</p>
+              {adminSections.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-2 rounded-[var(--radius-control)] px-3 py-2 text-sm text-muted hover:bg-sand/60 hover:text-ink"
+                >
+                  <Icon name={item.icon} className="size-4" />
+                  {item.label}
+                </Link>
+              ))}
+            </>
+          )}
         </nav>
         <div>
           {data ? (
