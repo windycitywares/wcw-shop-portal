@@ -136,7 +136,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-50 bg-night/60 lg:hidden" />
                 <Dialog.Content className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-night text-night-muted shadow-xl lg:hidden">
-                  <Dialog.Title className="sr-only">Menu</Dialog.Title>
+                  <Dialog.Title className="sr-only">Admin menu</Dialog.Title>
                   <Dialog.Description className="sr-only">Go to a section of the admin.</Dialog.Description>
                   <div className="flex items-center justify-between px-3 pb-3 pt-5">
                     <Brand collapsed={false} />
