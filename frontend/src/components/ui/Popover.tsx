@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -31,6 +31,9 @@ export function Popover({
   onOpenChange?: (open: boolean) => void;
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
+  // Render the panel only while open: a closed <details> still keeps its children in the DOM, which
+  // leaks hidden text into screen readers and page text queries (e.g. the help copy).
+  const [open, setOpen] = useState(false);
   const close = () => {
     if (ref.current) ref.current.open = false;
   };
@@ -52,7 +55,14 @@ export function Popover({
     };
   }, []);
   return (
-    <details ref={ref} className={cn("relative", className)} onToggle={(e) => onOpenChange?.(e.currentTarget.open)}>
+    <details
+      ref={ref}
+      className={cn("relative", className)}
+      onToggle={(e) => {
+        setOpen(e.currentTarget.open);
+        onOpenChange?.(e.currentTarget.open);
+      }}
+    >
       <summary
         title={title}
         className={cn(
@@ -63,15 +73,17 @@ export function Popover({
         {trigger}
         {label && <span className="sr-only">{label}</span>}
       </summary>
-      <div
-        className={cn(
-          "absolute top-full z-50 mt-1.5 min-w-56 rounded-[var(--radius-card)] border border-line bg-surface p-1.5 shadow-[0_16px_40px_-16px_rgb(0_0_0/0.4)]",
-          align === "right" ? "right-0" : "left-0",
-          panelClassName,
-        )}
-      >
-        {typeof children === "function" ? children(close) : children}
-      </div>
+      {open && (
+        <div
+          className={cn(
+            "absolute top-full z-50 mt-1.5 min-w-56 rounded-[var(--radius-card)] border border-line bg-surface p-1.5 shadow-[0_16px_40px_-16px_rgb(0_0_0/0.4)]",
+            align === "right" ? "right-0" : "left-0",
+            panelClassName,
+          )}
+        >
+          {typeof children === "function" ? children(close) : children}
+        </div>
+      )}
     </details>
   );
 }
