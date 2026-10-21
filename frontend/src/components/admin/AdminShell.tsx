@@ -29,7 +29,7 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
         return (
           <div key={group.label ?? gi} className={gi > 0 ? "mt-6 mb-2" : "mb-4"}>
             {!collapsed && group.label && (
-              <p className="px-2 pb-1 text-[0.7rem] font-semibold tracking-wider text-night-muted/70 uppercase">
+              <p className="px-2 pb-1 text-[0.7rem] font-semibold tracking-wider text-night-muted uppercase">
                 {group.label}
               </p>
             )}
@@ -46,12 +46,12 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
                       className={cn(
                         "flex items-center gap-3 rounded-[var(--radius-control)] px-2.5 py-2 text-sm font-medium transition-colors focus-visible:outline-offset-0",
                         collapsed ? "px-2 justify-center" : "",
-                        active ? "bg-white/15 text-white" : "text-night-muted/70 hover:bg-white/5 hover:text-night",
+                        active ? "bg-white/15 text-white" : "text-night-muted hover:bg-white/5 hover:text-white",
                       )}>
                       {active && !collapsed && (
                         <span aria-hidden="true" className="absolute inset-y-1 left-0 w-[2px] rounded-r-full bg-gold" />
                       )}
-                      <Icon name={item.icon} className={cn("size-5 shrink-0", active ? "text-white" : "text-night-muted/70")} />
+                      <Icon name={item.icon} className={cn("size-5 shrink-0", active ? "text-white" : "text-night-muted")} />
                       {!collapsed && <span className="font-medium">{item.label}</span>}
                     </Link>
                   </li>
