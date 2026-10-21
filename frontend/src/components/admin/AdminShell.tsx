@@ -71,7 +71,7 @@ function Brand({ collapsed }: { collapsed: boolean }) {
       <div className="grid size-6 place-items-center rounded-full bg-gold text-night">
         <Icon name="dashboard" className="size-4" />
       </div>
-      {!collapsed && <span className="font-semibold text-ink tracking-wide">WCW Admin</span>}
+      {!collapsed && <span className="font-semibold text-white tracking-wide">WCW Admin</span>}
     </Link>
   );
 }
@@ -112,7 +112,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={() => setCollapsed((c) => !c)}
-              className="ml-1 mr-1 grid size-9 place-items-center rounded-[var(--radius-control)] hover:bg-white/10 text-night-muted/70"
+              className="ml-1 mr-1 grid size-9 place-items-center rounded-[var(--radius-control)] hover:bg-white/10 text-night-muted"
               title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
               <Icon name={collapsed ? "chevronRight" : "chevronLeft"} className="size-4" />
             </button>
