@@ -22,7 +22,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <nav aria-label="Admin" className="flex-1 overflow-y-auto px-3 py-2">
       {NAV.map((group, gi) => {
-        const items = group.items.filter((i) => !i.permission || can(i.permission));
+        const items = group.items.filter((i) => !i.hidden && (!i.permission || can(i.permission)));
         if (items.length === 0) return null;
         return (
           <div key={group.label ?? gi} className={gi > 0 ? "mt-5" : undefined}>
