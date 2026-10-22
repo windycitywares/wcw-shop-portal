@@ -55,7 +55,7 @@ fi
 code=000
 for _ in $(seq 1 18); do
   sleep 5
-  code=$(curl -s -m 20 -o /dev/null -w '%{http_code}' https://api.windycitywares.com/health || true)
+  code=$(curl -s -m 20 -o /dev/null -w '%{http_code}' https://shop-api.windycitywares.com/health || true)
   [ "$code" = "200" ] && break
 done
 if [ "$code" = "200" ]; then echo "✓ API is up (health 200)"; else echo "✗ restarted on the new code, but the health check still returns $code after 90 s — see backend/stderr.log"; exit 1; fi
