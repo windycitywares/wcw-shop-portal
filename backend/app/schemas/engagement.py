@@ -58,8 +58,9 @@ class ReviewsOut(BaseModel):
     total: int
     page: int
     page_size: int
-    can_review: bool = False  # signed in and has not reviewed yet
-    purchased: bool = False  # the signed-in shopper bought it (reviews will be marked verified)
+    can_review: bool = False  # signed in, received it (a delivered order), and has not reviewed yet
+    purchased: bool = False  # the signed-in shopper bought it (paid), delivered or not
+    reviewed: bool = False  # the signed-in shopper has already reviewed it
 
 
 class ReviewSubmittedOut(BaseModel):

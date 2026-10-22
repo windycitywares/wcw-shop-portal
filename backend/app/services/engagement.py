@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from app.core.enums import ContentStatus, OrderStatus, StockStatus
-from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
+from app.core.exceptions import ConflictError, NotFoundError, PermissionDeniedError, ValidationFailedError
 from app.domain import emailtext, stock_requests
 from app.models.commerce import EmailOutbox
 from app.models.engagement import Review, ReviewVote, StockAlert, WishlistItem
@@ -101,17 +101,23 @@ class ReviewService:
             return parent
         return product
 
-    async def _bought(self, user: User, product_id: int) -> int | None:
-        """The id of a paid, still-valid order of this shopper that includes the product (or one of its variants)."""
+    async def _bought(self, user: User, product_id: int, *, delivered: bool = False) -> int | None:
+        """The id of a paid, still-valid order of this shopper that includes the product (or one of its variants).
+        With `delivered`, only an order the shopper has received counts — that is when they may review: one marked
+        delivered, or one shipped at least Settings → Reviews "ask after" days ago (the rule the review request uses)."""
         variant = aliased(Product)
-        return (await self.session.execute(
+        query = (
             select(Order.id)
             .join(OrderItem, OrderItem.order_id == Order.id)
             .join(variant, variant.id == OrderItem.product_id)
             .where(Order.user_id == user.id, Order.paid_at.is_not(None), Order.status.notin_([OrderStatus.CANCELLED, OrderStatus.REFUNDED]),
                    or_(variant.id == product_id, variant.parent_id == product_id))
-            .order_by(Order.id.desc()).limit(1)
-        )).scalar_one_or_none()
+        )
+        if delivered:
+            days = (await SettingsService(self.session).load()).reviews.request_after_days
+            shipped_long_ago = and_(Order.status == OrderStatus.SHIPPED, Order.shipped_at <= utcnow() - timedelta(days=days))
+            query = query.where(or_(Order.status == OrderStatus.DELIVERED, shipped_long_ago))
+        return (await self.session.execute(query.order_by(Order.id.desc()).limit(1))).scalar_one_or_none()
 
     async def list(self, slug: str, viewer: User | None, sort: str, page: int, page_size: int) -> ReviewsOut:
         product = await self._root(slug)
@@ -136,14 +142,15 @@ class ReviewService:
             o = ReviewOut.model_validate(r)
             o.helpful_by_me = r.id in voted
             outs.append(o)
-        can_review = purchased = False
+        can_review = purchased = reviewed = False
         if viewer:
             mine = (await self.session.execute(select(Review.id).where(Review.product_id == product.id, Review.user_id == viewer.id))).first()
-            can_review = mine is None
+            reviewed = mine is not None
             purchased = await self._bought(viewer, product.id) is not None
+            can_review = not reviewed and await self._bought(viewer, product.id, delivered=True) is not None
         return ReviewsOut(
             summary=ReviewSummary(average=round(average, 2), count=count, distribution=distribution),
-            items=outs, total=count, page=page, page_size=page_size, can_review=can_review, purchased=purchased,
+            items=outs, total=count, page=page, page_size=page_size, can_review=can_review, purchased=purchased, reviewed=reviewed,
         )
 
     async def submit(self, slug: str, user: User, data: ReviewIn) -> ReviewSubmittedOut:
@@ -151,7 +158,9 @@ class ReviewService:
         existing = (await self.session.execute(select(Review.id).where(Review.product_id == product.id, Review.user_id == user.id))).first()
         if existing is not None:
             raise ConflictError("You've already reviewed this product. Thank you!")
-        order_id = await self._bought(user, product.id)
+        order_id = await self._bought(user, product.id, delivered=True)
+        if order_id is None:  # reviews come from shoppers who have received the item
+            raise PermissionDeniedError("You can rate this once your order has been delivered.")
         settings = await SettingsService(self.session).load()
         has_link = bool(LINK.search(data.body) or (data.title and LINK.search(data.title)))
         approved = bool(order_id) and settings.reviews.auto_approve_verified and not has_link

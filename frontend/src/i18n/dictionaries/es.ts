@@ -262,6 +262,7 @@ const es: Dictionary = {
     thanksPending: "¡Gracias! Tu opinión aparecerá cuando la hayamos revisado.",
     thanksLive: "¡Gracias! Tu opinión ya está publicada.",
     already: "Ya opinaste sobre este diseño. ¡Gracias!",
+    afterDelivery: "Podrás valorarlo cuando tu pedido haya sido entregado.",
     more: "Ver más opiniones",
     chooseRating: "Elige una valoración",
   },

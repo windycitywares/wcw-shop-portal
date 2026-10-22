@@ -29,6 +29,7 @@ export interface ReviewPage {
   page_size: number;
   can_review: boolean;
   purchased: boolean;
+  reviewed: boolean;
 }
 
 export type ReviewSort = "helpful" | "newest" | "highest" | "lowest";
