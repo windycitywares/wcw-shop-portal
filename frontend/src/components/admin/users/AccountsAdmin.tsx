@@ -43,11 +43,11 @@ export type AccountScope = "team" | "customers";
 
 /** Team (staff roles) or customer accounts: /admin/team, and the Accounts view of /admin/customers.
  *  `embedded` drops the page heading when another page supplies it. */
-export function AccountsAdmin({ scope, embedded = false }: { scope: AccountScope; embedded?: boolean }) {
+export function AccountsAdmin({ scope, embedded = false, initialQuery = "" }: { scope: AccountScope; embedded?: boolean; initialQuery?: string }) {
   const { user: me } = useAuth();
   const { push } = useToast();
   const [data, setData] = useState<Page<User> | null>(null);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(initialQuery);
   const view = scope;
   const [page, setPage] = useState(1);
   const [error, setError] = useState("");
@@ -291,6 +291,7 @@ export function AccountsAdmin({ scope, embedded = false }: { scope: AccountScope
               id="user-q"
               name="q"
               type="search"
+              defaultValue={initialQuery}
               placeholder="Name or email"
               className="h-8 w-60 rounded-[var(--radius-control)] border border-line bg-surface pl-8 pr-2 text-sm placeholder:text-muted/70 focus-visible:border-accent"
             />
