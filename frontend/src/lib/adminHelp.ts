@@ -61,7 +61,7 @@ const HELP: Record<string, HelpEntry> = {
     title: "Customers",
     body: [
       "Shoppers grouped by value (RFM). Click one to see their orders and addresses.",
-      "A shopper with no paid order may not appear here — use Team and customers for every account.",
+      "A shopper with no paid order may not appear here — Customer accounts lists every shopper who has signed up.",
     ],
   },
   "/admin/messages": {
@@ -105,11 +105,18 @@ const HELP: Record<string, HelpEntry> = {
       "Changes are saved per group. Sensitive values (API keys) stay in the server's .env file.",
     ],
   },
-  "/admin/users": {
-    title: "Team and customers",
+  "/admin/team": {
+    title: "Team",
     body: [
-      "Staff accounts (Team) and shopper accounts (Customers) are separate tabs. Create team members here; shoppers sign up themselves.",
+      "Staff accounts: admins, publishers and authors. Add a team member here; shoppers sign up themselves.",
       "Change a role, switch an account off, set a new password, or edit a name or email. You can't change your own role or disable yourself.",
+    ],
+  },
+  "/admin/users": {
+    title: "Customer accounts",
+    body: [
+      "Every shopper account. Edit a customer's name or email, set a new password, or switch an account off.",
+      "Team members are on the Team page.",
     ],
   },
   "/admin/audit": {

@@ -6,7 +6,7 @@ test.use({ storageState: adminState });
 test("add a team member, change their role and switch the account off", async ({ page }) => {
   const seen = watch(page);
   const email = `${unique("team")}@example.com`;
-  await page.goto("/admin/users");
+  await page.goto("/admin/team");
   await adminReady(page);
 
   await page.getByRole("button", { name: "Add team member" }).click();
@@ -65,7 +65,7 @@ test("add a team member, change their role and switch the account off", async ({
 });
 
 test("the same email cannot be added twice", async ({ page }) => {
-  await page.goto("/admin/users");
+  await page.goto("/admin/team");
   await adminReady(page);
   await page.getByRole("button", { name: "Add team member" }).click();
   const dialog = page.getByRole("dialog", { name: "Add a team member" });
@@ -77,7 +77,7 @@ test("the same email cannot be added twice", async ({ page }) => {
 });
 
 test("you cannot change your own role or switch yourself off", async ({ page }) => {
-  await page.goto("/admin/users");
+  await page.goto("/admin/team");
   await adminReady(page);
   const email = process.env.ADMIN_EMAIL || "";
   const row = page.getByRole("row").filter({ hasText: email });
