@@ -57,7 +57,7 @@ export function MetricStrip({ items, compareLabel, className }: { items: MetricI
   return (
     // Hairline dividers without double borders: every cell draws its top/left edge, and the grid is
     // shifted 1px up/left so the outer edges are clipped by the wrapper's own border.
-    <div className={cn("overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface", className)}>
+    <div className={cn("overflow-hidden rounded-[var(--radius-card)] bg-surface shadow-[var(--shadow-card,0_0_0_1px_var(--color-line))]", className)}>
       <dl
         className="-ml-px -mt-px grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-[repeat(var(--cols),minmax(0,1fr))]"
         style={{ ["--cols" as string]: items.length }}
@@ -80,7 +80,7 @@ export function MetricStrip({ items, compareLabel, className }: { items: MetricI
             </dt>
             {/* The figure keeps its width; the sparkline takes what is left (up to 88px) and stays inside the cell. */}
             <dd className="flex min-w-0 items-end justify-between gap-3 overflow-hidden py-1 pr-1">
-              <span className="num shrink-0 text-[1.625rem] font-semibold leading-none tracking-tight">{m.value}</span>
+              <span className="num font-admin shrink-0 text-[1.625rem] font-bold leading-none text-ink">{m.value}</span>
               {m.spark && <Sparkline values={m.spark} className="ml-auto" />}
             </dd>
             {m.change !== undefined && (

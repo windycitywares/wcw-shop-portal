@@ -27,16 +27,16 @@ export function Modal({
   return (
     <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-night/55" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-night/50" />
         <Dialog.Content
           className={cn(
-            "fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-[var(--radius-card)] border border-line bg-surface shadow-[0_24px_60px_-20px_rgb(0_0_0/0.5)] focus:outline-none",
+            "fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-[var(--radius-card)] bg-surface shadow-[var(--shadow-raised,0_24px_60px_-20px_rgb(0_0_0/0.5))] focus:outline-none",
             SIZES[size],
           )}
         >
           <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
             <div className="min-w-0">
-              <Dialog.Title className="text-lg font-semibold">{title}</Dialog.Title>
+              <Dialog.Title className="font-admin text-lg font-semibold text-ink">{title}</Dialog.Title>
               <Dialog.Description className={description ? "mt-0.5 text-sm text-muted" : "sr-only"}>{description ?? title}</Dialog.Description>
             </div>
             <Dialog.Close className="-mr-2 grid size-9 shrink-0 place-items-center rounded-full text-muted hover:bg-sand hover:text-ink">

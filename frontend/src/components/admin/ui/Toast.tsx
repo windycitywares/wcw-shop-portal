@@ -38,8 +38,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             key={t.id}
             role={t.tone === "danger" ? "alert" : "status"}
             className={cn(
-              "toast-in pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-[var(--radius-card)] border bg-surface px-4 py-3 text-sm shadow-[0_12px_32px_-12px_rgb(0_0_0/0.4)]",
-              t.tone === "danger" ? "border-danger/40" : t.tone === "info" ? "border-line" : "border-success/40",
+              "toast-in pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-[var(--radius-card)] border border-l-4 bg-surface px-4 py-3 text-sm shadow-[var(--shadow-raised,0_24px_60px_-20px_rgb(0_0_0/0.5))]",
+              t.tone === "danger" ? "border-danger/40 border-l-danger" : t.tone === "info" ? "border-line border-l-accent" : "border-success/40 border-l-success",
             )}
           >
             <Icon name={t.tone === "danger" ? "alert" : "check"} className={cn("mt-0.5 size-4", t.tone === "danger" ? "text-danger" : t.tone === "info" ? "text-muted" : "text-success")} strokeWidth={2} />

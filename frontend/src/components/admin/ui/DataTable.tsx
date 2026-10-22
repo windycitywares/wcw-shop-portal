@@ -50,7 +50,7 @@ export function DataTable<T>({
     <div className={cn("relative overflow-x-auto", className)}>
       <table className="w-full text-left text-sm">
         <caption className="sr-only">{caption}</caption>
-        <thead className="border-b border-line text-xs text-muted">
+        <thead className="border-b border-line bg-canvas/70 text-xs text-muted">
           <tr>
             {columns.map((c) => {
               const active = sort?.key === c.sort;
@@ -59,7 +59,7 @@ export function DataTable<T>({
                   key={c.key}
                   scope="col"
                   aria-sort={c.sort && active ? (sort?.dir === "asc" ? "ascending" : "descending") : undefined}
-                  className={cn("whitespace-nowrap px-4 py-2.5 font-medium", ALIGN[c.align ?? "left"], c.hide && HIDE[c.hide], c.className)}
+                  className={cn("whitespace-nowrap px-4 py-3 font-semibold", ALIGN[c.align ?? "left"], c.hide && HIDE[c.hide], c.className)}
                 >
                   {c.sort && onSort ? (
                     <button type="button" onClick={() => onSort(c.sort as string)} className={cn("inline-flex items-center gap-1 hover:text-ink", active && "text-ink")}>
@@ -86,7 +86,7 @@ export function DataTable<T>({
                 </tr>
               ))
             : rows.map((row, i) => (
-                <tr key={rowKey(row)} className={cn("hover:bg-canvas/70", rowClassName?.(row))}>
+                <tr key={rowKey(row)} className={cn("transition-colors hover:bg-sand/50", rowClassName?.(row))}>
                   {columns.map((c) => (
                     <td key={c.key} className={cn("px-4 py-3 align-middle", ALIGN[c.align ?? "left"], c.hide && HIDE[c.hide], c.className)}>
                       {c.cell(row, i)}
