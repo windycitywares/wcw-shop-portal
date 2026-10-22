@@ -1,4 +1,5 @@
-"""Read-only API for the CRM (docs/CRM_SYNC.md): customers, orders and newsletter consent, paged by id.
+"""Read-only API for the CRM (docs/CRM_SYNC.md): customers, orders, newsletter consent and the catalog,
+paged by id.
 
 Authenticated with `Authorization: Bearer <CRM_API_TOKEN>` (server setting), not a staff login. Answers 404 while
 the token isn't configured, so the endpoints don't exist as far as anyone else can tell. Always live data.
@@ -10,14 +11,16 @@ import hmac
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from app.api.deps import SessionDep
 from app.core import appmode
 from app.core.config import get_settings
-from app.core.enums import UserRole
+from app.core.enums import ContentStatus, UserRole
 from app.core.rate_limit import RateLimiter
+from app.models.contact import Contact
 from app.models.order import Order
+from app.models.product import Product
 from app.models.user import NewsletterSubscriber, User
 from app.services.crm_sync import customer_payload, newsletter_event, order_payload
 
@@ -53,6 +56,39 @@ def _page(items: list[dict[str, Any]], ids: list[int], limit: int) -> dict[str, 
     return {"items": items, "next_after_id": ids[-1] if len(ids) == limit else None}
 
 
+def contact_payload(c: Contact) -> dict[str, Any]:
+    return {
+        "id": c.id, "email": c.email, "full_name": c.full_name, "phone": c.phone,
+        "source": c.source, "user_id": c.user_id, "marketing_opt_in": c.marketing_opt_in,
+        "created_at": c.created_at.isoformat() if c.created_at else None,
+        "updated_at": c.updated_at.isoformat() if c.updated_at else None,
+    }
+
+
+def _image(p: Product) -> str | None:
+    first = (p.images or [None])[0]
+    return first.get("url") if isinstance(first, dict) else None
+
+
+def product_payload(p: Product) -> dict[str, Any]:
+    """A catalog row as the CRM's deal picker reads it: its own `id` becomes the line's `shop_product_id`,
+    `title` is the line's `name`, and `price` (the base price) is a starting unit price staff can adjust."""
+    return {
+        "id": p.id, "parent_id": p.parent_id, "sku": p.sku, "name": p.title, "slug": p.slug,
+        "price": f"{p.base_price:.2f}",
+        "compare_at_price": f"{p.compare_at_price:.2f}" if p.compare_at_price else None,
+        "currency": p.currency, "status": str(p.status), "stock_status": str(p.stock_status),
+        "image": _image(p),
+    }
+
+
+@router.get("/contacts", dependencies=[Token])
+async def contacts(session: SessionDep, after_id: AfterId = 0, limit: Limit = 200) -> dict[str, Any]:
+    with appmode.use(appmode.LIVE):
+        rows = list((await session.execute(
+            select(Contact).where(Contact.id > after_id).order_by(Contact.id).limit(limit)
+        )).scalars())
+    return _page([contact_payload(c) for c in rows], [c.id for c in rows], limit)
 @router.get("/customers", dependencies=[Token])
 async def customers(session: SessionDep, after_id: AfterId = 0, limit: Limit = 200) -> dict[str, Any]:
     with appmode.use(appmode.LIVE):
@@ -85,3 +121,16 @@ async def newsletter(session: SessionDep, after_id: AfterId = 0, limit: Limit = 
         if found:
             items.append({"type": found[0], **found[1]})
     return _page(items, [s.id for s in rows], limit)
+
+
+@router.get("/products", dependencies=[Token])
+async def products(session: SessionDep, after_id: AfterId = 0, limit: Limit = 200,
+                   q: Annotated[str | None, Query(max_length=120)] = None) -> dict[str, Any]:
+    """The published catalog: what a deal line may name (the CRM's picker searches it with `q`)."""
+    stmt = select(Product).where(Product.status == ContentStatus.PUBLISHED, Product.id > after_id)
+    if q and q.strip():
+        term = f"%{q.strip()}%"
+        stmt = stmt.where(or_(Product.title.ilike(term), Product.sku.ilike(term), Product.slug.ilike(term)))
+    with appmode.use(appmode.LIVE):
+        rows = list((await session.execute(stmt.order_by(Product.id).limit(limit))).scalars())
+    return _page([product_payload(p) for p in rows], [p.id for p in rows], limit)

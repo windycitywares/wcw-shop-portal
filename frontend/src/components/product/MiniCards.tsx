@@ -10,16 +10,19 @@ export function MiniCards({
   hrefFor,
   locale,
   limit = 4,
+  id,
 }: {
   items: ProductCardData[];
   title: string;
   hrefFor: (slug: string) => string;
   locale: "en" | "es" | "nl";
   limit?: number;
+  /** Anchor target, for a link that should land on this row (e.g. the wishlist in the header). */
+  id?: string;
 }) {
   if (!items.length) return null;
   return (
-    <section aria-label={title} className="mt-20 border-t border-line pt-12">
+    <section id={id} aria-label={title} className="mt-20 scroll-mt-24 border-t border-line pt-12">
       <h2 className="text-3xl">{title}</h2>
       <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-4 lg:gap-x-8">
         {items.slice(0, limit).map((p) => {

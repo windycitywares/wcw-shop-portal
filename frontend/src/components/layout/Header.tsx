@@ -5,7 +5,9 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { Container } from "@/components/ui/misc";
 import { Logo } from "@/components/ui/Logo";
 import { CartButton } from "@/components/cart/CartButton";
-import { AccountLink } from "./AccountLink";
+import { AccountMenu } from "./AccountMenu";
+import { NotificationBell } from "./NotificationBell";
+import { WishlistLink } from "./WishlistLink";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 import { MegaMenu } from "./MegaMenu";
@@ -32,7 +34,9 @@ export async function Header({ locale }: { locale: Locale }) {
           <SearchBar className="mr-2 hidden w-56 xl:block" />
           <LanguageSwitcher className="hidden sm:block" />
           <ThemeSwitcher className="hidden sm:block" />
-          <AccountLink />
+          <WishlistLink />
+          <NotificationBell />
+          <AccountMenu />
           <CartButton />
         </div>
       </Container>

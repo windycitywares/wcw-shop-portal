@@ -13,7 +13,7 @@ class UserRepository(BaseRepository[User]):
         return await self.get_by(email=email.strip().lower())
 
     async def search(
-        self, q: str | None, role: UserRole | None, page: int, page_size: int
+        self, q: str | None, role: UserRole | None, page: int, page_size: int, staff: bool | None = None
     ) -> tuple[list[User], int]:
         stmt = select(User)
         if q:
@@ -21,6 +21,10 @@ class UserRepository(BaseRepository[User]):
             stmt = stmt.where(or_(User.email.ilike(like), User.full_name.ilike(like)))
         if role:
             stmt = stmt.where(User.role == role)
+        if staff is True:
+            stmt = stmt.where(User.role != UserRole.CUSTOMER)
+        elif staff is False:
+            stmt = stmt.where(User.role == UserRole.CUSTOMER)
         total = (await self.session.execute(select(func.count()).select_from(stmt.subquery()))).scalar_one()
         rows = await self.session.execute(
             stmt.order_by(User.created_at.desc()).offset((page - 1) * page_size).limit(page_size)

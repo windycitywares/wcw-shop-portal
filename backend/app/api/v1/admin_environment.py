@@ -69,3 +69,11 @@ async def set_mail_to(session: SessionDep, user: Admin, data: MailToIn):
     await _release(session)
     await TestEnvironment(engine).set_mail_to(str(data.email).lower() if data.email else None, user)
     return await _out()
+
+
+@router.put("/test-logins", response_model=EnvironmentOut)
+async def set_test_logins(session: SessionDep, user: Admin, data: LoginsIn):
+    """Which copied shoppers may sign in while the shop is on test data (staff always may)."""
+    await _release(session)
+    await TestEnvironment(engine).set_logins([str(email).lower() for email in data.emails], user)
+    return await _out()

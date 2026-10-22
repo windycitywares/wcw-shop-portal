@@ -26,7 +26,7 @@ from app.models.order import Order
 from app.models.user import NewsletterSubscriber, User
 from app.repositories.user import NewsletterRepository, UserRepository
 from app.schemas.user import RegisterIn, TokenOut, UserCreate, UserMe, UserUpdate
-from app.services import emails
+from app.services import audit, emails
 from app.services.promotions import issue_coupon
 from app.services.settings import SettingsService
 
@@ -41,6 +41,21 @@ def to_me(user: User) -> UserMe:
         created_at=user.created_at,
         permissions=permissions_for(user.role),
     )
+
+
+def may_sign_in(user: User) -> bool:
+    """Whether this account may sign in right now.
+
+    On live data, everyone active may. On the test copy, the copy holds every live customer and their
+    password, so only staff, the addresses the owner listed, and accounts made inside the copy (someone
+    signing up while testing) may sign in.
+    """
+    if user.role != UserRole.CUSTOMER or not appmode.is_test():
+        return True
+    state = appmode.current()
+    if user.email.strip().lower() in state.login_emails:
+        return True
+    return bool(state.test_synced_at and user.created_at and user.created_at > state.test_synced_at)
 
 
 class AuthService:
@@ -73,6 +88,16 @@ class AuthService:
 
     async def register(self, data: RegisterIn) -> TokenOut:
         user = await self._create(data.email, data.password, data.full_name, UserRole.CUSTOMER)
+        from app.services.contacts import ContactService
+        await ContactService(self.session).upsert(data.email, full_name=data.full_name, source="signup", user_id=user.id, marketing_opt_in=False)
+        locale = data.locale if data.locale in LANGUAGES else "en"
+        queued = [emails.enqueue(
+            self.session, "account_welcome", user.email,
+            {"name": user.full_name or "", "account_url": emails.site_link("/account", locale)},
+            locale=locale, related_type="user", related_id=user.id,
+        )]
+        await self.session.commit()
+        await emails.deliver(self.session, queued)
         return self.issue_token(user)
 
     async def _create(self, email: str, password: str, full_name: str | None, role: UserRole) -> User:
@@ -106,6 +131,22 @@ class UserService(AuthService):
             changes.get("is_active") is False or ("role" in changes and changes["role"] != user.role)
         ):
             raise PermissionDeniedError("You can't change your own role or disable your own account")
+        password = changes.pop("password", None)
+        if password is not None:
+            if user.id == acting.id:
+                raise PermissionDeniedError("Change your own password in Your account → Password")
+            user.hashed_password = hash_password(password)
+            user.password_changed_at = datetime.now(timezone.utc)  # older sign-ins stop working
+            audit.record(self.session, acting, "user.password_set", "user", user.id,
+                         f"Set a new password for {user.email}")
+        if "email" in changes and changes["email"] is not None:
+            new_email = str(changes["email"]).strip().lower()
+            if new_email != user.email:
+                existing = await self.users.get_by_email(new_email)
+                if existing is not None and existing.id != user.id:
+                    raise ConflictError("That email address is already in use")
+                user.email = new_email
+                changes.pop("email")
         for field, value in changes.items():
             if value is not None or field == "full_name":
                 setattr(user, field, value)
@@ -162,6 +203,8 @@ class NewsletterService:
             row.source, row.unsubscribed_at, row.locale = source, None, locale
         else:
             row = self.repo.add(NewsletterSubscriber(email=email, locale=locale, source=source, unsubscribe_token=secrets.token_urlsafe(24)))
+        from app.services.contacts import ContactService
+        await ContactService(self.session).upsert(email, source="newsletter", marketing_opt_in=True)
         queued = []
         settings = await SettingsService(self.session).load()
         if welcome and settings.welcome.enabled and not await self._has_ordered(email):

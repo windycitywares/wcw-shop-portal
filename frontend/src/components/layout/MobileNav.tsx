@@ -47,7 +47,7 @@ export function MobileNav({ tree }: { tree: CategoryNode[] }) {
   const close = () => setOpen(false);
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger className="-ml-2 grid size-10 place-items-center rounded-full hover:bg-sand lg:hidden">
+      <Dialog.Trigger className="-ml-2 grid size-10 place-items-center rounded-full hover:bg-sand lg:hidden" title={t.nav.openMenu}>
         <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
         </svg>
@@ -58,7 +58,7 @@ export function MobileNav({ tree }: { tree: CategoryNode[] }) {
         <Dialog.Content className="fixed inset-y-0 left-0 z-50 flex w-[88vw] max-w-sm flex-col bg-canvas shadow-xl">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <Dialog.Title className="font-serif text-xl">{t.nav.menu}</Dialog.Title>
-            <Dialog.Close className="grid size-10 place-items-center rounded-full hover:bg-sand">
+            <Dialog.Close className="grid size-10 place-items-center rounded-full hover:bg-sand" title={t.nav.closeMenu}>
               <span aria-hidden="true" className="text-2xl leading-none">
                 ×
               </span>

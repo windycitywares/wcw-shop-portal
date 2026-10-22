@@ -1,7 +1,8 @@
-"""Server-side cart snapshots: abandoned-cart reports and (only for shoppers who ask for them) gentle reminders.
+"""Server-side cart snapshots: abandoned-cart reports and (only with permission) gentle reminders.
 
-The shopper's real cart lives in their browser. We keep a copy so we can measure where people drop off and,
-if they ticked "remind me", send at most two quiet emails. A cart's email is stored only with that consent.
+The shopper's real cart lives in their browser. We keep a copy so we can measure where people drop off and, if
+they allowed it, send at most two quiet emails. Permission is the ticked "remind me" box; a shop set to "email
+every shopper" also takes the address left at checkout as permission. Without permission no address is kept.
 """
 
 from __future__ import annotations
@@ -69,9 +70,12 @@ class CartService:
         cart.coupon_code = codes.normalize_code(data.coupon) or None
         cart.locale = data.locale
         cart.user_id = user.id if user else cart.user_id
-        cart.reminders_ok = bool(data.reminders_ok)
+        # Permission: the ticked box, or (when the shop emails every shopper) the address given at checkout.
+        cfg = (await SettingsService(self.session).load()).cart_recovery
         email = str(data.email).lower() if data.email else (user.email if user else None)
-        cart.email = email if data.reminders_ok else None  # no consent, no email address kept
+        allowed = bool(email) and (bool(data.reminders_ok) or cfg.email_everyone)
+        cart.reminders_ok = allowed
+        cart.email = email if allowed else None  # no permission, no email address kept
         cart.last_activity_at = now
         if data.checkout_started and cart.checkout_started_at is None:
             cart.checkout_started_at = now

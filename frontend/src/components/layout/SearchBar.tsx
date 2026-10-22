@@ -30,6 +30,7 @@ export function SearchBar({
       />
       <button
         type="submit"
+        title={t.nav.search}
         className="absolute right-1 top-1 grid size-8 place-items-center rounded-full text-muted hover:bg-sand hover:text-ink"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8">

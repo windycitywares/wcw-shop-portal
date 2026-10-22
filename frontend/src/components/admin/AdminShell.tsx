@@ -11,21 +11,28 @@ import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { TestModeBanner } from "@/components/TestModeBanner";
 import { NotificationBell } from "./notifications/NotificationBell";
 import { NAV, isActive, titleFor } from "./nav";
+import { HelpButton } from "./HelpButton";
 import { Icon } from "./ui/Icon";
-import { Popover } from "./ui/Popover";
+import { Popover } from "@/components/ui/Popover";
+import { Badge } from "@/components/ui/Badge";
+import { Avatar } from "@/components/ui/Avatar";
 import { ToastProvider } from "./ui/Toast";
 
-function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collapsed: boolean }) {
   const { can } = useAuth();
   const pathname = usePathname();
   return (
-    <nav aria-label="Admin" className="flex-1 overflow-y-auto px-3 py-2">
+    <nav aria-label="Admin" className={cn("flex-1 overflow-y-auto px-2 py-3", collapsed ? "px-1" : "px-3")}>
       {NAV.map((group, gi) => {
-        const items = group.items.filter((i) => !i.permission || can(i.permission));
+        const items = group.items.filter((i) => !i.hidden && (!i.permission || can(i.permission)));
         if (items.length === 0) return null;
         return (
-          <div key={group.label ?? gi} className={gi > 0 ? "mt-5" : undefined}>
-            {group.label && <p className="px-3 pb-1.5 text-xs font-medium text-night-muted/80">{group.label}</p>}
+          <div key={group.label ?? gi} className={gi > 0 ? "mt-6 mb-2" : "mb-4"}>
+            {!collapsed && group.label && (
+              <p className="px-2 pb-1 text-[0.7rem] font-semibold tracking-wider text-night-muted uppercase">
+                {group.label}
+              </p>
+            )}
             <ul className="space-y-0.5">
               {items.map((item) => {
                 const active = isActive(pathname, item.href);
@@ -35,15 +42,17 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                       href={item.href}
                       onClick={onNavigate}
                       aria-current={active ? "page" : undefined}
+                      title={collapsed ? item.label : undefined}
                       className={cn(
-                        "relative flex items-center gap-3 rounded-[var(--radius-control)] px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-offset-0",
-                        active ? "bg-white/10 text-white" : "text-night-muted hover:bg-white/5 hover:text-white",
+                        "flex items-center gap-3 rounded-[var(--radius-control)] px-2.5 py-2 text-sm font-medium transition-colors focus-visible:outline-offset-0",
+                        collapsed ? "px-2 justify-center" : "",
+                        active ? "bg-white/15 text-white" : "text-night-muted hover:bg-white/5 hover:text-white",
+                      )}>
+                      {active && !collapsed && (
+                        <span aria-hidden="true" className="absolute inset-y-1 left-0 w-[2px] rounded-r-full bg-gold" />
                       )}
-                    >
-                      {/* gold marker = where you are */}
-                      {active && <span aria-hidden="true" className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-gold" />}
-                      <Icon name={item.icon} className="size-[1.15rem]" />
-                      {item.label}
+                      <Icon name={item.icon} className={cn("size-5 shrink-0", active ? "text-white" : "text-night-muted")} />
+                      {!collapsed && <span className="font-medium">{item.label}</span>}
                     </Link>
                   </li>
                 );
@@ -56,28 +65,14 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function Brand() {
+function Brand({ collapsed }: { collapsed: boolean }) {
   return (
-    <Link href="/admin" className="flex items-center gap-2.5 rounded-[var(--radius-control)] px-3 py-1" aria-label="WindyCityWares admin home">
-      <Logo tone="reverse" className="h-8 w-auto" />
+    <Link href="/admin" className="flex items-center gap-2.5 rounded-[var(--radius-control)] px-2 py-2 mb-4" aria-label="WindyCityWares admin home">
+      <div className="grid size-6 place-items-center rounded-full bg-gold text-night">
+        <Icon name="dashboard" className="size-4" />
+      </div>
+      {!collapsed && <span className="font-semibold text-white tracking-wide">WCW Admin</span>}
     </Link>
-  );
-}
-
-function SidebarFooter() {
-  return (
-    <div className="border-t border-white/10 px-3 py-3">
-      <a
-        href="/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-3 rounded-[var(--radius-control)] px-3 py-2 text-sm font-medium text-night-muted hover:bg-white/5 hover:text-white"
-      >
-        <Icon name="external" className="size-[1.15rem]" />
-        View the shop
-        <span className="sr-only">(opens in a new tab)</span>
-      </a>
-    </div>
   );
 }
 
@@ -87,6 +82,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [drawer, setDrawer] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -103,8 +99,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     return <div className="grid min-h-dvh place-items-center text-sm text-muted">Checking access…</div>;
   }
 
-  const initials = (user.full_name || user.email).trim().slice(0, 1).toUpperCase();
-
   return (
     <ToastProvider>
       <a href="#admin-main" className="skip-link">
@@ -112,12 +106,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </a>
       <div className="min-h-dvh lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
         {/* Sidebar: always the dark band, whatever the theme */}
-        <aside className="sticky top-0 hidden h-dvh flex-col bg-night text-night-muted lg:flex">
-          <div className="px-3 pb-3 pt-5">
-            <Brand />
+        <aside className={cn("sticky top-0 hidden h-dvh flex-col bg-night text-night-muted lg:flex", collapsed ? "w-[4.5rem]" : "w-[15rem]")}>
+          <div className="px-2 pb-3 pt-5">
+            <Brand collapsed={collapsed} />
+            <button
+              type="button"
+              onClick={() => setCollapsed((c) => !c)}
+              className="ml-1 mr-1 grid size-9 place-items-center rounded-[var(--radius-control)] hover:bg-white/10 text-night-muted"
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+              <Icon name={collapsed ? "chevronRight" : "chevronLeft"} className="size-4" />
+            </button>
           </div>
-          <SidebarNav />
-          <SidebarFooter />
+          <SidebarNav onNavigate={() => setDrawer(false)} collapsed={collapsed} />
         </aside>
 
         <div className="flex min-w-0 flex-col">
@@ -127,57 +127,67 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               Test mode settings
             </Link>
           </TestModeBanner>
-          <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-canvas/90 px-4 backdrop-blur sm:px-6 lg:px-8">
+          <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-line bg-canvas/90 backdrop-blur px-4 sm:px-6 lg:px-8">
             <Dialog.Root open={drawer} onOpenChange={setDrawer}>
-              <Dialog.Trigger className="-ml-2 grid size-10 place-items-center rounded-full hover:bg-sand lg:hidden">
-                <Icon name="menu" />
+              <Dialog.Trigger className="-ml-1 grid size-10 place-items-center rounded-[var(--radius-control)] hover:bg-sand lg:hidden">
+                <Icon name="menu" className="size-5" />
                 <span className="sr-only">Open admin menu</span>
               </Dialog.Trigger>
               <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 z-50 bg-night/55 lg:hidden" />
+                <Dialog.Overlay className="fixed inset-0 z-50 bg-night/60 lg:hidden" />
                 <Dialog.Content className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-night text-night-muted shadow-xl lg:hidden">
                   <Dialog.Title className="sr-only">Admin menu</Dialog.Title>
                   <Dialog.Description className="sr-only">Go to a section of the admin.</Dialog.Description>
                   <div className="flex items-center justify-between px-3 pb-3 pt-5">
-                    <Brand />
+                    <Brand collapsed={false} />
                     <Dialog.Close className="mr-1 grid size-9 place-items-center rounded-full text-night-muted hover:bg-white/10 hover:text-white">
-                      <Icon name="close" />
+                      <Icon name="close" className="size-5" />
                       <span className="sr-only">Close menu</span>
                     </Dialog.Close>
                   </div>
-                  <SidebarNav onNavigate={() => setDrawer(false)} />
-                  <SidebarFooter />
+                  <SidebarNav onNavigate={() => setDrawer(false)} collapsed={false} />
                 </Dialog.Content>
               </Dialog.Portal>
             </Dialog.Root>
 
-            <p className="text-sm font-medium text-muted lg:hidden">{titleFor(pathname)}</p>
+            <div className="ml-3 hidden sm:flex flex-1 max-w-[28rem]">
+              <div className="relative">
+                <Icon name="search" className="absolute left-2.5 top-2.5 size-4 text-muted" />
+                <input
+                  type="search"
+                  placeholder="Search orders, customers, products…"
+                  className="pl-9 pr-3 py-1.5 rounded-[var(--radius-control)] border border-line bg-surface text-sm text-ink focus:border-accent focus:outline-none w-full"
+                />
+              </div>
+            </div>
 
-            <div className="ml-auto flex items-center gap-1">
+            <div className="ml-auto flex items-center gap-2">
               <NotificationBell />
+              <HelpButton />
               <ThemeSwitcher />
               <Popover
                 label="Account menu"
                 trigger={
-                  <>
-                    <span aria-hidden="true" className="grid size-6 place-items-center rounded-full bg-accent text-xs font-semibold text-on-accent">
-                      {initials}
-                    </span>
-                    <span className="hidden max-w-32 truncate sm:inline">{user.full_name || user.email}</span>
+                  <div className="flex items-center gap-2">
+                    <Avatar name={user.full_name ?? user.email} size="sm" status="online" />
+                    <span className="hidden sm:inline truncate max-w-[14rem] text-sm font-medium text-ink">{user.full_name || user.email}</span>
                     <Icon name="chevronDown" className="size-4 text-muted" />
-                  </>
+                  </div>
                 }
-                triggerClassName="border-transparent bg-transparent hover:border-line"
-                panelClassName="w-60"
-              >
+                triggerClassName="border-transparent bg-transparent hover:bg-night/10"
+                panelClassName="w-64">
                 {(close) => (
                   <div>
                     <div className="px-3 py-2">
-                      <p className="truncate text-sm font-medium">{user.full_name || "Signed in"}</p>
+                      <p className="truncate text-sm font-medium text-ink">{user.full_name || "Signed in"}</p>
                       <p className="truncate text-xs text-muted">{user.email}</p>
                       <p className="mt-1 text-xs capitalize text-muted">{user.role} access</p>
                     </div>
                     <div className="border-t border-line pt-1">
+                      <Link href="/admin/settings" onClick={close} className="flex items-center gap-2.5 rounded-[var(--radius-control)] px-3 py-2 text-sm hover:bg-sand">
+                        <Icon name="sliders" className="size-4 text-muted" />
+                        Settings
+                      </Link>
                       <Link href="/account" onClick={close} className="flex items-center gap-2.5 rounded-[var(--radius-control)] px-3 py-2 text-sm hover:bg-sand">
                         <Icon name="customers" className="size-4 text-muted" />
                         Your account
@@ -185,11 +195,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                       <button
                         type="button"
                         onClick={() => {
+                          close();
                           logout();
                           router.push("/login");
                         }}
-                        className="flex w-full items-center gap-2.5 rounded-[var(--radius-control)] px-3 py-2 text-left text-sm hover:bg-sand"
-                      >
+                        className="flex w-full items-center gap-2.5 rounded-[var(--radius-control)] px-3 py-2 text-left text-sm hover:bg-sand">
                         <Icon name="logout" className="size-4 text-muted" />
                         Sign out
                       </button>
@@ -200,7 +210,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </div>
           </header>
 
-          <main id="admin-main" tabIndex={-1} className="mx-auto w-full max-w-[88rem] flex-1 px-4 py-6 focus:outline-none sm:px-6 lg:px-8 lg:py-8">
+          <main id="admin-main" tabIndex={-1} className="mx-auto w-full max-w-[92rem] flex-1 px-4 py-6 focus:outline-none sm:px-6 lg:px-8 lg:py-8">
             {children}
           </main>
         </div>

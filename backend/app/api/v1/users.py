@@ -22,10 +22,11 @@ async def list_users(
     _: Admin,
     q: str | None = None,
     role: UserRole | None = None,
+    staff: bool | None = None,
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 25,
 ):
-    items, total = await UserRepository(session).search(q, role, page, page_size)
+    items, total = await UserRepository(session).search(q, role, page, page_size, staff)
     return Page[UserOut](items=items, total=total, page=page, page_size=page_size)
 
 

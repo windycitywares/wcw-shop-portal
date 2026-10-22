@@ -1,19 +1,23 @@
 # CRM sync (shop → crm.windycitywares.com)
 
-The shop tells the CRM about customer accounts, orders and newsletter consent, so the team sees each customer's
-orders and consent in the CRM. The event format is defined by the CRM: `wcw-crm-portal/docs/SHOP_EVENTS.md`.
+The shop tells the CRM about customer accounts, orders, newsletter consent and contact-form messages, so the team
+sees each customer's orders and consent in the CRM — and a message sent through the contact page opens a support
+ticket there (SPEC 3.5). The event format is defined by the CRM: `wcw-crm-portal/docs/SHOP_EVENTS.md`.
 
 ## How it works
 
-1. **Recording** — `app/core/crm_events.py` hooks every database session. When an order, a customer account or a
-   newsletter row is written through the ORM, it adds a `crm_outbox` row ("order 987 changed") **in the same
-   transaction**. Nothing is recorded while the sync is off or while Admin → Test mode is on.
+1. **Recording** — `app/core/crm_events.py` hooks every database session. When an order, a customer account, a
+   newsletter row or a contact message is written through the ORM, it adds a `crm_outbox` row ("order 987 changed")
+   **in the same transaction**. Nothing is recorded while the sync is off or while Admin → Test mode is on. A
+   contact message is recorded once, when it arrives: opening, replying to or closing it is the shop's own
+   bookkeeping and does not send anything (the CRM already has the ticket).
 2. **Sending** — the `crm_sync` job (`python -m app.scripts.run_jobs --only crm_sync`, run by the deploy cron) reads
    each changed record *as it is now*, signs the event (HMAC-SHA256 with the shared secret) and posts it. Several
    changes to the same record go out as one event. Failures retry with backoff (1 min … 6 h, 12 tries); a body the
    CRM rejects (400/413/422) is marked `failed` and logged. Sent rows are purged after 30 days.
 
-Raw SQL updates (e.g. `UPDATE orders …`) are not seen; change orders, users and subscribers through the ORM.
+Raw SQL updates (e.g. `UPDATE orders …`) are not seen; change orders, users, subscribers and messages through the
+ORM.
 
 ## Switching it on
 
@@ -28,11 +32,16 @@ Raw SQL updates (e.g. `UPDATE orders …`) are not seen; change orders, users an
 
 ## Read API (for the CRM's backfill)
 
-`GET /api/v1/integrations/crm/{customers|orders|newsletter}?after_id=0&limit=200` (max 500), header
+`GET /api/v1/integrations/crm/{contacts|customers|orders|newsletter|products}?after_id=0&limit=200` (max 500), header
 `Authorization: Bearer <CRM_API_TOKEN>`. Pages by id: pass the answer's `next_after_id` until it is `null`.
 `orders` also takes `email=`. Items have the same shape as the events' `data`; newsletter items add `type`
 (`newsletter.subscribed` / `newsletter.unsubscribed`). Always live data. Answers 404 while `CRM_API_TOKEN` is unset;
 bad tokens are rate-limited per IP.
+
+`products` is the published catalog, for the CRM's deal-line picker: `q` searches name, SKU or slug (case-insensitive).
+Each item carries `id` (the line's `shop_product_id`), `sku`, `name`, `slug`, `price`, `compare_at_price`, `currency`,
+`status`, `stock_status`, `parent_id` (set on a variant) and `image`. `price` is the base price — a starting unit price
+the salesperson can adjust on the deal.
 
 To switch it on, add a long random value to the shop's `backend/.env` and the same value in CRM → Integrations →
 *Shop API token*:

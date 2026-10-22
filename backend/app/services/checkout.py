@@ -143,6 +143,10 @@ class CheckoutService:
                                  amount=order.grand_total, currency=order.currency))
         self.session.add(OrderEvent(order_id=order.id, type="placed", actor="customer",
                                     message=f"Order placed ({data.payment_method})", data={"ip_country": ship.country}))
+        from app.services.contacts import ContactService
+        await ContactService(self.session).upsert(email, full_name=ship.full_name, phone=data.phone or ship.phone,
+                                                source="order", user_id=user.id if user else None,
+                                                marketing_opt_in=data.marketing_opt_in)
         await self._conversions(data, order, email, lang, user, now)
         await self.session.commit()
         return await self._start_payment(order, lang, settings)
@@ -189,7 +193,7 @@ class CheckoutService:
             order = await service.mark_paid(order.id, provider=order.payment_provider or "test", reference=start.provider_ref)
             return CheckoutOut(order=await public_out(self.session, order, lang), payment=PaymentActionOut(provider=order.payment_provider or "", status="paid"))
         rows = []
-        if start.status == "pending":  # pay later: tell the customer how, and the owner that an order is waiting
+        if start.status == "pending":  # an order that waits for money (only an older "pay later" order gets here)
             rows.append(await service.customer_mail(order, "order_received", settings))
             admin_row = await service.admin_mail(order, settings)
             if admin_row is not None:

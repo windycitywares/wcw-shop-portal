@@ -28,6 +28,8 @@ const nl: Dictionary = {
     searchPlaceholder: "Zoek urnen en mini-urnen",
     signIn: "Inloggen",
     account: "Je account",
+    accountMenu: "Accountmenu",
+    wishlist: "Verlanglijst",
     admin: "Beheeromgeving",
     language: "Taal",
     themes: "Thema's",
@@ -138,16 +140,15 @@ const nl: Dictionary = {
     payment: "Betaling",
     methods: {
       stripe: "Kaart",
-      manual: "Later betalen",
       test: "Testbetaling (gratis)",
     },
     methodHints: {
       stripe: "Je vult je kaart in op de beveiligde pagina van Stripe. Wij zien je kaartnummer nooit.",
-      manual: "We mailen je hoe je kunt betalen. Intussen houden we je artikelen voor je vast.",
       test: "Alleen om te testen. Nooit beschikbaar in de echte winkel.",
     },
     marketing: "Mail me nieuws en aanbiedingen. Je kunt je altijd afmelden.",
     reminders: "Stuur me een herinnering als ik deze bestelling niet afrond.",
+    reminderNotice: "Rond je het niet af, dan sturen we je een herinnering. Je kunt je altijd afmelden.",
     saveAddress: "Dit adres in mijn account bewaren",
     summary: "Je bestelling",
     place: "Bestelling plaatsen",
@@ -370,9 +371,9 @@ const nl: Dictionary = {
   },
   footer: {
     findOrder: "Mijn bestelling zoeken",
-    subscribed: "Bedankt voor je aanmelding! Ben je nieuw, dan is je welkomstkorting onderweg naar je inbox.",
+    subscribed: "Bedankt, je staat op de lijst. Je kunt je altijd afmelden.",
     newsletterTitle: "Hoor als er nieuwe ontwerpen zijn",
-    newsletterText: "Nieuwe urnen en mini-urnen, een paar keer per jaar. Verder niets.",
+    newsletterText: "Een paar e-mails per jaar: nieuwe ontwerpen, af en toe een actie en verder niets.",
     email: "E-mailadres",
     emailPlaceholder: "jij@voorbeeld.nl",
     subscribe: "Aanmelden",
@@ -509,6 +510,19 @@ const nl: Dictionary = {
     changeFailed: "Het wachtwoord kon niet worden gewijzigd.",
     signOut: "Uitloggen",
   },
+  notifications: {
+    title: "Bestellingsupdates",
+    empty: "Nog niets. Zodra een bestelling opschiet, zie je het hier.",
+    markSeen: "Alles als gelezen markeren",
+    placed: "Bestelling {number} ontvangen",
+    paid: "Betaling ontvangen voor bestelling {number}",
+    shipped: "Bestelling {number} is onderweg",
+    delivered: "Bestelling {number} is bezorgd",
+    cancelled: "Bestelling {number} is geannuleerd",
+    refunded: "Terugbetaling van {amount} voor bestelling {number}",
+    viewAll: "Bekijk je bestellingen",
+  },
+
   attributes: {
     keys: {
       Material: "Materiaal",

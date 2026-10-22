@@ -228,3 +228,18 @@ class TestEnvironment:
             await conn.commit()
         appmode.forget()
 
+    async def set_logins(self, emails: list[str], user: User) -> None:
+        """Who may sign in as a shopper on the copy. Staff always may; the list is for copied customers."""
+        clean = appmode.login_emails(",".join(emails))
+        async with self.engine.connect() as conn:
+            await conn.execute(text("SET search_path TO public"))
+            await conn.execute(
+                text("UPDATE public.app_mode SET test_login_emails = :e WHERE id = 1"), {"e": ",".join(clean)}
+            )
+            await _audit(
+                conn, user, "environment.test_logins",
+                f"{len(clean)} address(es) may sign in on the test data" if clean else "Only staff may sign in on the test data",
+            )
+            await conn.commit()
+        appmode.forget()
+

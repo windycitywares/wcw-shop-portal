@@ -189,11 +189,19 @@ class OrderAdminTests(unittest.TestCase):
         self.assertEqual(w.post(f"/admin/orders/{order['id']}/ship", {}, w.admin).status_code, 409)
         self.assertEqual(w.post(f"/admin/orders/{order['id']}/cancel", {}, w.admin).status_code, 409)
 
-    def test_pay_later_then_staff_mark_paid(self):
+    def test_pay_later_is_no_longer_offered(self):
+        w = self.w
+        p = w.product(stock=2)
+        r = w.post("/checkout", w.checkout_body(w.email("nolater"), [item(p)], payment_method="manual"))
+        self.assertEqual(r.status_code, 422, r.text)
+        self.assertIn("available", r.text)
+        self.assertEqual(w.stock(p)["stock_quantity"], 2)  # nothing was held for an order that can't be paid
+
+    def test_an_order_waiting_for_money_can_be_marked_paid_by_staff(self):
         w = self.w
         p = w.product(stock=4)
         email = w.email("later")
-        data = w.place(email, [item(p)], payment_method="manual")
+        data = w.place_unpaid(email, [item(p)])
         order = data["order"]
         self.assertEqual((data["payment"]["status"], order["status"]), ("pending", "pending"))
         self.assertEqual(w.stock(p)["stock_quantity"], 3)  # held for the customer
@@ -209,7 +217,7 @@ class OrderAdminTests(unittest.TestCase):
     def test_unpaid_card_orders_expire(self):
         w = self.w
         p = w.product(stock=4)
-        order = w.place(w.email("expire"), [item(p)], payment_method="manual")["order"]
+        order = w.place_unpaid(w.email("expire"), [item(p)])["order"]
         w.sql("UPDATE orders SET payment_provider = 'stripe', placed_at = now() - interval '3 hours' WHERE id = :id", id=order["id"])
 
         async def run(session):
@@ -247,7 +255,7 @@ class StripeWebhookTests(unittest.TestCase):
 
     def test_only_signed_matching_payments_count(self):
         w = self.w
-        order = w.place(w.email("hook"), [item(w.product("40.00"))], payment_method="manual")["order"]
+        order = w.place_unpaid(w.email("hook"), [item(w.product("40.00"))])["order"]
         paid = {"type": "checkout.session.completed", "data": {"object": {
             "id": "cs_test_1", "client_reference_id": order["number"], "payment_status": "paid", "amount_total": 4895,
             "currency": "usd", "payment_intent": f"pi_{w.sfx}"}}}
@@ -299,6 +307,16 @@ class NewsletterAndCartTests(unittest.TestCase):
         self.assertEqual(w.get(f"/cart/recover/{token}").json()["items"][0]["quantity"], 2)
         no_consent = w.post("/cart/sync", {"items": [item(p)], "email": w.email("quiet")}).json()["token"]
         self.assertIsNone(w.value("SELECT email FROM carts WHERE token = :t", t=no_consent))  # no consent, no address kept
+
+        # Off by default. With "email every shopper" on, the address left at checkout is the permission.
+        self.assertTrue(w.get("/shop/config").json()["reminders_opt_in"])
+        w.put("/admin/settings/cart_recovery", {"email_everyone": True}, w.admin)
+        self.assertFalse(w.get("/shop/config").json()["reminders_opt_in"])
+        everyone = w.email("everyone")
+        token_everyone = w.post("/cart/sync", {"items": [item(p)], "email": everyone, "locale": "en"}).json()["token"]
+        self.assertEqual(w.value("SELECT email FROM carts WHERE token = :t", t=token_everyone), everyone)
+        self.assertTrue(w.value("SELECT reminders_ok FROM carts WHERE token = :t", t=token_everyone))
+        w.put("/admin/settings/cart_recovery", {"email_everyone": False}, w.admin)
 
         w.sql("UPDATE carts SET last_activity_at = now() - interval '25 hours' WHERE token = :t", t=token)
 

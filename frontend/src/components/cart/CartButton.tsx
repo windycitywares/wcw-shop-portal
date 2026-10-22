@@ -10,6 +10,7 @@ export function CartButton() {
     <button
       type="button"
       onClick={() => setOpen(true)}
+      title={fmt(t.cart.open, { count })}
       className="relative grid size-10 place-items-center rounded-full hover:bg-sand"
     >
       <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.5">

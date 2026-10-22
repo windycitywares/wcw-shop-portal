@@ -28,6 +28,8 @@ const es: Dictionary = {
     searchPlaceholder: "Buscar urnas y recuerdos",
     signIn: "Iniciar sesión",
     account: "Tu cuenta",
+    accountMenu: "Menú de la cuenta",
+    wishlist: "Lista de deseos",
     admin: "Panel de administración",
     language: "Idioma",
     themes: "Temas",
@@ -143,16 +145,15 @@ const es: Dictionary = {
     payment: "Pago",
     methods: {
       stripe: "Tarjeta",
-      manual: "Pagar después",
       test: "Pago de prueba (sin cargo)",
     },
     methodHints: {
       stripe: "Introducirás tu tarjeta en la página segura de Stripe. Nunca vemos el número de tu tarjeta.",
-      manual: "Te enviaremos por email cómo pagar. Mientras tanto, reservamos tus artículos.",
       test: "Solo para pruebas. Nunca se ofrece en la tienda real.",
     },
     marketing: "Envíame novedades y ofertas por email. Puedes darte de baja cuando quieras.",
     reminders: "Envíame un recordatorio si no termino este pedido.",
+    reminderNotice: "Si no terminas, te enviaremos un recordatorio. Puedes darte de baja cuando quieras.",
     saveAddress: "Guardar esta dirección en mi cuenta",
     summary: "Tu pedido",
     place: "Realizar pedido",
@@ -376,9 +377,9 @@ const es: Dictionary = {
   },
   footer: {
     findOrder: "Buscar mi pedido",
-    subscribed: "¡Gracias por suscribirte! Si eres nuevo, tu oferta de bienvenida va camino de tu bandeja de entrada.",
+    subscribed: "Gracias, ya estás en la lista. Puedes darte de baja cuando quieras.",
     newsletterTitle: "Entérate de los nuevos diseños",
-    newsletterText: "Nuevas urnas y recuerdos, unas pocas veces al año. Nada más.",
+    newsletterText: "Unos pocos correos al año: nuevos diseños, alguna oferta y nada más.",
     email: "Correo electrónico",
     emailPlaceholder: "tu@ejemplo.com",
     subscribe: "Suscribirme",
@@ -515,6 +516,19 @@ const es: Dictionary = {
     changeFailed: "No se pudo cambiar la contraseña.",
     signOut: "Cerrar sesión",
   },
+  notifications: {
+    title: "Novedades de tus pedidos",
+    empty: "Todavía no hay nada. Cuando un pedido avance, lo verás aquí.",
+    markSeen: "Marcar todo como leído",
+    placed: "Pedido {number} recibido",
+    paid: "Pago recibido del pedido {number}",
+    shipped: "El pedido {number} va en camino",
+    delivered: "El pedido {number} se ha entregado",
+    cancelled: "El pedido {number} fue cancelado",
+    refunded: "Reembolso de {amount} en el pedido {number}",
+    viewAll: "Ver tus pedidos",
+  },
+
   attributes: {
     keys: {
       Material: "Material",

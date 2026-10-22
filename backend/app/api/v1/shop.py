@@ -21,12 +21,14 @@ from app.schemas.shop import (
     CheckoutOut,
     ConfirmPaymentIn,
     OrderLookupIn,
+    OrderNotificationsOut,
     OrderPublicOut,
     OrderSummaryOut,
     PaymentActionOut,
     QuoteIn,
     QuoteOut,
 )
+from app.services.account_notifications import AccountNotificationService
 from app.services.cart_pricing import CartPricer, to_out
 from app.services.carts import CartService
 from app.services.checkout import CheckoutService
@@ -151,6 +153,18 @@ async def my_order(order_id: int, response: Response, session: SessionDep, user:
     no_store(response)
     service = OrderService(session)
     return await public_out(session, await service.for_user(user, order_id), lang)
+
+
+@router.get("/account/notifications", response_model=OrderNotificationsOut)
+async def my_notifications(response: Response, session: SessionDep, user: CurrentUser, limit: int = Query(20, ge=1, le=50)):
+    """Order milestones for the bell in the header: placed, paid, shipped, delivered, cancelled, refunded."""
+    no_store(response)
+    return await AccountNotificationService(session).feed(user, limit)
+
+
+@router.post("/account/notifications/seen", status_code=status.HTTP_204_NO_CONTENT)
+async def my_notifications_seen(session: SessionDep, user: CurrentUser):
+    await AccountNotificationService(session).mark_seen(user)
 
 
 # ---- Stripe ---------------------------------------------------------------------------------

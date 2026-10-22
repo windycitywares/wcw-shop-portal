@@ -35,7 +35,7 @@ export default function LoginPage() {
       const user =
         mode === "signin"
           ? await login(email, password)
-          : await register(email, password, String(data.get("name") || ""), captcha);
+          : await register(email, password, String(data.get("name") || ""), captcha, locale);
       const next = new URLSearchParams(window.location.search).get("next");
       router.push(next && next.startsWith("/") && !next.startsWith("//") ? next : isStaff(user) ? "/admin" : href("/account"));
     } catch (err) {

@@ -6,6 +6,8 @@ export interface NavItem {
   icon: IconName;
   /** Permission needed to see the link (the API enforces it as well). null = any staff. */
   permission: string | null;
+  /** Only shown in the settings page's left panel, not in the main sidebar. */
+  hidden?: boolean;
 }
 export interface NavGroup {
   label: string | null;
@@ -50,12 +52,12 @@ export const NAV: NavGroup[] = [
   {
     label: "Settings",
     items: [
-      { href: "/admin/settings", label: "Store settings", icon: "sliders", permission: "settings:manage" },
-      { href: "/admin/users", label: "Team and customers", icon: "users", permission: "users:manage" },
-      { href: "/admin/audit", label: "Audit log", icon: "shield", permission: "audit:view" },
-      { href: "/admin/environment", label: "Test mode", icon: "flask", permission: "environment:manage" },
-      { href: "/admin/backups", label: "Backups", icon: "archive", permission: "backups:manage" },
-      { href: "/admin/deployments", label: "Deployments", icon: "download", permission: "settings:manage" },
+      { href: "/admin/settings", label: "Store settings", icon: "sliders", permission: "settings:manage", hidden: true },
+      { href: "/admin/users", label: "Team and customers", icon: "users", permission: "users:manage", hidden: true },
+      { href: "/admin/audit", label: "Audit log", icon: "shield", permission: "audit:view", hidden: true },
+      { href: "/admin/environment", label: "Test mode", icon: "flask", permission: "environment:manage", hidden: true },
+      { href: "/admin/backups", label: "Backups", icon: "archive", permission: "backups:manage", hidden: true },
+      { href: "/admin/deployments", label: "Deployments", icon: "download", permission: "settings:manage", hidden: true },
     ],
   },
 ];

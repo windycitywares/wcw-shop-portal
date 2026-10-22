@@ -138,6 +138,11 @@ export function OrderView({ token }: { token: string }) {
                   <p className="text-sm text-muted">
                     {money(item.unit_price)} × {item.quantity}
                   </p>
+                  {order.status === "delivered" && item.slug && (
+                    <Link href={href(`/product/${item.slug}#reviews`)} className="mt-1 inline-block text-sm text-accent underline">
+                      {t.reviews.write}
+                    </Link>
+                  )}
                 </div>
                 <p className="text-sm font-medium tabular-nums">{money(item.line_total)}</p>
               </li>

@@ -46,6 +46,15 @@ test("add a team member, change their role and switch the account off", async ({
   await page.getByRole("button", { name: "Search" }).click();
   await expect(row.getByLabel(`Role for ${email}`)).toHaveValue("publisher");
 
+  // An admin can set a new password for someone who lost theirs.
+  await row.getByRole("button", { name: `Set password for ${email}` }).click();
+  const pw = page.getByRole("dialog", { name: "Set a new password" });
+  await expect(pw.getByLabel("New password")).toHaveValue(/^.{14}$/);
+  await pw.getByLabel("New password").fill("Fresh-password-456");
+  await pw.getByRole("button", { name: "Set password" }).click();
+  await expect(page.getByText("Password set", { exact: true })).toBeVisible();
+  await expect(pw).toBeHidden();
+
   // Switching the account off asks too; the checkbox only flips once it is saved.
   await row.getByLabel(`Account active for ${email}`).click();
   const off = page.getByRole("dialog", { name: "Switch this account off?" });

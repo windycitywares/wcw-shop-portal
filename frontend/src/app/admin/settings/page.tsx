@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/client-api";
 import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { Panel, PanelBody, PanelHeader } from "@/components/admin/ui/Panel";
 import { Pill } from "@/components/admin/ui/Pill";
-import { Tabs } from "@/components/admin/ui/Tabs";
 import { useToast } from "@/components/admin/ui/Toast";
+import { Icon } from "@/components/admin/ui/Icon";
+import { NAV } from "@/components/admin/nav";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
@@ -61,10 +63,10 @@ const GROUPS: Group[] = [
   {
     id: "payments",
     label: "Payments",
-    description: "Card payments switch on by themselves once the Stripe keys are on the server.",
+    description:
+      "Card payments switch on by themselves once the Stripe keys are on the server. “Pay later” is no longer offered at checkout; orders placed before that change still show these instructions.",
     fields: [
-      { key: "manual_enabled", label: "Offer “Pay later” (you collect payment yourself)", type: "bool" },
-      { key: "manual_instructions", label: "How to pay later", hint: "Shown after ordering and in the email: bank details, Zelle, check address…", type: "langs", long: true },
+      { key: "manual_instructions", label: "Instructions for an order that is waiting for money", hint: "Bank details, Zelle, check address… Shown on older “pay later” orders and in their email.", type: "langs", long: true },
     ],
   },
   {
@@ -81,9 +83,11 @@ const GROUPS: Group[] = [
   {
     id: "cart_recovery",
     label: "Cart reminders",
-    description: "Only for shoppers who ask for a reminder at checkout. Gentle wording; never more than you allow here.",
+    description:
+      "Gentle reminders after a cart is left. By default only shoppers who tick the box at checkout are emailed; the last option emails everyone who leaves an address there.",
     fields: [
       { key: "enabled", label: "Send cart reminders", type: "bool" },
+      { key: "email_everyone", label: "Email every shopper who leaves an email (not only those who tick the box)", type: "bool" },
       { key: "first_delay_hours", label: "First reminder after (hours)", type: "number", min: 1, max: 720 },
       { key: "second_delay_hours", label: "Second reminder after (hours)", type: "number", min: 2, max: 1440 },
       { key: "max_reminders", label: "Reminders at most", type: "number", min: 0, max: 3 },
@@ -272,10 +276,14 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function AdminSettings() {
   const { push } = useToast();
-  const { user } = useAuth();
+  const { user, can } = useAuth();
   const [tab, setTab] = useState("shipping");
   const [data, setData] = useState<{ settings: Settings; status: Record<string, boolean> } | null>(null);
   const [error, setError] = useState("");
+
+  const adminSections = (NAV.find((g) => g.label === "Settings")?.items ?? []).filter(
+    (i) => i.hidden && i.href !== "/admin/settings" && (!i.permission || can(i.permission)),
+  );
 
   useEffect(() => {
     apiFetch<{ settings: Settings; status: Record<string, boolean> }>("/admin/settings").then(setData, (e) => setError(e.message));
@@ -286,7 +294,7 @@ export default function AdminSettings() {
   const group = GROUPS.find((g) => g.id === tab) ?? GROUPS[0];
   return (
     <div>
-      <PageHeader title="Settings" description="Shipping, tax, payments, emails and the rules the shop runs by. Every change is recorded in the audit log." />
+      <PageHeader title="Settings" description="Everything the shop runs by: shipping, tax, payments, emails and rules, plus the audit log, test mode, backups and deployments." />
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}
@@ -321,21 +329,45 @@ export default function AdminSettings() {
           </PanelBody>
         </Panel>
       )}
-      <Tabs
-        tabs={GROUPS.map((g) => ({ id: g.id, label: g.label }))}
-        value={tab}
-        onChange={(id) => {
-          setTab(id);
-          window.history.replaceState(null, "", `?tab=${id}`);
-        }}
-        label="Settings group"
-        className="mb-4"
-      />
-      {data ? (
-        <GroupForm key={group.id} group={group} initial={data.settings[group.id] ?? {}} onSaved={(settings) => setData({ ...data, settings })} />
-      ) : (
-        <div className="skeleton h-64" />
-      )}
+      <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
+        <nav aria-label="Settings sections" className="space-y-1">
+          {GROUPS.map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              onClick={() => {
+                setTab(g.id);
+                window.history.replaceState(null, "", `?tab=${g.id}`);
+              }}
+              className={`block w-full rounded-[var(--radius-control)] px-3 py-2 text-left text-sm ${tab === g.id ? "bg-sand font-medium text-ink" : "text-muted hover:bg-sand/60 hover:text-ink"}`}
+            >
+              {g.label}
+            </button>
+          ))}
+          {adminSections.length > 0 && (
+            <>
+              <p className="px-3 pb-1 pt-4 text-xs font-medium uppercase tracking-wide text-muted">Admin</p>
+              {adminSections.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-2 rounded-[var(--radius-control)] px-3 py-2 text-sm text-muted hover:bg-sand/60 hover:text-ink"
+                >
+                  <Icon name={item.icon} className="size-4" />
+                  {item.label}
+                </Link>
+              ))}
+            </>
+          )}
+        </nav>
+        <div>
+          {data ? (
+            <GroupForm key={group.id} group={group} initial={data.settings[group.id] ?? {}} onSaved={(settings) => setData({ ...data, settings })} />
+          ) : (
+            <div className="skeleton h-64" />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

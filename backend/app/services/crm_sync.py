@@ -1,8 +1,9 @@
 """Send recorded changes to the CRM (docs/CRM_SYNC.md; the CRM's contract is its docs/SHOP_EVENTS.md).
 
-Run by the `crm_sync` job. For each pending `crm_outbox` row it reads the order / account / subscriber as it is
-now, wraps it in a signed event and posts it. Several rows for the same record are sent once. The CRM ignores a
-re-sent event id, so a send that timed out after the CRM stored it is safe to repeat.
+Run by the `crm_sync` job. For each pending `crm_outbox` row it reads the order / account / subscriber /
+contact message as it is now, wraps it in a signed event and posts it. Several rows for the same record are
+sent once. The CRM ignores a re-sent event id, so a send that timed out after the CRM stored it is safe to
+repeat.
 
 Always works on the live data, whatever Admin → Test mode is set to.
 """
@@ -29,6 +30,8 @@ from app.core import appmode
 from app.core.config import get_settings
 from app.core.enums import UserRole
 from app.domain.contacts import SERVICE_ONLY_SOURCES
+from app.models.account import ContactMessage
+from app.models.contact import Contact
 from app.models.crm import CrmOutbox
 from app.models.order import Order
 from app.models.user import NewsletterSubscriber, User
@@ -92,12 +95,29 @@ def customer_payload(u: User) -> dict[str, Any]:
     return {"id": u.id, "email": u.email, "full_name": u.full_name}
 
 
+def contact_record_payload(c: Contact) -> dict[str, Any]:
+    return {
+        "id": c.id, "email": c.email, "full_name": c.full_name, "phone": c.phone,
+        "source": c.source, "user_id": c.user_id, "marketing_opt_in": c.marketing_opt_in,
+        "created_at": _iso(c.created_at), "updated_at": _iso(c.updated_at),
+    }
+
+
 def newsletter_event(s: NewsletterSubscriber) -> tuple[str, dict[str, Any]] | None:
     if s.unsubscribed_at is not None:
         return "newsletter.unsubscribed", {"email": s.email}
     if s.source in SERVICE_ONLY_SOURCES:
         return None  # a row kept only for service-email unsubscribe links: not a subscriber
     return "newsletter.subscribed", {"email": s.email, "source": s.source}
+
+
+def contact_payload(m: ContactMessage) -> dict[str, Any]:
+    """A contact-form message: who wrote, and what they wrote. The CRM opens a ticket for it (SPEC 3.5).
+
+    The form has no phone field, so none is sent; the CRM treats a missing one the same as an empty one.
+    """
+    return {"name": m.name, "email": m.email, "subject": m.subject, "message": m.message,
+            "order_number": m.order_number}
 
 
 class CrmSync:
@@ -107,7 +127,8 @@ class CrmSync:
     # ---- payloads ------------------------------------------------------------------------
     async def build(self, kind: str, ref_id: int) -> tuple[str, dict[str, Any]] | None:
         """(event type, data) for the record as it is now, or None when there is nothing to tell."""
-        model = {"order": Order, "customer": User, "newsletter": NewsletterSubscriber}.get(kind)
+        model = {"order": Order, "customer": User, "newsletter": NewsletterSubscriber,
+                 "contact": ContactMessage, "contact_record": Contact}.get(kind)
         row = await self.session.get(model, ref_id) if model else None
         if row is None:
             return None
@@ -115,6 +136,10 @@ class CrmSync:
             return "order.updated", order_payload(row)
         if kind == "customer":
             return ("customer.upserted", customer_payload(row)) if row.role == UserRole.CUSTOMER else None
+        if kind == "contact_record":
+            return "contact.upserted", contact_record_payload(row)
+        if kind == "contact":
+            return "contact_message.created", contact_payload(row)
         return newsletter_event(row)
 
     # ---- sending ---------------------------------------------------------------------------

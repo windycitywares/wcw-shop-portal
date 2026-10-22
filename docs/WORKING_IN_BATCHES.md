@@ -74,7 +74,9 @@ The CRM's plan is in `wcw-crm-portal/docs/WORKING_IN_BATCHES.md` (M2); these are
 | # | Batch | Contents | PR |
 |---|-------|----------|----|
 | 1 | Events to the CRM | `crm_outbox` (migration 0014), ORM hook records order/account/newsletter changes in the same transaction, `crm_sync` job signs and posts them with retries; off until `CRM_WEBHOOK_URL`/`CRM_WEBHOOK_SECRET` are set — `docs/CRM_SYNC.md` | #67 (merged) |
-| 2 | Read API for the CRM | `/integrations/crm/{customers,orders,newsletter}` paged by id, `CRM_API_TOKEN` bearer token (server setting) | open |
+| 2 | Read API for the CRM | `/integrations/crm/{customers,orders,newsletter}` paged by id, `CRM_API_TOKEN` bearer token (server setting) | #68 (merged) |
+| 3 | Products for the CRM | `/integrations/crm/products` — the published catalog paged by id, `q` searches name/SKU/slug; `price` is the base price. Unblocks the CRM's deal-line picker (its M4 4c) | #73 (merged) |
+| 4 | Contact messages to the CRM | A message from the contact page is recorded (kind `contact`) and sent as `contact_message.created`, so the CRM opens a support ticket for it. Sent once, when it arrives; later status/emailed changes send nothing | this PR |
 
 Still open after these: Stripe live keys and the Illinois sales-tax rate (owner, in Settings), owner review of the
 returns/privacy/terms drafts, drag-and-drop category tree, marketplace API sync (Etsy/Amazon).
@@ -93,3 +95,26 @@ Lessons from these batches (check before pushing):
   fails with "base invalid". Merge `main` into the next branch and open it against `main` instead.
 - Frontend can't be type-checked in the sandbox (npm is blocked); CI's `build` job is the type check. Watch for
   union types on shared components (e.g. Turnstile `action`).
+
+## Owner review notes (2026-10-19)
+
+Things the owner asked for after walking through the shop. One small batch each, in this order. The numbers below
+are the order they were written in, with the original list kept in the PR that started this section.
+
+| # | What the owner asked for | Batch | State |
+|---|--------------------------|-------|-------|
+| 1 | The profile **name** top right, not just an icon | header and account menu | #75 (merged) |
+| 2 | The **wishlist** reachable from the top right | header and account menu | #75 (merged) |
+| 3 | A **tooltip** on every icon | header and account menu | #75 (merged) |
+| 4 | The user menu offers **profile and sign out** | header and account menu | #75 (merged) |
+| 5 | Remove **"pay later"** from checkout | checkout 1 | #77 (merged) |
+| 6 | A **welcome email** on registration | email 1 | #76 (merged) |
+| 7 | **Forgot password** isn't working: the reset email now goes through the outbox (retried), and a throttled request is answered honestly instead of pretending | email 1 | #76 (merged) |
+| 8 | In **Test mode** only allowed people may sign in (not every copied customer) | test mode 1 | #79 (merged) |
+| 9 | **Email *and* site notification on order activity** for the customer (a bell in the account) | notifications 1 | #81 (merged) |
+| 10 | **Review and rating after delivery** — prompted from the order, not only from the product page | reviews 1 | #82 (merged) |
+| 11 | **Team and customers apart** in the admin (staff list separate from shoppers) | admin 1 | #83 (merged) |
+| 12 | **Every account visible and editable** in the admin (today the list is capped, and only role/active/password) | admin 1 | #83 (merged) |
+| 13 | **Help content on each admin screen** (what it does, what to watch for) | admin 2 | #84 (merged) |
+| 14 | Subscribe copy **generic**, and the signed-in shopper's email **pre-filled** | newsletter 1 | #78 (merged) |
+| 15 | **Abandoned carts** aren't working — a reminder may only go to shoppers who ticked a box; make that configurable | cart reminders 1 | #80 (merged) |

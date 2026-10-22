@@ -26,6 +26,8 @@ class RegisterIn(BaseModel):
     email: EmailStr
     password: str = Password
     full_name: str | None = Field(default=None, max_length=200)
+    # The storefront's language, so the welcome email arrives in the language the shopper is reading.
+    locale: str | None = Field(default=None, max_length=5)
 
 
 class SignUpIn(RegisterIn):
@@ -40,8 +42,11 @@ class UserCreate(RegisterIn):
 
 class UserUpdate(BaseModel):
     full_name: str | None = Field(default=None, max_length=200)
+    email: EmailStr | None = None
     role: UserRole | None = None
     is_active: bool | None = None
+    # An admin sets a new password for someone who lost theirs (Team page). Signs them out everywhere.
+    password: str | None = Field(default=None, min_length=8, max_length=72)
 
 
 class ProfileUpdate(BaseModel):

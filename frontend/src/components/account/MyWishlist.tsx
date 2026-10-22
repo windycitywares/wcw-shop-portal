@@ -19,13 +19,13 @@ export function MyWishlist() {
   if (items === null) return null;
   if (!items.length) {
     return (
-      <section aria-labelledby="my-wishlist" className="mt-12">
-        <h2 id="my-wishlist" className="text-3xl">
+      <section id="my-wishlist" aria-labelledby="my-wishlist-heading" className="mt-12 scroll-mt-24">
+        <h2 id="my-wishlist-heading" className="text-3xl">
           {t.wishlist.title}
         </h2>
         <p className="mt-4 text-sm text-muted">{t.wishlist.empty}</p>
       </section>
     );
   }
-  return <MiniCards items={items} title={t.wishlist.title} hrefFor={(slug) => href(`/product/${slug}`)} locale={locale} limit={48} />;
+  return <MiniCards id="my-wishlist" items={items} title={t.wishlist.title} hrefFor={(slug) => href(`/product/${slug}`)} locale={locale} limit={48} />;
 }

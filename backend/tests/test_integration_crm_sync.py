@@ -5,7 +5,7 @@ import hmac
 import json
 import unittest
 
-from tests.integration_support import item, skip_unless_db, world
+from tests.integration_support import item, reset_limits, skip_unless_db, world
 
 URL = "https://crm.example.test/api/v1/integrations/shop/webhook"
 SECRET = "k" * 48
@@ -104,6 +104,39 @@ class CrmSyncTests(unittest.TestCase):
         self.w.sql("UPDATE users SET full_name = 'Raw SQL is not seen' WHERE id = :i", i=staff_id)
         self.assertEqual(self.outbox("customer", staff_id), [])
 
+    def test_a_contact_form_message_tells_the_crm(self):
+        reset_limits()
+        email = self.w.email("asker")
+        subject = f"Gift wrap {self.w.sfx}"
+        message = "Can this ship wrapped with a card?"
+        sent = self.w.post("/contact", {"name": "Mia Park", "email": email, "subject": subject,
+                                        "order_number": "WCW-3", "message": message})
+        self.assertEqual(sent.status_code, 202, sent.text)
+
+        msg_id = self.w.value("SELECT id FROM contact_messages WHERE subject = :s", s=subject)
+        self.assertEqual(len(self.outbox("contact", msg_id)), 1)  # the contact page recorded it
+
+        self.deliver()
+        events = [s["event"] for s in self.sent if s["event"]["type"] == "contact_message.created"]
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["data"], {"name": "Mia Park", "email": email, "subject": subject,
+                                             "message": message, "order_number": "WCW-3"})
+        self.assertEqual(self.outbox("contact", msg_id)[-1]["status"], "sent")
+
+        # The shop's own bookkeeping (open/closed, the emailed flag) is not a second message — the CRM has the
+        # ticket already, and a second one would be a duplicate.
+        async def handle(session):
+            from app.models.account import ContactMessage
+
+            msg = await session.get(ContactMessage, msg_id)
+            msg.status, msg.emailed = "open", True
+            await session.commit()
+
+        self.w.db(handle)
+        self.sent.clear()
+        self.assertEqual(self.deliver(), {})
+        self.assertEqual(self.sent, [])
+
     def test_retry_then_give_up_on_bad_request(self):
         email, _ = self.w.register("retry")
         user_id = self.w.value("SELECT id FROM users WHERE email = :e", e=email)
@@ -180,3 +213,29 @@ class CrmReadApiTests(unittest.TestCase):
         self.assertEqual(len(orders["items"]), 1)
         self.assertEqual(orders["items"][0]["user_id"], user_id)
         self.assertIsNone(orders["next_after_id"])
+
+    def test_products_are_paged_and_searchable(self):
+        product = self.w.product(price="42.50", title="Walnut bowl")
+        sku = self.w.value("SELECT sku FROM products WHERE id = :id", id=product["id"])
+
+        page = self.w.get("/integrations/crm/products", self.auth, after_id=product["id"] - 1, limit=1).json()
+        self.assertEqual(page["items"], [{
+            "id": product["id"], "parent_id": None, "sku": sku, "name": product["title"], "slug": product["slug"],
+            "price": "42.50", "compare_at_price": None, "currency": "USD", "status": "published",
+            "stock_status": "in_stock", "image": "https://media.example.com/test.jpg",
+        }])
+        self.assertEqual(page["next_after_id"], product["id"])
+
+        found = self.w.get("/integrations/crm/products", self.auth, q=sku.lower()).json()["items"]
+        self.assertIn(product["id"], [p["id"] for p in found])  # search ignores case
+        empty = self.w.get("/integrations/crm/products", self.auth, q="nothing-matches-this").json()
+        self.assertEqual(empty["items"], [])
+
+    def test_only_published_products_are_listed(self):
+        live = self.w.product(title="Visible item")
+        draft = self.w.product(title="Draft item")
+        self.w.sql("UPDATE products SET status = 'draft' WHERE id = :id", id=draft["id"])
+        ids = [p["id"] for p in self.w.get("/integrations/crm/products", self.auth, after_id=live["id"] - 1,
+                                           limit=500).json()["items"]]
+        self.assertIn(live["id"], ids)
+        self.assertNotIn(draft["id"], ids)

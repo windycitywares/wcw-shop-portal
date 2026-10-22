@@ -49,8 +49,6 @@ def payment_methods(s: StoreSettings) -> list[str]:
     methods: list[str] = []
     if secret_key():
         methods.append("stripe")
-    if s.payments.manual_enabled:
-        methods.append("manual")
     if not app.is_production or appmode.is_test():
         methods.append("test")  # no-charge payment for development, the browser tests and Test mode
     return methods
@@ -85,6 +83,7 @@ def public_config(s: StoreSettings, lang: str) -> PublicConfig:
         welcome_percent=s.welcome.percent if s.welcome.enabled else None,
         payment_methods=payment_methods(s),
         guest_checkout=s.general.guest_checkout,
+        reminders_opt_in=not s.cart_recovery.email_everyone,
         max_quantity_per_line=s.general.max_quantity_per_line,
         low_stock_threshold=s.general.low_stock_threshold,
         analytics_enabled=s.analytics.enabled,
