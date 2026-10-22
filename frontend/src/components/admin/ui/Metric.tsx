@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Sparkline } from "../charts/Sparkline";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 
 /**
  * Change versus the previous period. `good` says which direction is good (more orders: up; more refunds:
@@ -47,6 +47,8 @@ export interface MetricItem {
   hint?: string;
   spark?: number[];
   href?: string;
+  /** A small round icon beside the label. */
+  icon?: IconName;
 }
 
 /**
@@ -69,13 +71,20 @@ export function MetricStrip({ items, compareLabel, className }: { items: MetricI
             key={m.label}
             className={cn("relative min-w-0 border-l border-t border-line px-5 py-4", m.href && "hover:bg-canvas has-[a:focus-visible]:bg-canvas")}
           >
-            <dt className="text-sm text-muted">
-              {m.href ? (
-                <Link href={m.href} className="after:absolute after:inset-0 hover:text-ink hover:underline">
-                  {m.label}
-                </Link>
-              ) : (
-                m.label
+            <dt className="flex items-start justify-between gap-2 text-sm text-muted">
+              <span className="min-w-0">
+                {m.href ? (
+                  <Link href={m.href} className="after:absolute after:inset-0 hover:text-ink hover:underline">
+                    {m.label}
+                  </Link>
+                ) : (
+                  m.label
+                )}
+              </span>
+              {m.icon && (
+                <span aria-hidden="true" className="-mr-1 -mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-accent-soft text-accent">
+                  <Icon name={m.icon} className="size-4" />
+                </span>
               )}
             </dt>
             {/* The figure keeps its width; the sparkline takes what is left (up to 88px) and stays inside the cell. */}
