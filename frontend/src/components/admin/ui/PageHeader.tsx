@@ -27,7 +27,7 @@ export function PageHeader({
             {back.label}
           </Link>
         )}
-        <h1 className="text-[1.625rem]">{title}</h1>
+        <h1 className="text-[1.6rem] font-semibold text-ink">{title}</h1>
         {description && <p className="admin-prose mt-1 text-sm text-muted">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}

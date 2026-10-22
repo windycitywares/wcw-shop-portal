@@ -22,7 +22,7 @@ const DOTS: Record<Tone, string> = {
 /** Status label: a coloured dot plus words, so colour never carries the meaning alone. */
 export function Pill({ tone = "neutral", className, children, dot = true }: { tone?: Tone; className?: string; children: React.ReactNode; dot?: boolean }) {
   return (
-    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium", TONES[tone], className)}>
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold", TONES[tone], className)}>
       {dot && <span aria-hidden="true" className={cn("size-1.5 rounded-full", DOTS[tone])} />}
       {children}
     </span>
