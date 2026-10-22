@@ -399,12 +399,8 @@ const en = {
   theme: {
     label: "Color theme",
     choose: "Color theme",
-    classic: "Lakefront",
-    linen: "Linen",
-    sage: "Sage",
-    blush: "Blush",
-    midnight: "Midnight",
-    system: "Match my device",
+    classic: "Default",
+    midnight: "Dark",
   },
   auth: {
     signIn: "Sign in",

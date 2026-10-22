@@ -52,7 +52,7 @@ test.describe("browsing", () => {
   test("the colour theme can be changed and is remembered", async ({ page }) => {
     await page.goto("/");
     await page.locator("details > summary").filter({ hasText: "Color theme" }).first().click();
-    await page.getByText("Midnight", { exact: true }).click();
+    await page.getByText("Dark", { exact: true }).click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "midnight");
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "midnight");

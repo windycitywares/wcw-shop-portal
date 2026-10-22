@@ -6,14 +6,11 @@
 export const THEMES = [
   // swatch: [page, panel, accent] — shown in the switcher
   { id: "classic", scheme: "light", swatch: ["#f2f3ef", "#ffffff", "#2f5468"], meta: "#f2f3ef" },
-  { id: "linen", scheme: "light", swatch: ["#f6f1ea", "#fffdf9", "#9a4a2a"], meta: "#f6f1ea" },
-  { id: "sage", scheme: "light", swatch: ["#eef2ec", "#ffffff", "#3a684c"], meta: "#eef2ec" },
-  { id: "blush", scheme: "light", swatch: ["#f8f1f1", "#ffffff", "#874459"], meta: "#f8f1f1" },
   { id: "midnight", scheme: "dark", swatch: ["#0f151c", "#17202a", "#e3ad4f"], meta: "#0f151c" },
 ] as const;
 
 export type ThemeId = (typeof THEMES)[number]["id"];
-/** What the shopper picked: a theme, or "system" (Lakefront by day, Midnight if the device is in dark mode). */
+/** What the shopper picked: Default or Dark. "system" is still read from older saved choices (it follows the device). */
 export type ThemeChoice = ThemeId | "system";
 
 export const THEME_KEY = "wcw-theme";

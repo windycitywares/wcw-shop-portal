@@ -403,12 +403,8 @@ const es: Dictionary = {
   theme: {
     label: "Tema",
     choose: "Tema de color",
-    classic: "Lago",
-    linen: "Lino",
-    sage: "Salvia",
-    blush: "Rubor",
-    midnight: "Medianoche",
-    system: "Como mi dispositivo",
+    classic: "Predeterminado",
+    midnight: "Oscuro",
   },
   auth: {
     signIn: "Iniciar sesión",
