@@ -56,21 +56,60 @@ def may_sign_in(user: User) -> bool:
     return bool(state.test_synced_at and user.created_at and user.created_at > state.test_synced_at)
 
 
+DISABLED_MESSAGE = "Your account is disabled, so you can't sign in right now. If you think this is a mistake, please contact us."
+
+
 class AuthService:
     def __init__(self, session: AsyncSession):
         self.session = session
         self.users = UserRepository(session)
 
+    async def _tell_admin_about_disabled_sign_in(self, user: User, ip: str | None) -> None:
+        """Email the shop owner that a disabled account tried to sign in (at most once per account every 6 hours)."""
+        from app.core import mailer
+        from app.core.config import get_settings
+        from app.core.rate_limit import disabled_alert_by_email
+        from app.services.orders import admin_recipient
+
+        key = user.email.lower()
+        if disabled_alert_by_email.is_blocked(key):
+            return
+        disabled_alert_by_email.hit(key)
+        to = admin_recipient(await SettingsService(self.session).load())
+        if not to:
+            return
+        site = get_settings().site_url.rstrip("/")
+        staff = user.role != UserRole.CUSTOMER
+        lines = [
+            f"Someone tried to sign in to a disabled {'team' if staff else 'customer'} account, using the right password.",
+            "",
+            f"Account: {user.full_name + ' ' if user.full_name else ''}<{user.email}>",
+            f"Role: {user.role.value}",
+            f"When: {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC",
+            f"From IP address: {ip or 'unknown'}",
+            "",
+            "They were told the account is disabled and to contact you.",
+            f"To let them back in, switch the account on: {site}/admin/{'team' if staff else 'users'}",
+            "",
+            "You get one of these per account every 6 hours at most.",
+        ]
+        try:
+            await mailer.send(mailer.Mail(to=to, subject=f"[Account] Disabled account tried to sign in: {user.email}", text="\n".join(lines)))
+        except mailer.MailError:
+            pass  # the sign-in is refused either way
+
     def issue_token(self, user: User) -> TokenOut:
         token = create_access_token(user.id, user.role.value)
         return TokenOut(access_token=token, user=to_me(user))
 
-    async def authenticate(self, email: str, password: str) -> TokenOut:
+    async def authenticate(self, email: str, password: str, ip: str | None = None) -> TokenOut:
         user = await self.users.get_by_email(email)
         if not user or not verify_password(password, user.hashed_password):
             raise AuthenticationError("Incorrect email or password")
         if not user.is_active:
-            raise AuthenticationError("This account is disabled")
+            # Only someone who knows the password gets here, so this reveals nothing to a guesser.
+            await self._tell_admin_about_disabled_sign_in(user, ip)
+            raise AuthenticationError(DISABLED_MESSAGE)
         if not may_sign_in(user):
             raise AuthenticationError(
                 "This account can't sign in while the shop is on test data. Ask the shop owner to add "
