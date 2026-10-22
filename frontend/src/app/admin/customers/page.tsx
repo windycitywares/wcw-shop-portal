@@ -15,6 +15,9 @@ import { Pill, type Tone } from "@/components/admin/ui/Pill";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
+import { Tabs } from "@/components/admin/ui/Tabs";
+import { AccountsAdmin } from "@/components/admin/users/AccountsAdmin";
+import { useAuth } from "@/lib/auth";
 
 interface Customer {
   email: string;
@@ -73,7 +76,40 @@ const SORTS = [
 ];
 const PAGE_SIZE = 25;
 
+type View = "buyers" | "accounts";
+
+/** One place for customers. "Buyers" are people who paid (guest checkout included), grouped by how they buy;
+ *  "Accounts" are the shop logins, where an account is edited or switched off. */
 export default function AdminCustomers() {
+  const { can } = useAuth();
+  const canAccounts = can("users:manage");
+  const [view, setView] = useState<View>("buyers");
+  // /admin/users (the old "Customer accounts" page) and links send ?view=accounts.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("view") === "accounts") setView("accounts");
+  }, []);
+  const tabs: { id: View; label: string }[] = [
+    { id: "buyers", label: "Buyers" },
+    { id: "accounts", label: "Accounts" },
+  ];
+  const showAccounts = canAccounts && view === "accounts";
+  return (
+    <div>
+      <PageHeader
+        title="Customers"
+        description={
+          showAccounts
+            ? "Every shopper who signed up. Edit their details, set a new password, or switch an account off."
+            : "Everyone who has paid for an order, with or without an account, grouped by how recently and how often they buy."
+        }
+      />
+      {canAccounts && <Tabs tabs={tabs} value={view} onChange={setView} label="Customer view" className="mb-6" />}
+      {showAccounts ? <AccountsAdmin scope="customers" embedded /> : <Buyers />}
+    </div>
+  );
+}
+
+function Buyers() {
   const [segment, setSegment] = useState("");
   const [sort, setSort] = useState("revenue");
   const [draft, setDraft] = useState("");
@@ -143,15 +179,6 @@ export default function AdminCustomers() {
 
   return (
     <div>
-      <PageHeader
-        title="Customers"
-        description="Everyone who has paid for an order, grouped by how recently and how often they buy."
-        actions={
-          <Button size="sm" variant="secondary" onClick={() => downloadFile(`/admin/customers/export.csv?${query()}`, "wcw-customers.csv").catch((e) => setError(e.message))}>
-            Export CSV
-          </Button>
-        }
-      />
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}
@@ -207,6 +234,9 @@ export default function AdminCustomers() {
               Show all groups
             </Button>
           )}
+          <Button size="sm" variant="secondary" onClick={() => downloadFile(`/admin/customers/export.csv?${query()}`, "wcw-customers.csv").catch((e) => setError(e.message))}>
+            Export CSV
+          </Button>
           <label className="ml-auto flex items-center gap-2 text-sm">
             <span className="text-muted">Sort</span>
             <select className="h-9 rounded-lg border border-line bg-surface px-2" value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }}>

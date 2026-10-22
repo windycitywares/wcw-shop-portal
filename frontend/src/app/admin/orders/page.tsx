@@ -142,7 +142,7 @@ export default function AdminOrders() {
     <div>
       <PageHeader
         title="Orders"
-        description="Find an order, take payment, ship it, refund or cancel it."
+        description="Every sale in one list. Find an order, take payment, ship it, refund or cancel it. Totals over time are in Sales report."
         actions={
           <Button
             variant="secondary"
