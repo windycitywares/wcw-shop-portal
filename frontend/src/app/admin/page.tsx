@@ -155,6 +155,7 @@ export default function AdminDashboard() {
 
           <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
             <ChartFrame
+              className="rounded-[var(--radius-card)] bg-surface p-5 shadow-[var(--shadow-card,0_0_0_1px_var(--color-line))]"
               title="Sales"
               description="Order totals minus refunds, by the day the order was paid."
               table={lineTable(series.map((s) => s.bucket), lines, (n) => money(n), xFormat)}
