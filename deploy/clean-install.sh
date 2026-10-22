@@ -43,6 +43,8 @@ if [ ! -d "$VENV" ]; then
     --domain "$API_DOMAIN" --app-uri / --startup-file wsgi.py --entry-point application
   echo
 fi
+# Creating the app writes cPanel's "It works!" template over the startup file; put ours back.
+git -C "$REPO" checkout -- backend/wsgi.py
 # shellcheck disable=SC1091
 source "$VENV/bin/activate"
 cd "$REPO/backend"
@@ -69,7 +71,8 @@ crontab -l | grep auto-deploy
 
 step "Check"
 sleep 5
-for url in "https://$API_DOMAIN/health" "https://$SHOP_DOMAIN/"; do
-  printf '%s %s\n' "$(curl -s -m 20 -o /dev/null -w '%{http_code}' "$url" || true)" "$url"
-done
+health=$(curl -s -m 20 "https://$API_DOMAIN/health" || true)
+echo "API: $health"   # the real API answers {"status":"ok"}; cPanel's placeholder says "It works!"
+case "$health" in *'"status":"ok"'*) ;; *) echo "The API is not answering as the shop API"; exit 1 ;; esac
+printf '%s https://%s/\n' "$(curl -s -m 20 -o /dev/null -w '%{http_code}' "https://$SHOP_DOMAIN/" || true)" "$SHOP_DOMAIN"
 echo "Done. Sign in at https://$SHOP_DOMAIN/admin with ADMIN_EMAIL from the .env."
