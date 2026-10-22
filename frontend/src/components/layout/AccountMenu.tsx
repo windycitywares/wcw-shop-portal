@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown, User01 } from "@untitledui/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/i18n/client";
@@ -24,10 +25,7 @@ export function AccountMenu() {
         title={t.nav.signIn}
         className="grid size-10 place-items-center rounded-full hover:bg-sand"
       >
-        <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <circle cx="12" cy="8" r="4" />
-          <path d="M4 21a8 8 0 0 1 16 0" strokeLinecap="round" />
-        </svg>
+        <User01 aria-hidden="true" className="size-5" strokeWidth={1.6} />
         <span className="sr-only">{t.nav.signIn}</span>
       </Link>
     );
@@ -52,9 +50,7 @@ export function AccountMenu() {
             {first.slice(0, 1).toUpperCase()}
           </span>
           <span className="max-w-20 truncate text-sm font-medium sm:max-w-28">{first}</span>
-          <svg aria-hidden="true" viewBox="0 0 24 24" className="size-3.5 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <ChevronDown aria-hidden="true" className="size-3.5 shrink-0 text-muted" strokeWidth={2} />
         </>
       }
     >

@@ -1,5 +1,6 @@
 "use client";
 
+import { Bell01 } from "@untitledui/icons";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { fmt, intlLocale } from "@/i18n/config";
@@ -97,10 +98,7 @@ export function NotificationBell() {
       onOpenChange={opened}
       trigger={
         <>
-          <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.2 1.5 5.2h-15S6 13 6 9Z" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M10 18.5a2 2 0 0 0 4 0" strokeLinecap="round" />
-          </svg>
+          <Bell01 aria-hidden="true" className="size-5" strokeWidth={1.6} />
           {feed.unread > 0 && (
             <span className="absolute right-1.5 top-1.5 grid min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-semibold leading-4 text-white">
               {feed.unread > 9 ? "9+" : feed.unread}
