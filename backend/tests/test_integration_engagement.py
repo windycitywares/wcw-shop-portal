@@ -39,8 +39,14 @@ class ReviewTests(unittest.TestCase):
         w = self.w
         p = w.product("40.00")
         email, author = w.register("reviewer", name="Ana Lopez")
-        w.place(email, [item(p)], author)
+        order = w.place(email, [item(p)], author)["order"]
         body = {"rating": 5, "title": "Beautiful", "body": "Exactly as pictured and arrived quickly."}
+        # Paid but not delivered yet: no review.
+        self.assertFalse(w.get(f"/products/{p['slug']}/reviews", author).json()["can_review"])
+        self.assertEqual(w.post(f"/products/{p['slug']}/reviews", body, author).status_code, 403)
+        w.post(f"/admin/orders/{order['id']}/ship", {"notify_customer": False}, w.admin)
+        w.post(f"/admin/orders/{order['id']}/status", {"status": "delivered"}, w.admin)
+        self.assertTrue(w.get(f"/products/{p['slug']}/reviews", author).json()["can_review"])
         r = w.post(f"/products/{p['slug']}/reviews", body, author)
         self.assertEqual(r.status_code, 201, r.text)
         submitted = r.json()
@@ -68,11 +74,20 @@ class ReviewTests(unittest.TestCase):
         self.assertEqual(w.post(f"/reviews/{rid}/helpful", None, voter).json()["helpful_count"], 0)  # toggles
         self.assertEqual(w.post(f"/reviews/{rid}/helpful", None, author).status_code, 422)  # not your own
 
-        _, stranger = w.register("stranger")
-        unverified = w.post(f"/products/{p['slug']}/reviews", {"rating": 2, "body": "Never bought it but here I am."}, stranger).json()
-        self.assertFalse(unverified["review"]["verified"])
-        w.put(f"/admin/reviews/{unverified['review']['id']}", {"status": "rejected"}, w.admin)
+        _, stranger = w.register("stranger")  # never bought it: may not review
+        self.assertEqual(w.post(f"/products/{p['slug']}/reviews", {"rating": 2, "body": "Never bought it but here I am."}, stranger).status_code, 403)
+        mine = w.get(f"/products/{p['slug']}/reviews", author).json()
+        self.assertEqual((mine["can_review"], mine["reviewed"]), (False, True))
         self.assertEqual(w.get(f"/products/{p['slug']}/reviews").json()["summary"]["count"], 1)
+
+        # Shipped but never marked delivered: counts as received after Settings → Reviews "ask after" days (10).
+        email2, buyer = w.register("shipped")
+        later = w.place(email2, [item(p)], buyer)["order"]
+        w.post(f"/admin/orders/{later['id']}/ship", {"notify_customer": False}, w.admin)
+        self.assertFalse(w.get(f"/products/{p['slug']}/reviews", buyer).json()["can_review"])
+        w.sql("UPDATE orders SET shipped_at = now() - interval '11 days' WHERE id = :id", id=later["id"])
+        self.assertTrue(w.get(f"/products/{p['slug']}/reviews", buyer).json()["can_review"])
+        self.assertEqual(w.post(f"/products/{p['slug']}/reviews", {"rating": 4, "body": "Arrived well packed."}, buyer).status_code, 201)
         self.assertEqual(w.post(f"/products/{p['slug']}/reviews", body).status_code, 401)
         self.assertEqual(w.get("/admin/reviews", w.customer).status_code, 403)
 

@@ -34,7 +34,7 @@ export function Reviews({ slug }: { slug: string }) {
         setItems((prev) => (nextPage === 1 ? res.items : [...prev, ...res.items]));
         setPage(nextPage);
       } catch {
-        setData((d) => d ?? { summary: { average: 0, count: 0, distribution: {} }, items: [], total: 0, page: 1, page_size: 5, can_review: false, purchased: false });
+        setData((d) => d ?? { summary: { average: 0, count: 0, distribution: {} }, items: [], total: 0, page: 1, page_size: 5, can_review: false, purchased: false, reviewed: false });
       }
     },
     [slug],
@@ -110,7 +110,7 @@ export function Reviews({ slug }: { slug: string }) {
                 }}
               />
             ) : data ? (
-              <p className="text-sm text-muted">{t.reviews.already}</p>
+              <p className="text-sm text-muted">{data.reviewed ? t.reviews.already : t.reviews.afterDelivery}</p>
             ) : null}
             {count === 0 && <p className="mt-3 text-sm text-muted">{t.reviews.beFirst}</p>}
           </div>

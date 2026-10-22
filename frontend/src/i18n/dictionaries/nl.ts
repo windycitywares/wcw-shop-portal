@@ -257,6 +257,7 @@ const nl: Dictionary = {
     thanksPending: "Dank je wel! Je beoordeling verschijnt zodra we hem hebben bekeken.",
     thanksLive: "Dank je wel! Je beoordeling staat online.",
     already: "Je hebt dit ontwerp al beoordeeld. Dank je wel!",
+    afterDelivery: "Je kunt dit beoordelen zodra je bestelling is bezorgd.",
     more: "Meer beoordelingen",
     chooseRating: "Kies een beoordeling",
   },

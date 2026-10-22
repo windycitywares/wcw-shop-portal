@@ -259,6 +259,7 @@ const en = {
     thanksPending: "Thank you! Your review will appear once we've checked it.",
     thanksLive: "Thank you! Your review is live.",
     already: "You've reviewed this design. Thank you!",
+    afterDelivery: "You can rate this once your order has been delivered.",
     more: "Show more reviews",
     chooseRating: "Choose a rating",
   },
