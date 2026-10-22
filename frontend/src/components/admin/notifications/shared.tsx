@@ -7,7 +7,7 @@ import { Icon, type IconName } from "../ui/Icon";
 
 export interface Activity {
   id: string;
-  type: "order" | "refund" | "message" | "stock_request" | "review" | "signup" | "backup_failed";
+  type: "order" | "refund" | "message" | "stock_request" | "review" | "signup" | "subscriber" | "backup_failed";
   at: string;
   unread: boolean;
   title: string;
@@ -30,6 +30,7 @@ export const KIND: Record<Activity["type"], { label: string; icon: IconName }> =
   stock_request: { label: "Stock requests", icon: "bell" },
   review: { label: "Reviews", icon: "star" },
   signup: { label: "New customers", icon: "customers" },
+  subscriber: { label: "Subscribers", icon: "mail" },
   backup_failed: { label: "Backups", icon: "archive" },
 };
 

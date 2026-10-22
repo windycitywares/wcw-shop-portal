@@ -56,6 +56,16 @@ export default function AdminSubscribers() {
   const [busy, setBusy] = useState(false);
   const canManage = can("promotions:manage");
 
+  // The bell links here with ?q=email.
+  useEffect(() => {
+    const found = new URLSearchParams(window.location.search).get("q");
+    if (found) {
+      setQ(found);
+      setDraft(found);
+      setStatus("all");
+    }
+  }, []);
+
   const query = useCallback(() => {
     const p = new URLSearchParams({ status, page: String(page), page_size: String(PAGE_SIZE) });
     if (q) p.set("q", q);

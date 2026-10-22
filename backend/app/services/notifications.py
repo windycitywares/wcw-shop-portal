@@ -1,7 +1,7 @@
 """Admin bell: recent activity across the shop, each item linking to the page where it's handled.
 
 Nothing is stored per event: the feed is read from the tables that already hold the activity (orders, refunds,
-contact messages, stock requests, reviews, sign-ups, failed backups). Each person only sees the kinds their role
+contact messages, stock requests, reviews, sign-ups, newsletter subscribers, failed backups). Each person only sees the kinds their role
 can act on, and anything newer than `users.notifications_seen_at` counts as unread.
 """
 
@@ -14,6 +14,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.permissions import Permission, has_permission
+from app.domain.contacts import SERVICE_ONLY_SOURCES
 from app.models.user import User
 
 WINDOW_DAYS = 30
@@ -45,6 +46,10 @@ SOURCES: dict[str, tuple[Permission, str]] = {
     "signup": (Permission.CUSTOMERS_VIEW, """
         SELECT 'signup', u.id::text, u.created_at, u.email::text, u.full_name::text, NULL::text, NULL::text
         FROM users u WHERE u.role = 'customer' AND u.created_at >= :since"""),
+    "subscriber": (Permission.CUSTOMERS_VIEW, """
+        SELECT 'subscriber', s.id::text, s.created_at, s.email::text, s.source::text, NULL::text, NULL::text
+        FROM newsletter_subscribers s
+        WHERE s.created_at >= :since AND s.source <> ALL(CAST(:service_only AS text[]))"""),
     "backup_failed": (Permission.BACKUPS_MANAGE, """
         SELECT 'backup_failed', b.id::text, b.started_at, COALESCE(b.file_name, 'Backup')::text, b.error::text, NULL::text, b.status::text
         FROM backup_runs b WHERE b.status = 'failed' AND b.started_at >= :since"""),
@@ -85,6 +90,9 @@ def present(row: dict[str, Any]) -> dict[str, Any]:
         return {"title": f"{extra}★ review of {title}", "detail": f"By {detail}" + (" · waiting for approval" if state == "pending" else ""),
                 "href": "/admin/reviews?status=pending" if state == "pending" else "/admin/reviews?status=approved",
                 "tone": "warning" if state == "pending" else "neutral"}
+    if t == "subscriber":
+        where = {"site": "the website form", "checkout": "checkout", "account": "their account", "admin": "added by staff"}.get(detail, detail)
+        return {"title": "New newsletter subscriber", "detail": f"{title} · from {where}", "href": f"/admin/subscribers?q={title}", "tone": "info"}
     if t == "signup":
         return {"title": "New customer account", "detail": f"{detail + ' · ' if detail else ''}{title}",
                 "href": f"/admin/customers?q={title}", "tone": "info"}
@@ -109,11 +117,11 @@ class NotificationService:
         cond = "WHERE at < :before" if before else ""
         rows = (await self.session.execute(
             text(f"SELECT * FROM ({union}) AS feed {cond} ORDER BY at DESC, ref DESC LIMIT :n"),
-            {"since": since, "n": limit, **({"before": before} if before else {})},
+            {"since": since, "service_only": list(SERVICE_ONLY_SOURCES), "n": limit, **({"before": before} if before else {})},
         )).mappings().all()
         unread = (await self.session.execute(
             text(f"SELECT count(*) FROM ({self._union(user, None)}) AS feed WHERE at > :seen"),
-            {"since": since, "seen": seen or since},
+            {"since": since, "service_only": list(SERVICE_ONLY_SOURCES), "seen": seen or since},
         )).scalar_one()
         items = [
             {"id": f"{r['type']}:{r['ref']}", "type": r["type"], "at": r["at"], "unread": seen is None or r["at"] > seen, **present(dict(r))}

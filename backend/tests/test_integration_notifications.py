@@ -53,6 +53,21 @@ class NotificationTests(unittest.TestCase):
         self.assertEqual(after["unread"], 0)
         self.assertFalse(any(i["unread"] for i in after["items"]))
 
+    def test_newsletter_signup_reaches_the_bell(self):
+        w = self.w
+        w.post("/admin/notifications/seen", None, w.admin)
+        email = w.email("bell-news")
+        reset_limits()
+        self.assertEqual(w.post("/newsletter", {"email": email, "locale": "en"}).status_code, 202)
+        feed = w.get("/admin/notifications", w.admin, kind="subscriber").json()
+        found = next(i for i in feed["items"] if email in i["detail"])
+        self.assertEqual(found["title"], "New newsletter subscriber")
+        self.assertEqual(found["href"], f"/admin/subscribers?q={email}")
+        self.assertTrue(found["unread"])
+        self.assertGreaterEqual(w.get("/admin/notifications", w.admin).json()["unread"], 1)
+        # A publisher (who cannot see customers) never gets it.
+        self.assertNotIn("subscriber", w.get("/admin/notifications", w.publisher).json()["kinds"])
+
 
 @skip_unless_db
 class ShopperBellTests(unittest.TestCase):
