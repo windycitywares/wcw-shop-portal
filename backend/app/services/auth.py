@@ -227,6 +227,8 @@ class NewsletterService:
             if row.unsubscribed_at is not None:  # coming back: no second welcome offer
                 row.unsubscribed_at = None
                 row.locale = locale
+            if source != "admin":
+                row.paused_at = None  # they signed up again themselves: they want the email
             if commit:
                 await self.session.commit()
             return row

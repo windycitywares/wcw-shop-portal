@@ -26,16 +26,18 @@ interface Subscriber {
   subscribed: boolean;
   subscribed_at: string;
   unsubscribed_at: string | null;
+  paused: boolean;
+  paused_at: string | null;
   welcome_coupon: string | null;
   has_ordered: boolean;
 }
 interface Listing {
   items: Subscriber[];
   total: number;
-  counts: { all: number; subscribed: number; unsubscribed: number };
+  counts: { all: number; subscribed: number; paused: number; unsubscribed: number };
 }
 
-type Status = "all" | "subscribed" | "unsubscribed";
+type Status = "all" | "subscribed" | "paused" | "unsubscribed";
 const SOURCES: Record<string, string> = { site: "Website form", checkout: "Checkout", account: "Account", admin: "Added by staff" };
 const LANGUAGES: Record<string, string> = { en: "English", es: "Spanish", nl: "Dutch" };
 const PAGE_SIZE = 25;
@@ -53,6 +55,7 @@ export default function AdminSubscribers() {
   const [addError, setAddError] = useState("");
   const [removing, setRemoving] = useState<Subscriber | null>(null);
   const [deleting, setDeleting] = useState<Subscriber | null>(null);
+  const [pausing, setPausing] = useState<Subscriber | null>(null);
   const [busy, setBusy] = useState(false);
   const canManage = can("promotions:manage");
 
@@ -114,6 +117,31 @@ export default function AdminSubscribers() {
     }
   }
 
+  async function pause() {
+    if (!pausing) return;
+    setBusy(true);
+    try {
+      await apiFetch(`/admin/subscribers/${pausing.id}/pause`, { method: "POST" });
+      push({ title: "Subscriber paused", description: pausing.email });
+      setPausing(null);
+      await load();
+    } catch (err) {
+      push({ title: "Not paused", description: err instanceof Error ? err.message : undefined, tone: "danger" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resume(s: Subscriber) {
+    try {
+      await apiFetch(`/admin/subscribers/${s.id}/resume`, { method: "POST" });
+      push({ title: "Subscriber resumed", description: s.email });
+      await load();
+    } catch (err) {
+      push({ title: "Not resumed", description: err instanceof Error ? err.message : undefined, tone: "danger" });
+    }
+  }
+
   async function remove() {
     if (!deleting) return;
     setBusy(true);
@@ -143,7 +171,16 @@ export default function AdminSubscribers() {
         </div>
       ),
     },
-    { key: "status", header: "Status", cell: (s) => <Pill tone={s.subscribed ? "success" : "neutral"}>{s.subscribed ? "Subscribed" : "Unsubscribed"}</Pill> },
+    {
+      key: "status",
+      header: "Status",
+      cell: (s) =>
+        s.paused ? (
+          <Pill tone="warning">Paused</Pill>
+        ) : (
+          <Pill tone={s.subscribed ? "success" : "neutral"}>{s.subscribed ? "Subscribed" : "Unsubscribed"}</Pill>
+        ),
+    },
     { key: "source", header: "Joined from", hide: "md", cell: (s) => <span className="text-sm">{SOURCES[s.source] ?? s.source}</span> },
     {
       key: "joined",
@@ -163,6 +200,8 @@ export default function AdminSubscribers() {
       cell: (s) =>
         canManage ? (
           <RowActions>
+            {s.subscribed && !s.paused && <IconButton icon="pause" label={`Pause ${s.email}`} onClick={() => setPausing(s)} />}
+            {s.paused && <IconButton icon="play" label={`Resume ${s.email}`} onClick={() => void resume(s)} />}
             {s.subscribed && <IconButton icon="archive" label={`Take ${s.email} off the list`} onClick={() => setRemoving(s)} />}
             <IconButton icon="trash" tone="danger" label={`Delete ${s.email}`} onClick={() => setDeleting(s)} />
           </RowActions>
@@ -204,6 +243,7 @@ export default function AdminSubscribers() {
           }}
           tabs={[
             { id: "subscribed", label: "Subscribed", count: data?.counts.subscribed },
+            { id: "paused", label: "Paused", count: data?.counts.paused },
             { id: "unsubscribed", label: "Unsubscribed", count: data?.counts.unsubscribed },
             { id: "all", label: "Everyone", count: data?.counts.all },
           ]}
@@ -237,8 +277,9 @@ export default function AdminSubscribers() {
       </Panel>
 
       <p className="mt-4 text-sm text-muted">
-        People can leave with the link in every email. You can take someone off the list or delete their record, but only they can sign up again, so nobody is
-        added back without agreeing.
+        People can leave with the link in every email. Pause someone to leave them out of campaigns for a while without taking them off the list; resume
+        whenever you like. You can also take someone off the list or delete their record, but only they can sign up again, so nobody is added back without
+        agreeing.
       </p>
 
       <Modal
@@ -283,6 +324,16 @@ export default function AdminSubscribers() {
         onCancel={() => setRemoving(null)}
         onConfirm={() => void unsubscribe()}
         message={<p>{removing?.email} will not get any more newsletters or campaigns. Only they can sign up again.</p>}
+      />
+      <ConfirmDialog
+        open={!!pausing}
+        title="Pause this subscriber?"
+        tone="primary"
+        confirmLabel="Pause subscriber"
+        busy={busy}
+        onCancel={() => setPausing(null)}
+        onConfirm={() => void pause()}
+        message={<p>{pausing?.email} stays on the list but gets no email campaigns until you resume them. Order and account emails still go out.</p>}
       />
       <ConfirmDialog
         open={!!deleting}

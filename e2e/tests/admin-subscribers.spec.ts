@@ -19,6 +19,15 @@ test("a newsletter sign-up shows in Subscribers and can be taken off the list an
   await expect(row).toHaveCount(1);
   await expect(row.getByText("Subscribed", { exact: true })).toBeVisible();
 
+  // Pausing asks first, shows the status, and resuming brings them back.
+  await row.getByRole("button", { name: `Pause ${email}` }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Pause subscriber" }).click();
+  await expect(page.getByText("Subscriber paused", { exact: true })).toBeVisible();
+  await expect(row.getByText("Paused", { exact: true })).toBeVisible();
+  await row.getByRole("button", { name: `Resume ${email}` }).click();
+  await expect(page.getByText("Subscriber resumed", { exact: true })).toBeVisible();
+  await expect(row.getByText("Subscribed", { exact: true })).toBeVisible();
+
   // Taking someone off the list asks first.
   await row.getByRole("button", { name: `Take ${email} off the list` }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Take off the list" }).click();

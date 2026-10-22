@@ -1,4 +1,4 @@
-"""Newsletter subscribers: see who joined, add, take off the list, export."""
+"""Newsletter subscribers: see who joined, add, pause, take off the list, export."""
 
 from typing import Annotated
 
@@ -46,6 +46,16 @@ async def add_subscriber(session: SessionDep, user: Manager, data: SubscriberAdd
 @router.post("/{subscriber_id}/unsubscribe", response_model=SubscriberOut)
 async def unsubscribe_subscriber(subscriber_id: int, session: SessionDep, user: Manager):
     return await SubscriberService(session).unsubscribe(subscriber_id, user)
+
+
+@router.post("/{subscriber_id}/pause", response_model=SubscriberOut)
+async def pause_subscriber(subscriber_id: int, session: SessionDep, user: Manager):
+    return await SubscriberService(session).pause(subscriber_id, user)
+
+
+@router.post("/{subscriber_id}/resume", response_model=SubscriberOut)
+async def resume_subscriber(subscriber_id: int, session: SessionDep, user: Manager):
+    return await SubscriberService(session).resume(subscriber_id, user)
 
 
 @router.delete("/{subscriber_id}", status_code=status.HTTP_204_NO_CONTENT)

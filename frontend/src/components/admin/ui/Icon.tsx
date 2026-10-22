@@ -31,6 +31,8 @@ import {
   Mail01,
   Menu01,
   Package,
+  PauseCircle,
+  PlayCircle,
   Plus,
   Receipt,
   SearchLg,
@@ -97,6 +99,8 @@ const ICONS = {
   flask: Beaker01,
   key: Key01,
   inbox: Inbox01,
+  pause: PauseCircle,
+  play: PlayCircle,
 } as const satisfies Record<string, ComponentType<SVGProps<SVGSVGElement>>>;
 
 export type IconName = keyof typeof ICONS;
