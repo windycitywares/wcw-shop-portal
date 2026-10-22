@@ -70,6 +70,13 @@ const HELP: Record<string, HelpEntry> = {
       "Contact-form messages. Mark as answered or spam; replying sends an email from the shop.",
     ],
   },
+  "/admin/notifications": {
+    title: "Activity",
+    body: [
+      "Everything from the last 30 days you may need to act on: new orders and refunds, contact messages, stock requests, reviews, sign-ups and failed backups. You only see the kinds your role can work on.",
+      "The bell in the top bar shows the newest; opening this page marks them as seen. Use the tabs to work through one kind at a time, and select an item to open it where it's handled.",
+    ],
+  },
   "/admin/stock-requests": {
     title: "Stock requests",
     body: [
