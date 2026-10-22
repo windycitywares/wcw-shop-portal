@@ -400,6 +400,9 @@ const nl: Dictionary = {
     choose: "Kleurthema",
     classic: "Standaard",
     midnight: "Donker",
+    dark: "Donkere modus",
+    toDark: "Naar donkere modus",
+    toLight: "Naar lichte modus",
   },
   auth: {
     signIn: "Inloggen",

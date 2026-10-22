@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useOptionalI18n } from "@/i18n/client";
-import { applyTheme, DEFAULT_THEME, THEME_KEY, THEMES, type ThemeChoice } from "@/lib/themes";
+import { applyTheme, DEFAULT_THEME, resolveTheme, THEME_KEY, THEMES, type ThemeChoice } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 
 function readChoice(): ThemeChoice {
@@ -14,119 +14,91 @@ function readChoice(): ThemeChoice {
   }
 }
 
-function useThemeChoice() {
-  const [choice, setChoice] = useState<ThemeChoice>(DEFAULT_THEME);
-  useEffect(() => setChoice(readChoice()), []);
+/** Whether Dark is showing now, and a switch that saves the opposite. An older "match my device" choice is kept until the shopper clicks. */
+function useDarkMode() {
+  const [dark, setDark] = useState(false);
   useEffect(() => {
-    if (choice !== "system") return;
+    const sync = () => setDark(document.documentElement.dataset.theme === "midnight");
+    sync();
+    const choice = readChoice();
+    window.addEventListener("wcw-theme", sync);
+    if (choice !== "system") return () => window.removeEventListener("wcw-theme", sync);
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => applyTheme("system", true);
     mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, [choice]);
-  const choose = (c: ThemeChoice) => {
-    setChoice(c);
+    return () => {
+      window.removeEventListener("wcw-theme", sync);
+      mq.removeEventListener("change", onChange);
+    };
+  }, []);
+  const toggle = () => {
+    const next: ThemeChoice = resolveTheme(readChoice()) === "midnight" ? "classic" : "midnight";
     try {
-      localStorage.setItem(THEME_KEY, c);
+      localStorage.setItem(THEME_KEY, next);
     } catch {
       /* private mode: applies for this visit only */
     }
-    applyTheme(c, true);
+    applyTheme(next, true);
   };
-  return [choice, choose] as const;
+  return [dark, toggle] as const;
 }
 
-function Swatch({ colors, className }: { colors: readonly string[]; className?: string }) {
+function Moon({ className }: { className?: string }) {
   return (
-    <span aria-hidden="true" className={cn("relative inline-flex size-7 shrink-0 overflow-hidden rounded-full border border-line", className)}>
-      <span className="h-full w-1/2" style={{ background: colors[0] }} />
-      <span className="h-full w-1/2" style={{ background: colors[1] }} />
-      <span className="absolute inset-[30%] rounded-full" style={{ background: colors[2] }} />
-    </span>
+    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z" />
+    </svg>
   );
 }
 
-/** Radio group of themes. `variant="menu"`: palette button + popover (header); "inline": row of swatches (mobile menu). */
+function Sun({ className }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2 M12 19.5v2 M4.6 4.6l1.4 1.4 M18 18l1.4 1.4 M2.5 12h2 M19.5 12h2 M4.6 19.4 6 18 M18 6l1.4-1.4" />
+    </svg>
+  );
+}
+
+/**
+ * Dark mode on/off: one button, no menu. A moon while the page is light (click for Dark), a sun while it is dark.
+ * `variant="menu"`: round icon button (header, admin top bar); "inline": icon and words (mobile menu).
+ */
 export function ThemeSwitcher({ className, variant = "menu" }: { className?: string; variant?: "menu" | "inline" }) {
   const { t } = useOptionalI18n();
-  const [choice, choose] = useThemeChoice();
-  const name = useId();
-  const ref = useRef<HTMLDetailsElement>(null);
+  const [dark, toggle] = useDarkMode();
+  const tip = dark ? t.theme.toLight : t.theme.toDark;
+  const icon = dark ? <Sun className="size-5" /> : <Moon className="size-5" />;
 
-  useEffect(() => {
-    if (variant !== "menu") return;
-    const onClick = (e: MouseEvent) => {
-      if (ref.current?.open && !ref.current.contains(e.target as Node)) ref.current.open = false;
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && ref.current?.open) {
-        ref.current.open = false;
-        ref.current.querySelector("summary")?.focus();
-      }
-    };
-    document.addEventListener("click", onClick);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("click", onClick);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [variant]);
-
-  const options = THEMES.map((th) => ({ id: th.id as ThemeChoice, label: t.theme[th.id], swatch: th.swatch }));
-
-  const group = (
-    <fieldset className={variant === "inline" ? "flex flex-wrap gap-2" : "space-y-0.5"}>
-      <legend className={variant === "menu" ? "px-3 pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wider text-muted" : "sr-only"}>
-        {t.theme.choose}
-      </legend>
-      {options.map((o) => (
-        <label
-          key={o.id}
-          className={cn(
-            "flex cursor-pointer items-center gap-3 rounded-[var(--radius-control)] text-sm has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent",
-            variant === "menu" ? "px-3 py-2 hover:bg-sand" : "border border-line px-2.5 py-1.5",
-            choice === o.id && (variant === "menu" ? "bg-accent-soft font-semibold" : "border-accent bg-accent-soft font-semibold"),
-          )}
-        >
-          <input
-            type="radio"
-            name={name}
-            value={o.id}
-            checked={choice === o.id}
-            onChange={() => choose(o.id)}
-            className="sr-only"
-          />
-          <Swatch colors={o.swatch} className={variant === "inline" ? "size-5" : undefined} />
-          <span className="flex-1">{o.label}</span>
-          {variant === "menu" && choice === o.id && (
-            <svg aria-hidden="true" viewBox="0 0 20 20" className="size-4 text-accent" fill="currentColor">
-              <path d="M7.7 13.3 4.4 10l-1.2 1.2 4.5 4.5 9.1-9.1-1.2-1.2z" />
-            </svg>
-          )}
-        </label>
-      ))}
-    </fieldset>
-  );
-
-  if (variant === "inline") return <div className={className}>{group}</div>;
+  if (variant === "inline") {
+    return (
+      <button
+        type="button"
+        aria-pressed={dark}
+        onClick={toggle}
+        title={tip}
+        className={cn(
+          "inline-flex items-center gap-2.5 rounded-[var(--radius-control)] border px-3 py-2 text-sm hover:bg-sand",
+          dark ? "border-accent bg-accent-soft font-semibold" : "border-line",
+          className,
+        )}
+      >
+        {icon}
+        <span>{t.theme.dark}</span>
+      </button>
+    );
+  }
 
   return (
-    <details ref={ref} className={cn("relative", className)}>
-      <summary
-        className="grid size-10 cursor-pointer list-none place-items-center rounded-full hover:bg-sand [&::-webkit-details-marker]:hidden"
-        title={t.theme.label}
-      >
-        <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.6">
-          <path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16a5 5 0 0 0 5-5c0-4-4-7.2-9-7.2Z" />
-          <circle cx="7.5" cy="11.5" r="1.2" fill="currentColor" />
-          <circle cx="10.5" cy="7.5" r="1.2" fill="currentColor" />
-          <circle cx="15" cy="7.8" r="1.2" fill="currentColor" />
-        </svg>
-        <span className="sr-only">{t.theme.label}</span>
-      </summary>
-      <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-[var(--radius-control)] border border-line bg-surface p-1.5 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)]">
-        {group}
-      </div>
-    </details>
+    <button
+      type="button"
+      aria-label={t.theme.dark}
+      aria-pressed={dark}
+      onClick={toggle}
+      title={tip}
+      className={cn("grid size-10 place-items-center rounded-full transition-colors hover:bg-sand", className)}
+    >
+      {icon}
+    </button>
   );
 }
