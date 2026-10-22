@@ -87,6 +87,55 @@ html[data-theme="midnight"] {
   color-scheme: dark;
 }
 
+/*
+ * Admin palette: a clean dashboard look (soft grey-blue ground, white cards with a soft shadow, indigo primary,
+ * Quicksand headings over Open Sans text). Declared on .admin-root (the admin <body>), so it overrides the shared
+ * tokens for the admin only — the storefront keeps its own. Every text pair here is ≥ 4.5:1 (WCAG AA).
+ */
+.admin-root {
+  --color-canvas: #f4f5fa;
+  --color-surface: #ffffff;
+  --color-sand: #eceef6; /* hovers, quiet fills, active menu item */
+  --color-line: #e1e4ee;
+  --color-ink: #464855; /* 8.3:1 on canvas */
+  --color-muted: #626679; /* 5.2:1 on canvas */
+  --color-accent: #5159d6; /* 5.6:1 on white, and white on it */
+  --color-accent-strong: #3f46b8;
+  --color-accent-soft: #eceefe;
+  --color-on-accent: #ffffff;
+  --color-night: #2a2e3f;
+  --color-night-muted: #b9bdd0; /* 7.2:1 on night */
+  --color-success: #157a55;
+  --color-danger: #d1293f;
+  --color-warning: #9a4f00;
+  --font-sans: var(--font-admin-body), ui-sans-serif, system-ui, sans-serif;
+  --font-admin-heading: var(--font-admin-display), var(--font-admin-body), ui-sans-serif, system-ui, sans-serif;
+  --radius-card: 6px;
+  --radius-control: 4px;
+  --shadow-card: 0 2px 18px 1px rgb(49 53 72 / 0.1);
+  --shadow-raised: 0 10px 30px 1px rgb(49 53 72 / 0.14);
+  background-color: var(--color-canvas);
+}
+html[data-theme="midnight"] .admin-root {
+  --color-canvas: #171a26;
+  --color-surface: #212536;
+  --color-sand: #2b3045;
+  --color-line: #343a52;
+  --color-ink: #e6e8f2;
+  --color-muted: #a3a9c2; /* 6.5:1 on surface */
+  --color-accent: #9aa0f5; /* 6.3:1 on surface */
+  --color-accent-strong: #b8bcfa;
+  --color-accent-soft: #2c3058;
+  --color-on-accent: #10131f;
+  --color-night: #11131c;
+  --color-night-muted: #a3a9c2;
+  --color-success: #6fd6a8;
+  --color-danger: #ff8a98;
+  --color-warning: #f2b45a;
+  --shadow-card: 0 2px 18px 1px rgb(0 0 0 / 0.35);
+  --shadow-raised: 0 10px 30px 1px rgb(0 0 0 / 0.45);
+}
+
 /* Smooth hand-over when the shopper switches theme (not on first paint). */
 html.theme-switching,
 html.theme-switching * {
@@ -185,14 +234,14 @@ html.theme-switching * {
  */
 @layer components {
   .admin-root :where(h1, h2, h3, h4) {
-    font-family: var(--font-sans);
+    font-family: var(--font-admin-heading);
     font-weight: 600;
-    letter-spacing: -0.012em;
+    letter-spacing: 0;
     line-height: 1.25;
   }
   .admin-root {
     font-feature-settings: normal;
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     line-height: 1.5;
   }
   .admin-root .num {
