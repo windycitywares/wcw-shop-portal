@@ -43,6 +43,7 @@ test.describe("storefront", () => {
     ["home", "/"],
     ["shop", "/shop"],
     ["cart", "/cart"],
+    ["login", "/login"],
   ] as const) {
     test(`${name} (desktop)`, async ({ page }) => {
       await page.goto(path);
@@ -54,6 +55,11 @@ test.describe("storefront", () => {
       await page.goto(path);
       await page.waitForLoadState("networkidle");
       await shot(page, `shop-${name}-phone`);
+    });
+    test(`${name} (dark)`, async ({ page }) => {
+      await page.goto(`${path}?theme=midnight`);
+      await page.waitForLoadState("networkidle");
+      await shot(page, `shop-${name}-dark`);
     });
   }
 });
