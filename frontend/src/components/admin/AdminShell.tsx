@@ -27,14 +27,14 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
         const items = group.items.filter((i) => !i.hidden && (!i.permission || can(i.permission)));
         if (items.length === 0) return null;
         return (
-          <div key={group.label ?? gi} className={gi > 0 ? "mt-5" : ""}>
+          <div key={group.label ?? gi} className={gi > 0 ? "mt-4" : ""}>
             {group.label &&
               (collapsed ? (
                 <hr className="mx-2 mb-2 border-line" />
               ) : (
                 <p className="font-admin px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-muted">{group.label}</p>
               ))}
-            <ul className="space-y-1">
+            <ul className="space-y-0.5">
               {items.map((item) => {
                 const active = isActive(pathname, item.href);
                 return (
@@ -45,7 +45,7 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
                       aria-current={active ? "page" : undefined}
                       title={collapsed ? item.label : undefined}
                       className={cn(
-                        "font-admin group relative flex items-center gap-3 rounded-[var(--radius-control)] py-2.5 text-[0.95rem] transition-[color,background-color,transform] duration-150 focus-visible:outline-offset-0",
+                        "font-admin group relative flex items-center gap-3 rounded-[var(--radius-control)] py-2 text-[0.95rem] transition-[color,background-color,transform] duration-150 focus-visible:outline-offset-0",
                         collapsed ? "justify-center px-2" : "px-3",
                         active ? "bg-sand font-bold text-ink" : "text-ink hover:bg-sand/60 hover:text-accent motion-safe:hover:translate-x-0.5",
                       )}>
