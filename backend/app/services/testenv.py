@@ -39,6 +39,14 @@ async def _rows(conn: AsyncConnection, sql: str, **params: Any) -> list[dict[str
     return [dict(r) for r in (await conn.execute(text(sql), params)).mappings().all()]
 
 
+def _emails(raw: Any) -> list[str]:
+    try:
+        found = json.loads(raw) if raw else []
+    except ValueError:
+        return []
+    return [e for e in found if isinstance(e, str)]
+
+
 async def _clone(conn: AsyncConnection) -> dict[str, Any]:
     await conn.execute(text("SET LOCAL search_path TO public"))
     await conn.execute(text("SET LOCAL lock_timeout = '20s'"))  # give up rather than wait forever on a busy test copy
@@ -130,7 +138,7 @@ class TestEnvironment:
     async def status(self) -> dict[str, Any]:
         async with self.engine.connect() as conn:
             await conn.execute(text("SET search_path TO public"))
-            mode = (await _rows(conn, "SELECT mode, test_mail_to, test_synced_at, changed_at, changed_by_email FROM public.app_mode WHERE id = 1")) or [{}]
+            mode = (await _rows(conn, "SELECT mode, test_mail_to, test_login_emails::text AS test_login_emails, test_synced_at, changed_at, changed_by_email FROM public.app_mode WHERE id = 1")) or [{}]
             row = mode[0]
             exists = bool((await conn.execute(text("SELECT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = :s)"), {"s": SCHEMA})).scalar_one())
             live_version = (await conn.execute(text("SELECT version_num FROM public.alembic_version LIMIT 1"))).scalar_one_or_none()
@@ -149,6 +157,7 @@ class TestEnvironment:
             "test_exists": exists,
             "test_synced_at": row.get("test_synced_at"),
             "test_mail_to": row.get("test_mail_to"),
+            "test_login_emails": _emails(row.get("test_login_emails")),
             "test_size_bytes": size,
             "out_of_date": bool(exists and test_version != live_version),
             "changed_at": row.get("changed_at"),
@@ -199,6 +208,15 @@ class TestEnvironment:
             await conn.execute(text(f"DROP SCHEMA IF EXISTS {BUILDING} CASCADE"))
             await conn.execute(text("UPDATE public.app_mode SET test_synced_at = NULL WHERE id = 1"))
             await _audit(conn, user, "environment.delete_test", "Deleted the test data")
+            await conn.commit()
+        appmode.forget()
+
+    async def set_test_logins(self, emails: list[str], user: User) -> None:
+        async with self.engine.connect() as conn:
+            await conn.execute(text("SET search_path TO public"))
+            await conn.execute(text("UPDATE public.app_mode SET test_login_emails = CAST(:e AS JSONB) WHERE id = 1"), {"e": json.dumps(emails)})
+            summary = f"Test mode sign-in: {', '.join(emails)}" if emails else "Test mode sign-in: admin accounts only"
+            await _audit(conn, user, "environment.test_logins", summary[:500])
             await conn.commit()
         appmode.forget()
 

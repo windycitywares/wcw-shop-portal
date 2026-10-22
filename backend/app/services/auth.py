@@ -1,11 +1,13 @@
+import json
 import secrets
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import appmode
 from app.core.enums import OrderStatus, UserRole
 from app.core.exceptions import (
     AuthenticationError,
@@ -19,6 +21,7 @@ from app.core.permissions import permissions_for
 from app.core.security import create_access_token, hash_password, verify_password
 from app.domain import emailtext
 from app.domain.contacts import SERVICE_ONLY_SOURCES  # noqa: F401  (also imported from here by other services)
+from app.domain.testlogin import test_login_allowed
 from app.models.order import Order
 from app.models.user import NewsletterSubscriber, User
 from app.repositories.user import NewsletterRepository, UserRepository
@@ -55,7 +58,18 @@ class AuthService:
             raise AuthenticationError("Incorrect email or password")
         if not user.is_active:
             raise AuthenticationError("This account is disabled")
+        if appmode.is_test() and not test_login_allowed(user.email, user.role, await self._test_login_emails()):
+            raise AuthenticationError("Sign-in is limited to approved accounts while the shop is in test mode")
         return self.issue_token(user)
+
+    async def _test_login_emails(self) -> list[str]:
+        """Read from the live table, whichever copy the session is on."""
+        raw = (await self.session.execute(text("SELECT test_login_emails::text FROM public.app_mode WHERE id = 1"))).scalar_one_or_none()
+        try:
+            found = json.loads(raw) if raw else []
+        except ValueError:
+            return []
+        return [e for e in found if isinstance(e, str)]
 
     async def register(self, data: RegisterIn) -> TokenOut:
         user = await self._create(data.email, data.password, data.full_name, UserRole.CUSTOMER)
