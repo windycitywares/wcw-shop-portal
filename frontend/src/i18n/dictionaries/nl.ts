@@ -372,8 +372,8 @@ const nl: Dictionary = {
   footer: {
     findOrder: "Mijn bestelling zoeken",
     subscribed: "Bedankt, je staat op de lijst. Je kunt je altijd afmelden.",
-    newsletterTitle: "Hoor als er nieuwe ontwerpen zijn",
-    newsletterText: "Een paar e-mails per jaar: nieuwe ontwerpen, af en toe een actie en verder niets.",
+    newsletterTitle: "Blijf op de hoogte",
+    newsletterText: "Af en toe een e-mail over nieuwe producten en aanbiedingen. Afmelden kan altijd.",
     email: "E-mailadres",
     emailPlaceholder: "jij@voorbeeld.nl",
     subscribe: "Aanmelden",

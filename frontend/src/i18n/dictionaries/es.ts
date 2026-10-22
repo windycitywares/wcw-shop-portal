@@ -378,8 +378,8 @@ const es: Dictionary = {
   footer: {
     findOrder: "Buscar mi pedido",
     subscribed: "Gracias, ya estás en la lista. Puedes darte de baja cuando quieras.",
-    newsletterTitle: "Entérate de los nuevos diseños",
-    newsletterText: "Unos pocos correos al año: nuevos diseños, alguna oferta y nada más.",
+    newsletterTitle: "Mantente al día",
+    newsletterText: "Correos ocasionales con novedades y ofertas. Puedes darte de baja cuando quieras.",
     email: "Correo electrónico",
     emailPlaceholder: "tu@ejemplo.com",
     subscribe: "Suscribirme",
