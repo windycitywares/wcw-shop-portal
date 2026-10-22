@@ -34,7 +34,7 @@ test("add a team member, change their role and switch the account off", async ({
   await expect(confirm).toContainText("from author to publisher", { ignoreCase: true });
   await confirm.getByRole("button", { name: "Cancel" }).click();
   await expect(confirm).toBeHidden();
-  await expect(row.getByText("author", { exact: true })).toBeVisible();
+  await expect(edit.getByLabel("Role")).toHaveValue("publisher");
 
   await edit.getByRole("button", { name: "Save changes" }).click();
   await confirm.getByRole("button", { name: "Save changes" }).click();
