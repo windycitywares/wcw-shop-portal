@@ -120,7 +120,7 @@ def high_cart_abandonment(m: Metrics) -> Insight | None:
     return Insight(
         "cart_abandonment", "opportunity", f"{_pct(rate)} of carts are abandoned ({_money(value)} left behind)",
         "Most carts never become orders, which is normal (the average online shop sees about 70%), but every recovered cart is almost free revenue. "
-        "A single gentle reminder email a day later usually wins back 5-10%. For a sensitive purchase like an urn, keep the tone caring and the offer modest.",
+        "A single gentle reminder email a day later usually wins back 5-10%. Keep the tone friendly and the offer modest: a small nudge works better than a big discount.",
         "Review abandoned carts and reminder settings", "/admin/carts", {"abandonment_rate": rate, "value": value},
     )
 
@@ -261,7 +261,7 @@ def free_shipping_nudge(m: Metrics) -> Insight | None:
         return None
     return Insight(
         "free_shipping_nudge", "opportunity", f"{_pct(near)} of orders land just under the {_money(threshold)} free-shipping line",
-        f"Average order value is {_money(aov or 0)}. A cart-page progress bar and a low-priced add-on (a keepsake, a candle) "
+        f"Average order value is {_money(aov or 0)}. A cart-page progress bar and a low-priced add-on (a small gift, a card) "
         "typically move these shoppers over the line and raise order value.",
         "Add a recommended add-on or adjust the threshold", "/admin/settings", {"threshold": threshold, "near_share": near},
     )
@@ -273,8 +273,8 @@ def refund_rate(m: Metrics) -> Insight | None:
         return None
     return Insight(
         "refund_rate", "warning", f"{_pct(rate, 1)} of revenue was refunded",
-        "Check which products are returned and the reasons given. Wrong-size purchases are the usual cause for urns: "
-        "a clear capacity guide (cubic inches per pound of body weight) on every product page prevents most of them.",
+        "Check which products are returned and the reasons given. Items that look different from the photos or are the wrong size are the usual causes: "
+        "clear dimensions, a photo for scale and an honest condition note on every product page prevent most of them.",
         "See refunds by product", "/admin/orders?payment=refunded", {"refund_rate": rate},
     )
 
@@ -285,8 +285,8 @@ def repeat_rate(m: Metrics) -> Insight | None:
         return None
     return Insight(
         "repeat_rate", "info", f"{_pct(rate)} of customers have bought more than once",
-        "For memorial products that is expected: most customers need one. Growth here comes from new customers and referrals "
-        "(funeral homes, veterinarians, cremation services), matching keepsakes and companion urns, rather than win-back discounts.",
+        "Gifts and one-of-a-kind pieces are often bought once, so growth comes from new customers as well as repeat buyers. "
+        "A follow-up email with new arrivals, a wishlist reminder or a small returning-customer offer can bring people back.",
         "Explore customers", "/admin/analytics/customers", {"repeat_rate": rate},
     )
 

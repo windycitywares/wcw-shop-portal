@@ -70,7 +70,7 @@ export default async function HomePage({ params }: Props) {
     getCategoryTree(locale),
     getProducts({ sort: "newest", page_size: "11" }, locale),
   ]);
-  // With a single top-level category (e.g. "Cremation Urns"), feature its themes instead.
+  // With a single top-level category (e.g. "Home Decor"), feature its themes instead.
   const themes = tree.length === 1 ? tree[0].children : tree;
   const previews = await Promise.all(themes.map((c) => getCategoryPreview(c.slug)));
   const [first, second, third] = latest.items;

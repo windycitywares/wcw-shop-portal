@@ -476,7 +476,7 @@ export function CouponsTab() {
       >
         <div className="space-y-4">
           {problem && <Alert tone="danger">{problem}</Alert>}
-          <Field label="Campaign" hint="Required: groups the codes for reports and export, e.g. funeral-home-partners.">
+          <Field label="Campaign" hint="Required: groups the codes for reports and export, e.g. trade-partners.">
             {(p) => <Input {...p} value={terms.campaign} onChange={(e) => setTerms({ ...terms, campaign: e.target.value })} maxLength={80} />}
           </Field>
           <div className="grid gap-3 sm:grid-cols-2">

@@ -34,9 +34,9 @@ export const HELP: Record<Lang, Record<HelpTopic, HelpPage>> = {
   en: {
     faq: {
       title: "Frequently asked questions",
-      description: "Sizes, materials, shipping, payment and orders: answers to the questions families ask us most.",
+      description: "Sizes, materials, shipping, payment and orders: answers to the questions shoppers ask us most.",
       sections: [
-        { heading: "How do I choose the right size?", paragraphs: ["A common guide is one cubic inch of capacity for every pound of body weight before cremation. Keepsake urns hold a small portion and are often shared between family members. Each product page lists the capacity of every size; if you're unsure, contact us and we'll help you choose."] },
+        { heading: "How do I choose the right size?", paragraphs: ["Each product page lists the dimensions of the item, and often a photo for scale. Measure the space you have in mind and compare. If you're unsure, contact us and we'll help you choose."] },
         { heading: "Can I add engraving or a personal note?", paragraphs: ["Leave a note at checkout with what you'd like, or contact us before ordering. We'll confirm the details with you by email before preparing your order."] },
         { heading: "How long does delivery take?", paragraphs: ["Most orders are prepared in {handling} business days and arrive {transit} business days after shipping. You'll receive an email with tracking as soon as your order ships."] },
         { heading: "How can I pay?", paragraphs: ["You pay by card on Stripe's secure payment page. We never see or store your card number. If you would rather pay another way, contact us before ordering and we will find something that works."] },
@@ -60,7 +60,7 @@ export const HELP: Record<Lang, Record<HelpTopic, HelpPage>> = {
       description: "How returns, exchanges and refunds work at Windy City Wares.",
       sections: [
         { heading: "Returns", paragraphs: ["You can return unused items in their original packaging within 30 days of delivery. Contact us first with your order number so we can help and share the return address."] },
-        { heading: "Items we can't take back", bullets: ["Engraved or personalized items, unless they arrived damaged or not as described.", "Urns that have been used."] },
+        { heading: "Items we can't take back", bullets: ["Engraved or personalized items, unless they arrived damaged or not as described.", "Items that have been used or damaged after delivery."] },
         { heading: "Refunds", paragraphs: ["Once we receive the return we refund the item price to your original payment method, usually within 5 to 10 business days. You'll get an email when the refund is made."] },
         { heading: "Damaged or wrong items", paragraphs: ["If something arrives damaged or isn't what you ordered, contact us within 7 days with a photo. We'll replace it or refund it in full, including shipping."] },
       ],
@@ -92,7 +92,7 @@ export const HELP: Record<Lang, Record<HelpTopic, HelpPage>> = {
       title: "Preguntas frecuentes",
       description: "Tamaños, materiales, envíos, pagos y pedidos: respuestas a las preguntas más habituales.",
       sections: [
-        { heading: "¿Cómo elijo el tamaño adecuado?", paragraphs: ["Una guía habitual es una pulgada cúbica de capacidad por cada libra de peso corporal antes de la cremación. Las urnas recuerdo guardan una pequeña parte y suelen compartirse entre familiares. Cada página de producto indica la capacidad de cada tamaño; si tienes dudas, escríbenos y te ayudamos."] },
+        { heading: "¿Cómo elijo el tamaño adecuado?", paragraphs: ["Cada página de producto indica las dimensiones del artículo y, a menudo, una foto para tener una referencia de escala. Mide el espacio que tienes pensado y compara. Si tienes dudas, contáctanos y te ayudamos a elegir."] },
         { heading: "¿Puedo añadir un grabado o una nota personal?", paragraphs: ["Deja una nota al pagar con lo que deseas, o escríbenos antes de hacer el pedido. Te confirmaremos los detalles por email antes de prepararlo."] },
         { heading: "¿Cuánto tarda la entrega?", paragraphs: ["La mayoría de los pedidos se preparan en {handling} días hábiles y llegan {transit} días hábiles después del envío. Recibirás un email con el seguimiento en cuanto salga tu pedido."] },
         { heading: "¿Cómo puedo pagar?", paragraphs: ["Pagas con tarjeta en la página segura de Stripe. Nunca vemos ni guardamos el número de tu tarjeta. Si prefieres pagar de otra forma, escríbenos antes de hacer el pedido y buscamos una solución."] },
@@ -116,7 +116,7 @@ export const HELP: Record<Lang, Record<HelpTopic, HelpPage>> = {
       description: "Cómo funcionan las devoluciones, cambios y reembolsos en Windy City Wares.",
       sections: [
         { heading: "Devoluciones", paragraphs: ["Puedes devolver artículos sin usar en su embalaje original en los 30 días siguientes a la entrega. Escríbenos primero con tu número de pedido para ayudarte y darte la dirección de devolución."] },
-        { heading: "Artículos que no podemos aceptar", bullets: ["Artículos grabados o personalizados, salvo que lleguen dañados o no coincidan con la descripción.", "Urnas que se hayan utilizado."] },
+        { heading: "Artículos que no podemos aceptar", bullets: ["Artículos grabados o personalizados, salvo que lleguen dañados o no coincidan con la descripción.", "Artículos que se hayan usado o dañado después de la entrega."] },
         { heading: "Reembolsos", paragraphs: ["Cuando recibimos la devolución, reembolsamos el precio del artículo al método de pago original, normalmente en 5 a 10 días hábiles. Recibirás un email cuando se haga el reembolso."] },
         { heading: "Artículos dañados o equivocados", paragraphs: ["Si algo llega dañado o no es lo que pediste, escríbenos en 7 días con una foto. Lo cambiaremos o te devolveremos el importe completo, envío incluido."] },
       ],
@@ -146,9 +146,9 @@ export const HELP: Record<Lang, Record<HelpTopic, HelpPage>> = {
   nl: {
     faq: {
       title: "Veelgestelde vragen",
-      description: "Maten, materialen, verzending, betalen en bestellingen: antwoorden op de vragen die families ons het vaakst stellen.",
+      description: "Maten, materialen, verzending, betalen en bestellingen: antwoorden op de vragen die klanten ons het vaakst stellen.",
       sections: [
-        { heading: "Hoe kies ik de juiste maat?", paragraphs: ["Een gangbare richtlijn is één kubieke inch inhoud per pond lichaamsgewicht vóór de crematie. Aandenkenurnen bevatten een klein deel en worden vaak onder familieleden verdeeld. Op elke productpagina staat de inhoud van elke maat; twijfel je, neem dan contact op en we helpen je kiezen."] },
+        { heading: "Hoe kies ik de juiste maat?", paragraphs: ["Op elke productpagina staan de afmetingen van het artikel, vaak met een foto ter vergelijking. Meet de ruimte die je in gedachten hebt en vergelijk. Twijfel je, neem dan contact op en we helpen je kiezen."] },
         { heading: "Kan ik een gravure of persoonlijke boodschap toevoegen?", paragraphs: ["Laat bij het afrekenen een opmerking achter met je wensen, of neem vóór het bestellen contact op. We bevestigen de details per e-mail voordat we je bestelling klaarmaken."] },
         { heading: "Hoe lang duurt de levering?", paragraphs: ["De meeste bestellingen maken we in {handling} werkdagen klaar en ze komen {transit} werkdagen na verzending aan. Zodra je bestelling onderweg is, krijg je een e-mail met de tracking."] },
         { heading: "Hoe kan ik betalen?", paragraphs: ["Je betaalt met je kaart op de beveiligde betaalpagina van Stripe. Wij zien of bewaren je kaartnummer nooit. Liever op een andere manier betalen? Neem dan contact op vóór je bestelt, dan zoeken we een oplossing."] },
@@ -172,7 +172,7 @@ export const HELP: Record<Lang, Record<HelpTopic, HelpPage>> = {
       description: "Hoe retouren, ruilen en terugbetalingen werken bij Windy City Wares.",
       sections: [
         { heading: "Retourneren", paragraphs: ["Ongebruikte artikelen in de originele verpakking kun je binnen 30 dagen na levering retourneren. Neem eerst contact op met je bestelnummer, dan helpen we je en sturen we het retouradres."] },
-        { heading: "Artikelen die we niet terugnemen", bullets: ["Gegraveerde of gepersonaliseerde artikelen, tenzij ze beschadigd of anders dan beschreven aankwamen.", "Urnen die gebruikt zijn."] },
+        { heading: "Artikelen die we niet terugnemen", bullets: ["Gegraveerde of gepersonaliseerde artikelen, tenzij ze beschadigd of anders dan beschreven aankwamen.", "Artikelen die gebruikt of na levering beschadigd zijn."] },
         { heading: "Terugbetaling", paragraphs: ["Zodra we de retour ontvangen, betalen we de prijs van het artikel terug via je oorspronkelijke betaalmethode, meestal binnen 5 tot 10 werkdagen. Je krijgt een e-mail zodra dat gebeurd is."] },
         { heading: "Beschadigde of verkeerde artikelen", paragraphs: ["Komt iets beschadigd aan of is het niet wat je bestelde, neem dan binnen 7 dagen contact op met een foto. We vervangen het of betalen alles terug, inclusief verzending."] },
       ],
