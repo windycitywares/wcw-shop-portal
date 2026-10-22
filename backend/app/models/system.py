@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, SmallInteger, String, Text, text
+from sqlalchemy import CheckConstraint, DateTime, SmallInteger, String, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
@@ -18,8 +19,7 @@ class AppMode(Base):
     id: Mapped[int] = mapped_column(SmallInteger, primary_key=True, server_default=text("1"))
     mode: Mapped[str] = mapped_column(String(8), server_default="live")
     test_mail_to: Mapped[str | None] = mapped_column(String(320))
-    # Comma-separated shopper addresses that may sign in on the copy (staff always may).
-    test_login_emails: Mapped[str] = mapped_column(Text, server_default="")
+    test_login_emails: Mapped[list] = mapped_column(JSONB, server_default=text("'[]'::jsonb"), default=list)
     test_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"))
     changed_by_email: Mapped[str | None] = mapped_column(String(320))

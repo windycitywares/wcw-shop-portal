@@ -9,7 +9,7 @@ from app.core.config import get_settings
 from app.core.database import engine
 from app.core.permissions import Permission
 from app.models.user import User
-from app.schemas.environment import EnvironmentOut, LoginsIn, MailToIn, ModeIn
+from app.schemas.environment import EnvironmentOut, MailToIn, ModeIn, TestLoginsIn
 from app.services.testenv import TestEnvironment
 
 router = APIRouter(prefix="/admin/environment", tags=["admin: environment"])
@@ -53,6 +53,14 @@ async def delete_test_data(session: SessionDep, user: Admin):
     """Delete the test copy. Only while the shop is on live data."""
     await _release(session)
     await TestEnvironment(engine).delete_copy(user)
+
+
+@router.put("/test-logins", response_model=EnvironmentOut)
+async def set_test_logins(session: SessionDep, user: Admin, data: TestLoginsIn):
+    """Who may sign in while test mode is on. Empty: only admin accounts."""
+    await _release(session)
+    await TestEnvironment(engine).set_test_logins(data.normalized(), user)
+    return await _out()
 
 
 @router.put("/mail-to", response_model=EnvironmentOut)
