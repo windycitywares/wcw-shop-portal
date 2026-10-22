@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { smoothPath } from "./curve";
 
 /**
  * A tiny trend line for a figure. It stretches to the room it is given (up to `width`) and never spills past
@@ -26,7 +27,8 @@ export function Sparkline({
   const span = max - min || 1;
   const pad = 4;
   const pts = values.map((v, i) => [pad + (i / (values.length - 1)) * (width - pad * 2), pad + (1 - (v - min) / span) * (height - pad * 2)] as const);
-  const d = pts.map(([a, b], i) => `${i ? "L" : "M"}${a.toFixed(1)} ${b.toFixed(1)}`).join(" ");
+  const d = smoothPath(pts);
+  const area = `${d} L${pts[pts.length - 1][0].toFixed(1)} ${height} L${pts[0][0].toFixed(1)} ${height} Z`;
   const [lx, ly] = pts[pts.length - 1];
   return (
     <svg
@@ -36,6 +38,7 @@ export function Sparkline({
       className={cn("block min-w-0 flex-1 overflow-visible", className)}
       style={box}
     >
+      <path d={area} fill={color} fillOpacity={0.1} stroke="none" />
       <path d={d} fill="none" stroke={color} strokeWidth={1.75} strokeLinejoin="round" strokeLinecap="round" opacity={0.9} vectorEffect="non-scaling-stroke" />
       <path d={`M${lx.toFixed(1)} ${ly.toFixed(1)}h0`} stroke="var(--color-surface)" strokeWidth={8} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
       <path d={`M${lx.toFixed(1)} ${ly.toFixed(1)}h0`} stroke={color} strokeWidth={6} strokeLinecap="round" vectorEffect="non-scaling-stroke" />

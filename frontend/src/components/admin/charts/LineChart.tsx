@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { smoothPath } from "./curve";
 import { dayLabel, labelIndices, niceTicks, seriesColor } from "./format";
 import { useWidth } from "./useWidth";
 
@@ -55,6 +56,7 @@ export function LineChart({
 }: Props) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const [active, setActive] = useState<number | null>(null);
+  const gid = useId().replace(/:/g, "");
   const live = series.filter((s) => !s.muted);
   const single = live.length === 1;
   const showArea = area ?? single;
@@ -90,7 +92,7 @@ export function LineChart({
     let run: [number, number][] = [];
     const flush = () => {
       if (run.length === 0) return;
-      d += run.map(([a, b], k) => `${k === 0 ? "M" : "L"}${a.toFixed(1)} ${b.toFixed(1)}`).join(" ");
+      d += (d ? " " : "") + smoothPath(run);
       if (close) d += ` L${run[run.length - 1][0].toFixed(1)} ${py(0).toFixed(1)} L${run[0][0].toFixed(1)} ${py(0).toFixed(1)} Z`;
       run = [];
     };
@@ -133,6 +135,17 @@ export function LineChart({
       onBlur={() => setActive(null)}
     >
       <svg width={w} height={height} role="img" aria-label={label} className="block overflow-visible">
+        {showArea && (
+          <defs>
+            {/* soft fill under each line, fading towards the axis */}
+            {live.map((s, i) => (
+              <linearGradient key={s.key} id={`${gid}-${i}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={colorFor(s, i, single)} stopOpacity={0.24} />
+                <stop offset="100%" stopColor={colorFor(s, i, single)} stopOpacity={0} />
+              </linearGradient>
+            ))}
+          </defs>
+        )}
         {/* grid + y labels */}
         {ticks.map((t) => (
           <g key={t}>
@@ -152,7 +165,7 @@ export function LineChart({
         {/* areas first so lines sit on top */}
         {showArea &&
           live.map((s, i) => (
-            <path key={`a-${s.key}`} d={path(s.values, true)} fill={colorFor(s, i, single)} fillOpacity={0.1} />
+            <path key={`a-${s.key}`} d={path(s.values, true)} fill={`url(#${gid}-${i})`} />
           ))}
         {series.map((s) => {
           const li = live.indexOf(s);
