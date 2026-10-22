@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** Small outline icon set for the admin (24px grid, 1.6px stroke, inherits text colour). */
+/** Small outline icon set for the admin (24px grid, 1.75px round stroke in the Feather style, inherits text colour). */
 const PATHS = {
   dashboard: "M4 4h7v7H4z M13 4h7v4h-7z M13 10h7v10h-7z M4 13h7v7H4z",
   orders: "M6 3h12v18l-3-2-3 2-3-2-3 2V3Z M9 8h6 M9 12h6",
@@ -52,7 +52,7 @@ const PATHS = {
 
 export type IconName = keyof typeof PATHS;
 
-export function Icon({ name, className, strokeWidth = 1.6 }: { name: IconName; className?: string; strokeWidth?: number }) {
+export function Icon({ name, className, strokeWidth = 1.75 }: { name: IconName; className?: string; strokeWidth?: number }) {
   return (
     <svg
       aria-hidden="true"

@@ -14,12 +14,26 @@ import { DateRangePicker } from "@/components/admin/ui/DateRangePicker";
 import { rangeParams } from "@/components/admin/ui/dateRange";
 import { MetricStrip } from "@/components/admin/ui/Metric";
 import { PageHeader } from "@/components/admin/ui/PageHeader";
+import type { IconName } from "@/components/admin/ui/Icon";
 import { Panel, PanelBody, PanelHeader } from "@/components/admin/ui/Panel";
 import { Pill } from "@/components/admin/ui/Pill";
 import { StatusBar } from "@/components/admin/ui/StatusBar";
 import { useDateRange } from "@/components/admin/ui/useDateRange";
 import { ButtonLink } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/misc";
+
+/** The round icon beside each headline figure. */
+const KPI_ICONS: Record<string, IconName | undefined> = {
+  net: "chart",
+  orders: "orders",
+  aov: "tag",
+  conversion_rate: "funnel",
+  visitors: "globe",
+  new_customers: "users",
+  profit: "sparkle",
+  units: "cart",
+  refund_rate: "arrowDown",
+};
 
 type Stats = Record<"draft" | "in_review" | "published" | "archived" | "low_stock", number>;
 
@@ -132,6 +146,7 @@ export default function AdminDashboard() {
                     value: formatKpi(k),
                     change: k.better === "none" ? null : k.change,
                     good: k.better === "down" ? ("down" as const) : ("up" as const),
+                    icon: KPI_ICONS[k.key],
                     spark: k.key === "net" ? series.map((s) => s.net) : k.key === "orders" ? series.map((s) => s.orders) : k.key === "visitors" ? series.map((s) => s.visitors) : undefined,
                   }))
                 : ["Net revenue", "Orders", "Average order", "Conversion rate", "Visitors", "New customers", "Items sold", "Refund rate"].map((label) => ({ label, value: "—" }))
