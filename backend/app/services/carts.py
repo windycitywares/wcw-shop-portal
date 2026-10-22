@@ -71,9 +71,12 @@ class CartService:
         cart.locale = data.locale
         cart.user_id = user.id if user else cart.user_id
         # Permission: the ticked box, or (when the shop emails every shopper) the address given at checkout.
+        # Signed in: the customer's own account address counts too (Settings → Cart reminders "remind signed-in
+        # customers", on by default; every reminder carries an unsubscribe link).
         cfg = (await SettingsService(self.session).load()).cart_recovery
         email = str(data.email).lower() if data.email else (user.email if user else None)
-        allowed = bool(email) and (bool(data.reminders_ok) or cfg.email_everyone)
+        own_account = user is not None and email == user.email.lower() and cfg.remind_signed_in
+        allowed = bool(email) and (bool(data.reminders_ok) or cfg.email_everyone or own_account)
         cart.reminders_ok = allowed
         cart.email = email if allowed else None  # no permission, no email address kept
         cart.last_activity_at = now
@@ -124,6 +127,11 @@ class CartRecoveryJob:
                 cart.reminders_ok, cart.email = False, None
                 result["skipped"] += 1
                 continue
+            if await self._ordered_since(cart, email):
+                # They checked out another way (another device, a new cart): "you left something" would be wrong.
+                cart.reminders_ok = False
+                result["skipped"] += 1
+                continue
             items = [CartItemIn(**i) for i in cart.items]
             priced = await CartPricer(self.session).price(items, coupon_code=None, lang=locale, now=now)
             if not priced.lines:
@@ -149,6 +157,12 @@ class CartRecoveryJob:
         await self.session.commit()
         await emails.deliver(self.session, queued)
         return result
+
+    async def _ordered_since(self, cart: Cart, email: str) -> bool:
+        """Has this shopper (by address, or by account) placed an order since they last touched the cart?"""
+        who = Order.email == email if cart.user_id is None else or_(Order.email == email, Order.user_id == cart.user_id)
+        found = await self.session.execute(select(Order.id).where(who, Order.created_at >= cart.last_activity_at).limit(1))
+        return found.first() is not None
 
 
 

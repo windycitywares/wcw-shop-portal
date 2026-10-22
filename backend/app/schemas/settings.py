@@ -81,6 +81,10 @@ class CartRecoverySettings(_Group):
         default=False,
         description="Email every shopper who leaves an address at checkout, not only those who tick the reminder box",
     )
+    remind_signed_in: bool = Field(
+        default=True,
+        description="Remind signed-in customers without asking (they have an account; every reminder can be unsubscribed)",
+    )
     first_delay_hours: int = Field(default=24, ge=1, le=720)
     second_delay_hours: int = Field(default=96, ge=2, le=1440)
     max_reminders: int = Field(default=2, ge=0, le=3)
@@ -154,6 +158,7 @@ class PublicConfig(BaseModel):
     # True: checkout shows "email me a reminder" and only a ticked box may be emailed. False: the shop
     # emails every shopper who leaves an address, so the form says so instead of asking.
     reminders_opt_in: bool = True
+    reminders_signed_in: bool = True  # signed-in shoppers are reminded without the tickbox
     max_quantity_per_line: int
     low_stock_threshold: int
     analytics_enabled: bool

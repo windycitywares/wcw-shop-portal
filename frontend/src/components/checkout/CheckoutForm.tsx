@@ -162,7 +162,8 @@ export function CheckoutForm() {
   }, [items, coupon, address.country, address.region, address.postal_code, validEmail, email, locale]);
 
   // A cart snapshot for the "you left something" reminder. The address is kept only when the shopper
-  // ticks the box, or when the shop is set to email everyone who leaves one.
+  // ticks the box, is signed in (their own account address, when the shop reminds signed-in customers),
+  // or when the shop is set to email everyone who leaves one.
   useEffect(() => {
     if (!items.length) return;
     const timer = setTimeout(() => {
@@ -294,7 +295,8 @@ export function CheckoutForm() {
             <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} className="mt-0.5 size-4 accent-[var(--color-accent)]" />
             <span>{t.checkout.marketing}</span>
           </label>
-          {config?.reminders_opt_in === false ? (
+          {config?.reminders_opt_in === false ||
+          (user && config?.reminders_signed_in && email.trim().toLowerCase() === user.email.toLowerCase()) ? (
             <p className="text-sm text-muted">{t.checkout.reminderNotice}</p>
           ) : (
             <label className="flex items-start gap-3 text-sm">

@@ -84,9 +84,10 @@ const GROUPS: Group[] = [
     id: "cart_recovery",
     label: "Cart reminders",
     description:
-      "Gentle reminders after a cart is left. By default only shoppers who tick the box at checkout are emailed; the last option emails everyone who leaves an address there.",
+      "Gentle reminders after a cart is left. Signed-in customers are reminded by default; guests only when they tick the box at checkout, unless you email everyone who leaves an address. Nobody who unsubscribed, or who has ordered since, is reminded.",
     fields: [
       { key: "enabled", label: "Send cart reminders", type: "bool" },
+      { key: "remind_signed_in", label: "Remind signed-in customers without asking (recommended; every reminder has an unsubscribe link)", type: "bool" },
       { key: "email_everyone", label: "Email every shopper who leaves an email (not only those who tick the box)", type: "bool" },
       { key: "first_delay_hours", label: "First reminder after (hours)", type: "number", min: 1, max: 720 },
       { key: "second_delay_hours", label: "Second reminder after (hours)", type: "number", min: 2, max: 1440 },
