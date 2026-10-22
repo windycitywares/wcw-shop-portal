@@ -105,9 +105,9 @@ html[data-theme="midnight"] {
   --color-on-accent: #ffffff;
   --color-night: #2a2e3f;
   --color-night-muted: #b9bdd0; /* 7.2:1 on night */
-  --color-success: #157a55;
-  --color-danger: #d1293f;
-  --color-warning: #9a4f00;
+  --color-success: #116848; /* ≥ 4.5:1 also on its own 12% tint (badges) */
+  --color-danger: #b8213a;
+  --color-warning: #844300;
   --font-sans: var(--font-admin-body), ui-sans-serif, system-ui, sans-serif;
   --font-admin-heading: var(--font-admin-display), var(--font-admin-body), ui-sans-serif, system-ui, sans-serif;
   --radius-card: 6px;
