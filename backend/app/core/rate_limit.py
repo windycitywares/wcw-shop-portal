@@ -43,6 +43,8 @@ class RateLimiter:
 # Failed sign-ins: 10 per account and 30 per IP address every 15 minutes.
 failed_logins_by_email = RateLimiter(max_hits=10, window_seconds=15 * 60)
 failed_logins_by_ip = RateLimiter(max_hits=30, window_seconds=15 * 60)
+# Admin alert about someone signing in to a disabled account: once per account every 6 hours.
+disabled_alert_by_email = RateLimiter(max_hits=1, window_seconds=6 * 60 * 60)
 # Registrations: 5 per IP per hour.
 registrations_by_ip = RateLimiter(max_hits=5, window_seconds=60 * 60)
 # Password-reset emails: 3 per address and 10 per IP per hour; reset attempts: 20 per IP per 15 min.

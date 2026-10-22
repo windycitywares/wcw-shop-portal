@@ -47,7 +47,7 @@ async def login(
     if failed_logins_by_email.is_blocked(email_key) or failed_logins_by_ip.is_blocked(ip_key):
         raise TooManyRequestsError("Too many sign-in attempts. Please wait 15 minutes and try again.")
     try:
-        token = await AuthService(session).authenticate(form.username, form.password)
+        token = await AuthService(session).authenticate(form.username, form.password, ip_key)
     except AuthenticationError:
         failed_logins_by_email.hit(email_key)
         failed_logins_by_ip.hit(ip_key)
