@@ -71,6 +71,8 @@ CATEGORY_TREE = [("Handicrafts", None), ("Woodwork", "Handicrafts"), ("Ceramics"
                  ("Vintage Finds", "Antiques"), ("Home Decor", None), ("Wall Art", "Home Decor"), ("Candles", "Home Decor"),
                  ("Gifts", None)]
 
+q2 = Decimal("0.01")
+
 
 def money(value: float | Decimal) -> Decimal:
     return Decimal(str(value)).quantize(q2, rounding=ROUND_HALF_UP)
