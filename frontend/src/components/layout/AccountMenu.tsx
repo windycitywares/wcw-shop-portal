@@ -51,7 +51,7 @@ export function AccountMenu() {
           >
             {first.slice(0, 1).toUpperCase()}
           </span>
-          <span className="hidden max-w-28 truncate sm:inline">{first}</span>
+          <span className="max-w-20 truncate text-sm font-medium sm:max-w-28">{first}</span>
           <svg aria-hidden="true" viewBox="0 0 24 24" className="size-3.5 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
