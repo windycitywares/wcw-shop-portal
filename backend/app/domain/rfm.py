@@ -1,6 +1,6 @@
 """Customer segments from purchase history (recency, frequency, value).
 
-Memorial products are usually bought once, so the segments are written for that reality: "Active" and
+Gifts and one-of-a-kind pieces are often bought once, so the segments are written for that reality: "Active" and
 "Loyal" are rare and valuable, "Lapsed" is not an emergency, and a one-time buyer is still welcome.
 """
 

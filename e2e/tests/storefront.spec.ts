@@ -11,7 +11,7 @@ test.describe("browsing", () => {
   test("home page", async ({ page }) => {
     const seen = watch(page);
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("A beautiful place to keep them close");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Finds worth bringing home");
     await page.waitForLoadState("networkidle");
     seen.expectClean();
     await a11y(page, { enforce: false });

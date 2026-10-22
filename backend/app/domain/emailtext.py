@@ -345,9 +345,9 @@ def _abandoned_cart(ctx: dict[str, Any]) -> Rendered:
 def _review_request(ctx: dict[str, Any]) -> Rendered:
     l = loc(ctx.get("locale"))
     subject = {"en": "How is everything?", "es": "¿Cómo va todo?", "nl": "Hoe gaat het?"}[l]
-    intro = {"en": "We hope your order arrived safely. When you have a moment, a few words about it help other families choose with confidence. Only if you feel like it.",
-             "es": "Esperamos que tu pedido haya llegado bien. Cuando tengas un momento, unas palabras sobre él ayudan a otras familias a elegir con confianza. Solo si te apetece.",
-             "nl": "We hopen dat je bestelling goed is aangekomen. Als je een moment hebt, helpen een paar woorden andere gezinnen om met vertrouwen te kiezen. Alleen als je zin hebt."}[l]
+    intro = {"en": "We hope your order arrived safely. When you have a moment, a few words about it help other shoppers choose with confidence. Only if you feel like it.",
+             "es": "Esperamos que tu pedido haya llegado bien. Cuando tengas un momento, unas palabras sobre él ayudan a otros compradores a elegir con confianza. Solo si te apetece.",
+             "nl": "We hopen dat je bestelling goed is aangekomen. Als je een moment hebt, helpen een paar woorden andere kopers om met vertrouwen te kiezen. Alleen als je zin hebt."}[l]
     blocks: list[Block] = [("p", _greet(ctx)), ("p", intro)]
     for item in ctx.get("items", []):
         blocks.append(("button", {"en": "Review {t}", "es": "Opinar sobre {t}", "nl": "Beoordeel {t}"}[l].format(t=item["title"]), item["url"]))

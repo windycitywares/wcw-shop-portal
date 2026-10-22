@@ -2,9 +2,9 @@
 export const site = {
   name: "Windy City Wares",
   shortName: "WCW",
-  tagline: "Memorial urns and keepsakes to honor the ones you love.",
+  tagline: "Handcrafted pieces, antiques, gifts and home décor, chosen with care.",
   description:
-    "Windy City Wares — cremation urns and matching keepsakes with artwork chosen to honor a loved one.",
+    "Windy City Wares — handcrafts, antiques, gifts and home décor, hand-picked and shipped with care.",
   url: (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, ""),
   locale: "en_US",
   currency: "USD",
