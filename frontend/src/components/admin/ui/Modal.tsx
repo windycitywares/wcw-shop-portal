@@ -1,6 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "./Icon";
@@ -52,7 +53,18 @@ export function Modal({
   );
 }
 
-/** "Are you sure?" for anything that can't be undone. The button names the action ("Delete coupon"). */
+/** A short code without look-alike characters, new each time a dialog opens. */
+function randomCode(length = 5): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = new Uint32Array(length);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => chars[b % chars.length]).join("");
+}
+
+/**
+ * "Are you sure?" for anything that can't be undone. The button names the action ("Delete coupon").
+ * A delete (`confirmLabel` starting with "Delete", or `typeToConfirm`) also asks the person to type a random code first.
+ */
 export function ConfirmDialog({
   open,
   title,
@@ -60,6 +72,7 @@ export function ConfirmDialog({
   confirmLabel,
   tone = "danger",
   busy,
+  typeToConfirm,
   onConfirm,
   onCancel,
 }: {
@@ -69,9 +82,20 @@ export function ConfirmDialog({
   confirmLabel: string;
   tone?: "danger" | "primary";
   busy?: boolean;
+  typeToConfirm?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const needsCode = typeToConfirm ?? /^delete/i.test(confirmLabel);
+  const [code, setCode] = useState("");
+  const [typed, setTyped] = useState("");
+  useEffect(() => {
+    if (open) {
+      setCode(randomCode());
+      setTyped("");
+    }
+  }, [open]);
+  const ready = !needsCode || typed.trim().toUpperCase() === code;
   return (
     <Modal
       open={open}
@@ -83,13 +107,35 @@ export function ConfirmDialog({
           <Button variant="secondary" onClick={onCancel} disabled={busy}>
             Cancel
           </Button>
-          <Button variant={tone === "danger" ? "danger" : "primary"} onClick={onConfirm} disabled={busy}>
+          <Button variant={tone === "danger" ? "danger" : "primary"} onClick={onConfirm} disabled={busy || !ready}>
             {busy ? "Working…" : confirmLabel}
           </Button>
         </>
       }
     >
       <div className="text-sm text-muted">{message}</div>
+      {needsCode && (
+        <form
+          className="mt-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (ready && !busy) onConfirm();
+          }}
+        >
+          <label htmlFor="confirm-code" className="block text-sm text-ink">
+            To confirm, type <strong className="rounded bg-sand px-1.5 py-0.5 font-mono tracking-widest">{code}</strong> below
+          </label>
+          <input
+            id="confirm-code"
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            className="mt-2 h-10 w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 font-mono uppercase tracking-widest focus-visible:border-accent"
+          />
+        </form>
+      )}
     </Modal>
   );
 }

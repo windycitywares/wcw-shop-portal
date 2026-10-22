@@ -7,6 +7,7 @@ import { DataTable, type Column } from "../ui/DataTable";
 import { ConfirmDialog, Modal } from "../ui/Modal";
 import { Panel, PanelHeader } from "../ui/Panel";
 import { useToast } from "../ui/Toast";
+import { IconButton, RowActions } from "@/components/admin/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
@@ -169,10 +170,9 @@ export function OffersTab() {
       header: <span className="sr-only">Actions</span>,
       align: "right",
       cell: (o) => (
-        <Button size="sm" variant="ghost" className="h-8" onClick={() => setDeleting(o)}>
-          Delete
-          <span className="sr-only"> {o.name}</span>
-        </Button>
+        <RowActions>
+          <IconButton icon="trash" tone="danger" label={`Delete ${o.name}`} onClick={() => setDeleting(o)} />
+        </RowActions>
       ),
     },
   ];

@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/client-api";
 import type { CategoryNode } from "@/lib/types";
 import { useCategoryTree, type CategoryOption } from "@/components/admin/useCategoryOptions";
 import { ConfirmDialog } from "@/components/admin/ui/Modal";
+import { IconButton } from "@/components/admin/ui/IconButton";
 import { Icon } from "@/components/admin/ui/Icon";
 import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { Panel, PanelHeader } from "@/components/admin/ui/Panel";
@@ -64,9 +65,7 @@ export default function CategoriesAdmin() {
                 <Icon name="arrowDown" className="size-4" />
                 <span className="sr-only">Move {node.name} down</span>
               </Button>
-              <Button size="sm" variant="secondary" className="h-8" onClick={() => setEditing(node)}>
-                Edit<span className="sr-only"> {node.name}</span>
-              </Button>
+              <IconButton icon="edit" label={`Edit ${node.name}`} onClick={() => setEditing(node)} />
             </div>
             {node.children.length > 0 && <div className="ml-4 border-l border-line pl-3">{renderLevel(node.children)}</div>}
           </li>
@@ -204,9 +203,7 @@ function CategoryForm({
           </Button>
         )}
         {onDelete && (
-          <Button variant="ghost" size="sm" onClick={onDelete} className="ml-auto h-9 text-danger hover:bg-danger/10">
-            Delete
-          </Button>
+          <IconButton icon="trash" tone="danger" label="Delete category" onClick={onDelete} className="ml-auto size-9" />
         )}
       </div>
     </form>

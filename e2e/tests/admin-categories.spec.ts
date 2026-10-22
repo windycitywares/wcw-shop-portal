@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { adminApi, adminReady, adminState, unique, watch } from "./support";
+import { adminApi, adminReady, adminState, unique, watch, confirmDelete } from "./support";
 
 test.use({ storageState: adminState });
 
@@ -56,8 +56,8 @@ test("add, edit, reorder and delete a category", async ({ page }) => {
 
   // Delete
   await tree.getByRole("button", { name: `Edit ${name}` }).click();
-  await page.getByRole("button", { name: "Delete", exact: true }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Delete category" }).click();
+  await page.getByRole("button", { name: "Delete category", exact: true }).click();
+  await confirmDelete(page, "Delete category");
   await expect(page.getByText("Category deleted")).toBeVisible();
   await expect(names(name)).toHaveCount(0);
 
@@ -84,15 +84,15 @@ test("a category that still has a sub-category cannot be deleted", async ({ page
   await expect(names(child)).toBeVisible();
 
   await tree.getByRole("button", { name: `Edit ${parent}` }).click();
-  await page.getByRole("button", { name: "Delete", exact: true }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Delete category" }).click();
+  await page.getByRole("button", { name: "Delete category", exact: true }).click();
+  await confirmDelete(page, "Delete category");
   await expect(page.locator("#admin-main").getByRole("alert")).toContainText("sub-categories");
 
   // Clean up: child first, then parent
   for (const name of [child, parent]) {
     await tree.getByRole("button", { name: `Edit ${name}` }).click();
-    await page.getByRole("button", { name: "Delete", exact: true }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "Delete category" }).click();
+    await page.getByRole("button", { name: "Delete category", exact: true }).click();
+    await confirmDelete(page, "Delete category");
     await expect(names(name)).toHaveCount(0);
   }
   seen.expectClean();

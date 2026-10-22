@@ -7,6 +7,7 @@ import { DataTable, type Column } from "../ui/DataTable";
 import { ConfirmDialog, Modal } from "../ui/Modal";
 import { Panel, PanelHeader } from "../ui/Panel";
 import { useToast } from "../ui/Toast";
+import { IconButton } from "@/components/admin/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
@@ -172,10 +173,7 @@ export function SalesTab() {
             {s.is_active ? "Pause" : "Resume"}
             <span className="sr-only"> {s.name}</span>
           </Button>
-          <Button size="sm" variant="ghost" className="h-8" onClick={() => setDeleting(s)}>
-            Delete
-            <span className="sr-only"> {s.name}</span>
-          </Button>
+          <IconButton icon="trash" tone="danger" label={`Delete ${s.name}`} onClick={() => setDeleting(s)} />
         </div>
       ),
     },

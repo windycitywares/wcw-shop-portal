@@ -107,3 +107,11 @@ export async function shot(page: Page, name: string) {
 export async function adminReady(page: Page) {
   await expect(page.locator("#admin-main h1").first()).toBeVisible();
 }
+
+/** Answer a delete dialog's "type this code" prompt, then press its confirm button. */
+export async function confirmDelete(page: Page, label: string) {
+  const dialog = page.getByRole("dialog");
+  const code = (await dialog.locator("label[for=confirm-code] strong").textContent()) ?? "";
+  await dialog.getByLabel(/To confirm, type/).fill(code);
+  await dialog.getByRole("button", { name: label }).click();
+}

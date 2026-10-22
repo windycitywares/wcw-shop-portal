@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { Panel, PanelHeader } from "@/components/admin/ui/Panel";
 import { Pill, type Tone } from "@/components/admin/ui/Pill";
 import { useToast } from "@/components/admin/ui/Toast";
+import { IconButton } from "@/components/admin/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
@@ -239,10 +240,7 @@ export default function ProductEditor() {
         actions={
           <>
             {product && can("catalog:delete") && (
-              <Button variant="ghost" size="sm" className="h-9 text-danger hover:bg-danger/10" onClick={() => setConfirmDelete(true)}>
-                <Icon name="trash" className="size-4" />
-                Delete
-              </Button>
+              <IconButton icon="trash" tone="danger" label="Delete product" className="size-9" onClick={() => setConfirmDelete(true)} />
             )}
             <Button type="submit" form="product-form" size="sm" className="h-9" disabled={busy}>
               {busy ? "Saving…" : isNew ? "Create product" : "Save changes"}
