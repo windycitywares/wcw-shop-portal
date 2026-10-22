@@ -302,6 +302,32 @@ class CustomerAndCampaignTests(unittest.TestCase):
         self.assertEqual(w.get("/admin/customers/detail", w.admin, email=w.email()).status_code, 404)
         self.assertEqual(w.get("/admin/customers", w.publisher).status_code, 403)
 
+    def test_one_list_holds_buyers_and_accounts_without_orders(self):
+        w = self.w
+        email, _ = w.register("signedup", name="Signed Up")
+        email = email.lower()
+        found = w.get("/admin/customers", w.admin, q=email).json()
+        self.assertEqual(found["total"], 1)
+        row = found["items"][0]
+        self.assertEqual((row["orders"], row["segment"], row["has_account"], row["account_active"]), (0, "signed_up", True, True))
+        self.assertIsNotNone(row["account_id"])
+        self.assertIn("signed_up", [s["key"] for s in found["segments"]])
+        self.assertEqual(w.get("/admin/customers", w.admin, q=email, account="guest").json()["total"], 0)
+        self.assertEqual(w.get("/admin/customers", w.admin, q=email, segment="signed_up").json()["total"], 1)
+        detail = w.get("/admin/customers/detail", w.admin, email=email).json()
+        self.assertEqual((detail["summary"]["account_id"], detail["orders"]), (row["account_id"], []))
+
+        # Switching the account off shows in the list and under the "switched off" filter.
+        w.sql("UPDATE users SET is_active = false WHERE id = :i", i=row["account_id"])
+        off = w.get("/admin/customers", w.admin, q=email, account="disabled").json()
+        self.assertEqual((off["total"], off["items"][0]["account_active"]), (1, False))
+
+        # A guest buyer is a guest.
+        guest = w.email("guestbuyer")
+        w.place(guest, [item(w.product("20.00"))])
+        self.assertEqual(w.get("/admin/customers", w.admin, q=guest, account="guest").json()["total"], 1)
+        self.assertEqual(w.get("/admin/customers", w.admin, q=guest, account="account").json()["total"], 0)
+
     def test_campaign_reaches_only_people_who_opted_in(self):
         w = self.w
         fan, gone, service_only = w.email("fan"), w.email("gone"), w.email("orders-only")

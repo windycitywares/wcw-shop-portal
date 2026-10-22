@@ -7,7 +7,8 @@ import { downloadFile } from "@/components/admin/download";
 import { dateTime, money, timeAgo } from "@/components/admin/charts/format";
 import { ORDER_STATUS } from "@/components/admin/reports";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
-import { Modal } from "@/components/admin/ui/Modal";
+import { ConfirmDialog, Modal } from "@/components/admin/ui/Modal";
+import { useToast } from "@/components/admin/ui/Toast";
 import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { Pagination } from "@/components/admin/ui/Pagination";
 import { Panel } from "@/components/admin/ui/Panel";
@@ -25,11 +26,14 @@ interface Customer {
   orders: number;
   revenue: number;
   average_order: number;
-  first_order_at: string;
-  last_order_at: string;
+  first_order_at: string | null;
+  last_order_at: string | null;
   segment: string;
   subscribed: boolean;
   has_account: boolean;
+  account_id: number | null;
+  account_active: boolean | null;
+  joined_at: string | null;
 }
 
 interface Segment {
@@ -45,6 +49,7 @@ interface CustomerList {
   total: number;
   segments: Segment[];
   total_customers: number;
+  accounts_without_orders: number;
   subscribers_without_orders: number;
 }
 
@@ -66,13 +71,21 @@ const SEGMENT_TONE: Record<string, Tone> = {
   needs_nudge: "warning",
   at_risk: "danger",
   lapsed: "neutral",
+  signed_up: "info",
 };
+const ACCOUNT_FILTERS = [
+  { id: "all", label: "Everyone" },
+  { id: "account", label: "Has an account" },
+  { id: "guest", label: "Guest checkout" },
+  { id: "disabled", label: "Account switched off" },
+];
 const SORTS = [
   { id: "revenue", label: "Most spent" },
   { id: "orders", label: "Most orders" },
   { id: "recent", label: "Ordered most recently" },
   { id: "oldest", label: "Longest since last order" },
   { id: "name", label: "Name" },
+  { id: "joined", label: "Signed up most recently" },
 ];
 const PAGE_SIZE = 25;
 
@@ -84,13 +97,14 @@ export default function AdminCustomers() {
   const { can } = useAuth();
   const canAccounts = can("users:manage");
   const [view, setView] = useState<View>("buyers");
+  const [accountQuery, setAccountQuery] = useState("");
   // /admin/users (the old "Customer accounts" page) and links send ?view=accounts.
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("view") === "accounts") setView("accounts");
   }, []);
   const tabs: { id: View; label: string }[] = [
-    { id: "buyers", label: "Buyers" },
-    { id: "accounts", label: "Accounts" },
+    { id: "buyers", label: "All customers" },
+    { id: "accounts", label: "Logins and passwords" },
   ];
   const showAccounts = canAccounts && view === "accounts";
   return (
@@ -99,17 +113,36 @@ export default function AdminCustomers() {
         title="Customers"
         description={
           showAccounts
-            ? "Every shopper who signed up. Edit their details, set a new password, or switch an account off."
-            : "Everyone who has paid for an order, with or without an account, grouped by how recently and how often they buy."
+            ? "Every shopper account. Edit a name or email, set a new password, or switch an account off."
+            : "Everyone who bought or signed up, one row per person: guests, account holders and accounts that are switched off."
         }
       />
       {canAccounts && <Tabs tabs={tabs} value={view} onChange={setView} label="Customer view" className="mb-6" />}
-      {showAccounts ? <AccountsAdmin scope="customers" embedded /> : <Buyers />}
+      {showAccounts ? (
+        <AccountsAdmin key={accountQuery} scope="customers" embedded initialQuery={accountQuery} />
+      ) : (
+        <Buyers
+          onManageLogin={
+            canAccounts
+              ? (email) => {
+                  setAccountQuery(email);
+                  setView("accounts");
+                }
+              : undefined
+          }
+        />
+      )}
     </div>
   );
 }
 
-function Buyers() {
+function Buyers({ onManageLogin }: { onManageLogin?: (email: string) => void }) {
+  const { can } = useAuth();
+  const { push } = useToast();
+  const canAccounts = can("users:manage");
+  const [account, setAccount] = useState("all");
+  const [switching, setSwitching] = useState<{ id: number; active: boolean; email: string } | null>(null);
+  const [busy, setBusy] = useState(false);
   const [segment, setSegment] = useState("");
   const [sort, setSort] = useState("revenue");
   const [draft, setDraft] = useState("");
@@ -134,10 +167,11 @@ function Buyers() {
     const p = new URLSearchParams({ sort, page: String(page), page_size: String(PAGE_SIZE) });
     if (q) p.set("q", q);
     if (segment) p.set("segment", segment);
+    if (account !== "all") p.set("account", account);
     return p;
-  }, [q, sort, page, segment]);
+  }, [q, sort, page, segment, account]);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     apiFetch<CustomerList>(`/admin/customers?${query()}`).then(
       (d) => {
         setData(d);
@@ -146,6 +180,25 @@ function Buyers() {
       (e) => setError(e.message),
     );
   }, [query]);
+  useEffect(load, [load]);
+
+  const openDetail = (email: string) =>
+    apiFetch<CustomerDetail>(`/admin/customers/detail?email=${encodeURIComponent(email)}`).then(setDetail, (e) => setError(e.message));
+
+  async function switchAccount() {
+    if (!switching) return;
+    setBusy(true);
+    try {
+      await apiFetch(`/users/${switching.id}`, { method: "PATCH", body: JSON.stringify({ is_active: switching.active }) });
+      push({ title: switching.active ? "Account switched on" : "Account switched off", description: switching.email });
+      setSwitching(null);
+      load();
+    } catch (e) {
+      push({ title: "Not changed", description: e instanceof Error ? e.message : undefined, tone: "danger" });
+    } finally {
+      setBusy(false);
+    }
+  }
 
   const label = (key: string) => data?.segments.find((s) => s.key === key)?.label ?? key;
 
@@ -158,23 +211,23 @@ function Buyers() {
           <button
             type="button"
             className="block max-w-[18rem] truncate text-left font-medium hover:underline"
-            onClick={() => apiFetch<CustomerDetail>(`/admin/customers/detail?email=${encodeURIComponent(c.email)}`).then(setDetail, (e) => setError(e.message))}
+            onClick={() => void openDetail(c.email)}
           >
             {c.name || c.email}
           </button>
           <span className="block max-w-[18rem] truncate text-xs text-muted">
             {c.name ? c.email : ""}
-            {c.has_account ? " · account" : ""}
-            {c.subscribed ? " · subscribed" : ""}
+            {c.subscribed ? `${c.name ? " · " : ""}subscribed` : ""}
           </span>
         </div>
       ),
     },
     { key: "segment", header: "Group", cell: (c) => <Pill tone={SEGMENT_TONE[c.segment] ?? "neutral"}>{label(c.segment)}</Pill> },
+    { key: "account", header: "Account", hide: "sm", cell: (c) => <AccountPill c={c} /> },
     { key: "orders", header: "Orders", align: "right", cell: (c) => <span className="num">{c.orders}</span> },
     { key: "revenue", header: "Spent", align: "right", cell: (c) => <span className="num">{money(c.revenue)}</span> },
     { key: "aov", header: "Average order", align: "right", hide: "md", cell: (c) => <span className="num">{money(c.average_order)}</span> },
-    { key: "last", header: "Last order", hide: "lg", cell: (c) => <span className="text-sm text-muted">{timeAgo(c.last_order_at)}</span> },
+    { key: "last", header: "Last order", hide: "lg", cell: (c) => <span className="text-sm text-muted">{c.last_order_at ? timeAgo(c.last_order_at) : "—"}</span> },
   ];
 
   return (
@@ -209,7 +262,8 @@ function Buyers() {
       </ul>
       {data && (
         <p className="mb-4 text-sm text-muted">
-          {data.total_customers} customers in total. {data.subscribers_without_orders} newsletter subscribers haven't bought yet; reach them with an email campaign.
+          {data.total_customers} people have bought, and {data.accounts_without_orders} more signed up without ordering yet.{" "}
+          {data.subscribers_without_orders} newsletter subscribers haven&apos;t bought yet; reach them with an email campaign.
         </p>
       )}
 
@@ -229,6 +283,23 @@ function Buyers() {
           <Button type="submit" size="sm" variant="secondary">
             Search
           </Button>
+          <label className="flex items-center gap-2 text-sm">
+            <span className="text-muted">Show</span>
+            <select
+              className="h-9 rounded-lg border border-line bg-surface px-2"
+              value={account}
+              onChange={(e) => {
+                setAccount(e.target.value);
+                setPage(1);
+              }}
+            >
+              {ACCOUNT_FILTERS.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </label>
           {segment && (
             <Button size="sm" variant="ghost" onClick={() => setSegment("")}>
               Show all groups
@@ -248,7 +319,7 @@ function Buyers() {
             </select>
           </label>
         </form>
-        <DataTable columns={columns} rows={data?.items ?? null} rowKey={(c) => c.email} caption="Customers" empty="No customers yet. Everyone who pays for an order appears here." />
+        <DataTable columns={columns} rows={data?.items ?? null} rowKey={(c) => c.email} caption="Customers" empty={q || segment || account !== "all" ? "No one matches. Try another search or filter." : "No customers yet. Everyone who orders or signs up appears here."} />
         {data && <Pagination page={page} pageSize={PAGE_SIZE} total={data.total} onPage={setPage} className="px-4 py-3" />}
       </Panel>
 
@@ -269,11 +340,45 @@ function Buyers() {
               ))}
             </dl>
             <p className="text-muted">
-              Group: <span className="text-ink">{label(detail.summary.segment)}</span> · first order {dateTime(detail.summary.first_order_at)} ·{" "}
-              {detail.account_role ? "has an account" : "guest checkout"} · {detail.reviews} review{detail.reviews === 1 ? "" : "s"} ·{" "}
+              Group: <span className="text-ink">{label(detail.summary.segment)}</span>
+              {detail.summary.first_order_at ? ` · first order ${dateTime(detail.summary.first_order_at)}` : " · no order yet"} ·{" "}
+              {detail.reviews} review{detail.reviews === 1 ? "" : "s"} ·{" "}
               {detail.subscription ? (detail.subscription.status === "subscribed" ? "subscribed to news" : "unsubscribed from news") : "not on the email list"}
             </p>
-            <div>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line px-3 py-2">
+              <span>
+                <span className="font-medium">Account</span>{" "}
+                <AccountPill c={detail.summary} />
+                <span className="block text-xs text-muted">
+                  {detail.summary.account_id
+                    ? `Signed up ${detail.summary.joined_at ? dateTime(detail.summary.joined_at) : ""}${detail.summary.account_active ? "" : " · cannot sign in"}`
+                    : detail.account_role
+                      ? "A team account: manage it on the Team page."
+                      : "Bought as a guest, without an account."}
+                </span>
+              </span>
+              {detail.summary.account_id && canAccounts && (
+                <span className="flex flex-wrap gap-2">
+                  {onManageLogin && (
+                    <Button size="sm" variant="ghost" onClick={() => { const e = detail.summary.email; setDetail(null); onManageLogin(e); }}>
+                      Edit login
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      // The profile closes first: two dialogs open at once would close each other.
+                      setSwitching({ id: detail.summary.account_id as number, active: !detail.summary.account_active, email: detail.summary.email });
+                      setDetail(null);
+                    }}
+                  >
+                    {detail.summary.account_active ? "Switch account off" : "Switch account on"}
+                  </Button>
+                </span>
+              )}
+            </div>
+            {detail.orders.length > 0 && <div>
               <h3 className="mb-2 font-medium">Orders</h3>
               <ul className="divide-y divide-line rounded-lg border border-line">
                 {detail.orders.map((o) => {
@@ -297,7 +402,7 @@ function Buyers() {
                   );
                 })}
               </ul>
-            </div>
+            </div>}
             {detail.coupons.length > 0 && (
               <div>
                 <h3 className="mb-2 font-medium">Their personal codes</h3>
@@ -313,6 +418,28 @@ function Buyers() {
           </div>
         )}
       </Modal>
+      <ConfirmDialog
+        open={!!switching}
+        title={switching?.active ? "Switch this account on?" : "Switch this account off?"}
+        tone={switching?.active ? "primary" : "danger"}
+        typeToConfirm={false}
+        confirmLabel={switching?.active ? "Switch account on" : "Switch account off"}
+        busy={busy}
+        onCancel={() => setSwitching(null)}
+        onConfirm={() => void switchAccount()}
+        message={
+          <p>
+            {switching?.active
+              ? `${switching.email} can sign in again.`
+              : `${switching?.email} can't sign in until you switch the account back on. If they try, they're told the account is disabled and you get an email. Their orders are kept.`}
+          </p>
+        }
+      />
     </div>
   );
+}
+
+function AccountPill({ c }: { c: Customer }) {
+  if (c.account_id == null) return <Pill tone="neutral">{c.has_account ? "Team" : "Guest"}</Pill>;
+  return c.account_active ? <Pill tone="success">Account</Pill> : <Pill tone="danger">Switched off</Pill>;
 }

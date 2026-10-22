@@ -13,11 +13,14 @@ class CustomerRow(BaseModel):
     orders: int
     revenue: Money  # paid, net of refunds
     average_order: Money
-    first_order_at: datetime
-    last_order_at: datetime
+    first_order_at: datetime | None  # None: signed up, never paid
+    last_order_at: datetime | None
     segment: str
     subscribed: bool  # agreed to marketing email and hasn't left
     has_account: bool
+    account_id: int | None = None  # their shopper account, if they have one (staff accounts are on the Team page)
+    account_active: bool | None = None  # False: switched off by staff, cannot sign in
+    joined_at: datetime | None = None  # when the account was made
 
 
 class SegmentSummary(BaseModel):
@@ -34,7 +37,8 @@ class CustomerListOut(BaseModel):
     page: int
     page_size: int
     segments: list[SegmentSummary]
-    total_customers: int
+    total_customers: int  # people who paid
+    accounts_without_orders: int = 0
     subscribers_without_orders: int
 
 
