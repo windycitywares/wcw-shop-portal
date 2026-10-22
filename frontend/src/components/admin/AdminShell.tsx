@@ -22,17 +22,18 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
   const { can } = useAuth();
   const pathname = usePathname();
   return (
-    <nav aria-label="Admin" className={cn("flex-1 overflow-y-auto px-2 py-3", collapsed ? "px-1" : "px-3")}>
+    <nav aria-label="Admin" className={cn("flex-1 overflow-y-auto pb-6 pt-2", collapsed ? "px-2" : "px-4")}>
       {NAV.map((group, gi) => {
         const items = group.items.filter((i) => !i.hidden && (!i.permission || can(i.permission)));
         if (items.length === 0) return null;
         return (
-          <div key={group.label ?? gi} className={gi > 0 ? "mt-6 mb-2" : "mb-4"}>
-            {!collapsed && group.label && (
-              <p className="px-2 pb-1 text-[0.7rem] font-semibold tracking-wider text-night-muted uppercase">
-                {group.label}
-              </p>
-            )}
+          <div key={group.label ?? gi} className={gi > 0 ? "mt-4" : ""}>
+            {group.label &&
+              (collapsed ? (
+                <hr className="mx-2 mb-2 border-line" />
+              ) : (
+                <p className="font-admin px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-muted">{group.label}</p>
+              ))}
             <ul className="space-y-0.5">
               {items.map((item) => {
                 const active = isActive(pathname, item.href);
@@ -44,15 +45,15 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
                       aria-current={active ? "page" : undefined}
                       title={collapsed ? item.label : undefined}
                       className={cn(
-                        "flex items-center gap-3 rounded-[var(--radius-control)] px-2.5 py-2 text-sm font-medium transition-colors focus-visible:outline-offset-0",
-                        collapsed ? "px-2 justify-center" : "",
-                        active ? "bg-white/15 text-white" : "text-night-muted hover:bg-white/5 hover:text-white",
+                        "font-admin group relative flex items-center gap-3 rounded-[var(--radius-control)] py-2 text-[0.95rem] transition-[color,background-color,transform] duration-150 focus-visible:outline-offset-0",
+                        collapsed ? "justify-center px-2" : "px-3",
+                        active ? "bg-sand font-bold text-ink" : "text-ink hover:bg-sand/60 hover:text-accent motion-safe:hover:translate-x-0.5",
                       )}>
-                      {active && !collapsed && (
-                        <span aria-hidden="true" className="absolute inset-y-1 left-0 w-[2px] rounded-r-full bg-gold" />
+                      {active && (
+                        <span aria-hidden="true" className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-accent" />
                       )}
-                      <Icon name={item.icon} className={cn("size-5 shrink-0", active ? "text-white" : "text-night-muted")} />
-                      {!collapsed && <span className="font-medium">{item.label}</span>}
+                      <Icon name={item.icon} className={cn("size-[1.15rem] shrink-0", active ? "text-accent" : "text-muted group-hover:text-accent")} />
+                      {!collapsed && <span>{item.label}</span>}
                     </Link>
                   </li>
                 );
@@ -67,11 +68,11 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
 
 function Brand({ collapsed }: { collapsed: boolean }) {
   return (
-    <Link href="/admin" className="flex items-center gap-2.5 rounded-[var(--radius-control)] px-2 py-2 mb-4" aria-label="WindyCityWares admin home">
-      <div className="grid size-6 place-items-center rounded-full bg-gold text-night">
-        <Icon name="dashboard" className="size-4" />
-      </div>
-      {!collapsed && <span className="font-semibold text-white tracking-wide">WCW Admin</span>}
+    <Link href="/admin" className="flex min-w-0 items-center gap-3 rounded-[var(--radius-control)] px-1 py-1" aria-label="WindyCityWares admin home">
+      <span aria-hidden="true" className="font-admin grid size-9 shrink-0 place-items-center rounded-lg bg-accent text-base font-bold text-on-accent shadow-[var(--shadow-card)]">
+        W
+      </span>
+      {!collapsed && <span className="font-admin truncate text-lg font-semibold text-ink">WCW Admin</span>}
     </Link>
   );
 }
@@ -104,17 +105,19 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <a href="#admin-main" className="skip-link">
         Skip to content
       </a>
-      <div className="min-h-dvh lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
-        {/* Sidebar: always the dark band, whatever the theme */}
-        <aside className={cn("sticky top-0 hidden h-dvh flex-col bg-night text-night-muted lg:flex", collapsed ? "w-[4.5rem]" : "w-[15rem]")}>
-          <div className="px-2 pb-3 pt-5">
-            <Brand collapsed={collapsed} />
+      <div className={cn("min-h-dvh lg:grid", collapsed ? "lg:grid-cols-[4.5rem_minmax(0,1fr)]" : "lg:grid-cols-[16rem_minmax(0,1fr)]")}>
+        {/* Sidebar: a white menu with a soft shadow; the current page has a tint, an accent bar and an accent icon */}
+        <aside className="sticky top-0 z-20 hidden h-dvh flex-col bg-surface shadow-[var(--shadow-card)] lg:flex">
+          <div className={cn("flex h-16 shrink-0 items-center gap-2", collapsed ? "flex-col justify-center px-2" : "justify-between pl-4 pr-3")}>
+            {!collapsed && <Brand collapsed={false} />}
             <button
               type="button"
               onClick={() => setCollapsed((c) => !c)}
-              className="ml-1 mr-1 grid size-9 place-items-center rounded-[var(--radius-control)] hover:bg-white/10 text-night-muted"
+              aria-expanded={!collapsed}
+              className="grid size-9 shrink-0 place-items-center rounded-[var(--radius-control)] text-muted hover:bg-sand hover:text-accent"
               title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
-              <Icon name={collapsed ? "chevronRight" : "chevronLeft"} className="size-4" />
+              <Icon name="menu" className="size-5" />
+              <span className="sr-only">{collapsed ? "Expand sidebar" : "Collapse sidebar"}</span>
             </button>
           </div>
           <SidebarNav onNavigate={() => setDrawer(false)} collapsed={collapsed} />
@@ -127,20 +130,20 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               Test mode settings
             </Link>
           </TestModeBanner>
-          <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-line bg-canvas/90 backdrop-blur px-4 sm:px-6 lg:px-8">
+          <header className="sticky top-0 z-30 flex h-16 items-center gap-2 bg-surface px-4 shadow-[var(--shadow-card)] sm:px-6 lg:px-8">
             <Dialog.Root open={drawer} onOpenChange={setDrawer}>
               <Dialog.Trigger className="-ml-1 grid size-10 place-items-center rounded-[var(--radius-control)] hover:bg-sand lg:hidden">
                 <Icon name="menu" className="size-5" />
                 <span className="sr-only">Open admin menu</span>
               </Dialog.Trigger>
               <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 z-50 bg-night/60 lg:hidden" />
-                <Dialog.Content className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-night text-night-muted shadow-xl lg:hidden">
+                <Dialog.Overlay className="fixed inset-0 z-50 bg-night/50 lg:hidden" />
+                <Dialog.Content className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-surface shadow-[var(--shadow-raised)] lg:hidden">
                   <Dialog.Title className="sr-only">Admin menu</Dialog.Title>
                   <Dialog.Description className="sr-only">Go to a section of the admin.</Dialog.Description>
-                  <div className="flex items-center justify-between px-3 pb-3 pt-5">
+                  <div className="flex h-16 items-center justify-between pl-4 pr-3">
                     <Brand collapsed={false} />
-                    <Dialog.Close className="mr-1 grid size-9 place-items-center rounded-full text-night-muted hover:bg-white/10 hover:text-white">
+                    <Dialog.Close className="grid size-9 place-items-center rounded-full text-muted hover:bg-sand hover:text-ink">
                       <Icon name="close" className="size-5" />
                       <span className="sr-only">Close menu</span>
                     </Dialog.Close>
@@ -150,16 +153,30 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               </Dialog.Portal>
             </Dialog.Root>
 
-            <div className="ml-3 hidden sm:flex flex-1 max-w-[28rem]">
-              <div className="relative">
-                <Icon name="search" className="absolute left-2.5 top-2.5 size-4 text-muted" />
+            <form
+              role="search"
+              className="ml-2 hidden max-w-[26rem] flex-1 sm:flex"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = String(new FormData(e.currentTarget).get("q") || "").trim();
+                if (!q) return;
+                // An email finds the customer; anything else (an order number, a name) searches orders.
+                window.location.assign(`${q.includes("@") ? "/admin/customers" : "/admin/orders"}?q=${encodeURIComponent(q)}`);
+              }}>
+              <label htmlFor="admin-search" className="sr-only">
+                Search the admin
+              </label>
+              <div className="relative w-full">
+                <Icon name="search" className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" />
                 <input
+                  id="admin-search"
+                  name="q"
                   type="search"
-                  placeholder="Search orders, customers, products…"
-                  className="pl-9 pr-3 py-1.5 rounded-[var(--radius-control)] border border-line bg-surface text-sm text-ink focus:border-accent focus:outline-none w-full"
+                  placeholder="Order number, customer email…"
+                  className="w-full rounded-full border border-line bg-canvas py-2 pl-10 pr-4 text-sm text-ink placeholder:text-muted focus:border-accent focus:outline-none"
                 />
               </div>
-            </div>
+            </form>
 
             <div className="ml-auto flex items-center gap-2">
               <NotificationBell />
@@ -174,7 +191,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                     <Icon name="chevronDown" className="size-4 text-muted" />
                   </div>
                 }
-                triggerClassName="border-transparent bg-transparent hover:bg-night/10"
+                triggerClassName="border-transparent bg-transparent hover:bg-sand"
                 panelClassName="w-64">
                 {(close) => (
                   <div>
