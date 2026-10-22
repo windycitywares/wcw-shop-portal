@@ -36,39 +36,40 @@ DEVICES = [("mobile", 54), ("desktop", 41), ("tablet", 5)]
 BROWSERS = [("Chrome", 55), ("Safari", 30), ("Edge", 8), ("Firefox", 7)]
 OSES = {"mobile": [("iOS", 60), ("Android", 40)], "tablet": [("iOS", 70), ("Android", 30)], "desktop": [("Windows", 55), ("macOS", 40), ("Linux", 5)]}
 REFERRERS = {"organic_search": ["google.com", "bing.com", "duckduckgo.com"], "social": ["facebook.com", "pinterest.com", "instagram.com"],
-             "marketplace": ["etsy.com"], "referral": ["legacy-funeral-home.example", "pet-memorials.example", "grief-support.example"],
+             "marketplace": ["etsy.com"], "referral": ["chicago-makers.example", "gift-guide.example", "antiques-forum.example"],
              "paid_search": ["google.com"], "email": [None], "direct": [None]}
-SEARCHES = [("oak urn", 6), ("pet urn", 8), ("small urn", 5), ("keepsake", 6), ("companion urn", 3), ("brass", 3), ("cat urn", 4), ("urn for ashes", 4),
-            ("cremation jewelry", 3), ("paw print", 2), ("photo frame urn", 2), ("scattering tube", 2), ("biodegradable urn", 3)]
-ZERO_RESULT_TERMS = {"cremation jewelry", "paw print", "photo frame urn", "scattering tube"}
+SEARCHES = [("walnut bowl", 6), ("candle", 8), ("vintage", 5), ("gift set", 6), ("wall art", 3), ("brass", 3), ("ceramic mug", 4), ("cutting board", 4),
+            ("quilt", 3), ("stained glass", 2), ("record player", 2), ("tapestry", 2), ("planter", 3)]
+ZERO_RESULT_TERMS = {"quilt", "stained glass", "record player", "tapestry"}
 
 # (title, leaf category, price, variants [(label, price)], cost ratio or None, stock or None, popularity)
 CATALOG = [
-    ("Classic Oak Urn", "Adult Urns", 189, [("Medium", 149), ("Large", 189)], 0.42, 14, 10),
-    ("Walnut Memorial Box", "Adult Urns", 219, [], 0.45, 9, 7),
-    ("Brass Heritage Urn", "Adult Urns", 259, [("Standard", 259), ("Extra large", 299)], 0.5, 6, 5),
-    ("Marble Peace Urn", "Adult Urns", 329, [], 0.48, 3, 3),
-    ("Bamboo Eco Urn", "Adult Urns", 139, [("Standard", 139)], None, 20, 6),
-    ("Ceramic Garden Urn", "Adult Urns", 169, [], 0.4, 11, 4),
-    ("Pewter Companion Urn", "Companion Urns", 389, [], 0.5, 4, 2),
-    ("Twin Oak Companion Urn", "Companion Urns", 449, [("Standard", 449)], 0.46, 2, 2),
-    ("Heart Keepsake Urn", "Keepsake Urns", 39, [("Brass", 39), ("Silver", 45)], 0.35, 40, 12),
-    ("Mini Cylinder Keepsake", "Keepsake Urns", 29, [], 0.33, 55, 9),
-    ("Wooden Pocket Keepsake", "Keepsake Urns", 34, [], 0.3, 0, 5),
-    ("Angel Wing Keepsake", "Keepsake Urns", 49, [], None, 18, 4),
-    ("Paw Print Pet Urn", "Pet Urns", 59, [("Small", 59), ("Medium", 69), ("Large", 89)], 0.38, 30, 14),
-    ("Loyal Friend Pet Urn", "Pet Urns", 79, [], 0.4, 12, 8),
-    ("Cat Silhouette Urn", "Pet Urns", 64, [], 0.37, 16, 7),
-    ("Stone Pet Memorial", "Pet Urns", 99, [], None, 8, 3),
-    ("Memorial Candle Set", "Candles", 24, [], 0.4, 70, 7),
-    ("Remembrance Tealights", "Candles", 18, [], 0.35, 90, 5),
-    ("Sympathy Photo Frame", "Gifts", 32, [], 0.45, 25, 4),
-    ("Engraved Memorial Plaque", "Gifts", 54, [], 0.5, 1, 3),
-    ("Scattering Tube", "Adult Urns", 44, [], 0.3, 22, 2),
-    ("Granite Box Urn", "Adult Urns", 279, [], 0.5, 5, 2),
+    ("Hand-Turned Walnut Bowl", "Woodwork", 89, [("Small", 69), ("Large", 89)], 0.42, 14, 10),
+    ("Maple Serving Board", "Woodwork", 59, [], 0.45, 9, 7),
+    ("Carved Oak Keepsake Box", "Woodwork", 119, [("Standard", 119), ("Engraved", 139)], 0.5, 6, 5),
+    ("Live-Edge Wall Shelf", "Woodwork", 149, [], 0.48, 3, 3),
+    ("Stoneware Coffee Mug", "Ceramics", 28, [("Speckled", 28)], None, 20, 6),
+    ("Glazed Ceramic Planter", "Ceramics", 46, [], 0.4, 11, 4),
+    ("Hand-Thrown Vase", "Ceramics", 64, [], 0.5, 4, 2),
+    ("Vintage Brass Candlesticks", "Vintage Finds", 79, [("Pair", 79)], 0.46, 2, 2),
+    ("Mid-Century Table Lamp", "Vintage Finds", 159, [], 0.35, 4, 6),
+    ("Antique Pocket Watch", "Vintage Finds", 189, [], 0.33, 2, 4),
+    ("Victorian Pressed-Glass Dish", "Vintage Finds", 39, [], 0.3, 0, 5),
+    ("Chicago Skyline Print", "Wall Art", 35, [("8x10", 35), ("11x14", 49)], None, 18, 9),
+    ("Botanical Linen Wall Hanging", "Wall Art", 59, [("Small", 59), ("Medium", 69), ("Large", 89)], 0.38, 30, 8),
+    ("Framed Pressed Flowers", "Wall Art", 79, [], 0.4, 12, 6),
+    ("Macrame Plant Hanger", "Wall Art", 32, [], 0.37, 16, 7),
+    ("Hammered Copper Tray", "Vintage Finds", 69, [], None, 8, 3),
+    ("Soy Candle Trio", "Candles", 34, [], 0.4, 70, 12),
+    ("Beeswax Taper Set", "Candles", 22, [], 0.35, 90, 5),
+    ("Cozy Night In Gift Set", "Gifts", 64, [], 0.45, 25, 6),
+    ("Personalized Cutting Board", "Gifts", 74, [], 0.5, 1, 3),
+    ("Handmade Coaster Set", "Woodwork", 29, [], 0.3, 22, 4),
+    ("Copper Wind Chime", "Gifts", 54, [], 0.5, 5, 2),
 ]
-CATEGORY_TREE = [("Cremation Urns", None), ("Adult Urns", "Cremation Urns"), ("Companion Urns", "Cremation Urns"), ("Keepsake Urns", "Cremation Urns"),
-                 ("Pet Urns", "Cremation Urns"), ("Memorial Gifts", None), ("Candles", "Memorial Gifts"), ("Gifts", "Memorial Gifts")]
+CATEGORY_TREE = [("Handicrafts", None), ("Woodwork", "Handicrafts"), ("Ceramics", "Handicrafts"), ("Antiques", None),
+                 ("Vintage Finds", "Antiques"), ("Home Decor", None), ("Wall Art", "Home Decor"), ("Candles", "Home Decor"),
+                 ("Gifts", None)]
 
 q2 = Decimal("0.01")
 
@@ -128,7 +129,7 @@ def build(now: datetime | None = None, days: int = 120, seed: int = 2) -> Rows:
         created = now - timedelta(days=days + 20 - index * 2)
         base = {
             "category_id": cat_ids[category], "currency": "USD", "status": "published", "source": "demo", "published_at": created,
-            "created_at": created, "updated_at": created, "attributes": {}, "images": [], "tags": ["urn", category.lower()],
+            "created_at": created, "updated_at": created, "attributes": {}, "images": [], "tags": ["handmade", category.lower()],
             "units_sold": 0, "rating_avg": Decimal("0"), "rating_count": 0, "stock_status": "in_stock",
         }
         parent = {**base, "id": pid, "parent_id": None, "sku": f"DEMO-{index:03d}", "slug": f"demo-{title.lower().replace(' ', '-')}", "title": title,
@@ -162,8 +163,8 @@ def build(now: datetime | None = None, days: int = 120, seed: int = 2) -> Rows:
     sale_id = new_id("sales")
     sale_start, sale_end = now - timedelta(days=24), now + timedelta(days=9)
     rows["sales"].append({
-        "id": sale_id, "name": "Autumn remembrance sale", "badge": "10% off", "description": "A gentle seasonal offer on adult urns.", "kind": "percent",
-        "value": Decimal("10.00"), "scope": "category", "category_ids": [cat_ids["Adult Urns"]], "product_ids": [], "exclude_product_ids": [],
+        "id": sale_id, "name": "Autumn makers sale", "badge": "10% off", "description": "A seasonal offer on handmade woodwork.", "kind": "percent",
+        "value": Decimal("10.00"), "scope": "category", "category_ids": [cat_ids["Woodwork"]], "product_ids": [], "exclude_product_ids": [],
         "starts_at": sale_start, "ends_at": sale_end, "is_active": True, "translations": {}, "created_at": sale_start - timedelta(days=2),
     })
     old_sale = new_id("sales")
@@ -205,7 +206,7 @@ def build(now: datetime | None = None, days: int = 120, seed: int = 2) -> Rows:
                 customer = {"email": f"{first}.{last}{len(customers) + 1}{DEMO_EMAIL}".lower(), "name": f"{first} {last}", "state": state, "last_at": placed, "orders": 0}
                 customers.append(customer)
             customer["last_at"], customer["orders"] = placed, customer["orders"] + 1
-            orders.append(_order(rng, rows, new_id, leaf_weights, customer, placed, sale_id, sale_start, sale_end, cat_ids["Adult Urns"], coupons))
+            orders.append(_order(rng, rows, new_id, leaf_weights, customer, placed, sale_id, sale_start, sale_end, cat_ids["Woodwork"], coupons))
 
     for order in orders:
         _finish_order(rng, rows, order, new_id, now)
@@ -448,11 +449,11 @@ def _session(rng, rows, new_id, visitors, when, channel=None, device=None, conve
         visitors.append(visitor)
     pv = 1 if (not converted and rng.random() < 0.38) else rng.randint(2, 9)
     host = rng.choice(REFERRERS.get(channel, [None]))
-    utm = (("newsletter", "email", "fall-thank-you") if channel == "email" else ("google", "cpc", "urns-brand") if channel == "paid_search" else (None, None, None))
+    utm = (("newsletter", "email", "fall-thank-you") if channel == "email" else ("google", "cpc", "shop-brand") if channel == "paid_search" else (None, None, None))
     duration = 0 if pv == 1 else rng.randint(40, 900)
     rows["analytics_sessions"].append({
         "id": sid, "visitor_id": visitor, "started_at": when, "last_seen_at": when + timedelta(seconds=duration),
-        "landing_path": rng.choice(["/", "/", "/shop", "/category/pet-urns", "/product/classic-oak-urn", "/product/paw-print-pet-urn"]),
+        "landing_path": rng.choice(["/", "/", "/shop", "/category/woodwork", "/product/hand-turned-walnut-bowl", "/product/soy-candle-trio"]),
         "referrer_host": host, "channel": channel, "utm_source": utm[0], "utm_medium": utm[1], "utm_campaign": utm[2], "device": device,
         "browser": pick(rng, BROWSERS), "os": pick(rng, OSES[device]), "locale": pick(rng, [("en", 90), ("es", 7), ("nl", 3)]),
         "is_new_visitor": not returning, "page_views": pv, "event_count": 0,
@@ -492,7 +493,7 @@ def _sessions(rng, rows, orders, parents, root_of, new_id, now, days):
             when = at(rng, day, now)
             session, pv = _session(rng, rows, new_id, visitors, when)
             for _ in range(pv):
-                _event(rows, new_id, session, "page_view", when, rng.choice(["/", "/shop", "/category/pet-urns", "/category/adult-urns", "/about", "/contact"]))
+                _event(rows, new_id, session, "page_view", when, rng.choice(["/", "/shop", "/category/woodwork", "/category/home-decor", "/about", "/contact"]))
             if rng.random() < 0.55:
                 for _ in range(rng.randint(1, 3)):
                     pid = pick(rng, popular)
