@@ -51,11 +51,15 @@ test.describe("browsing", () => {
 
   test("the colour theme can be changed and is remembered", async ({ page }) => {
     await page.goto("/");
-    await page.locator("details > summary").filter({ hasText: "Color theme" }).first().click();
-    await page.getByText("Dark", { exact: true }).click();
+    const toggle = page.getByRole("button", { name: "Dark mode" }).first();
+    await expect(toggle).toHaveAttribute("aria-pressed", "false");
+    await toggle.click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "midnight");
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "midnight");
+    await page.getByRole("button", { name: "Dark mode" }).first().click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "classic");
   });
 
   test("pages fit a phone screen", async ({ page }) => {

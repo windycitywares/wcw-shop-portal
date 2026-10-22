@@ -59,8 +59,7 @@ test("the sidebar marks the current page", async ({ page }) => {
 test("switching the theme in the admin sticks across pages", async ({ page }) => {
   await page.goto("/admin");
   await adminReady(page);
-  await page.locator("details > summary").filter({ hasText: "Color theme" }).click();
-  await page.getByText("Dark", { exact: true }).click();
+  await page.getByRole("button", { name: "Dark mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "midnight");
   await page.goto("/admin/categories");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "midnight");

@@ -88,8 +88,7 @@ export function MobileNav({ tree }: { tree: CategoryNode[] }) {
           <div className="border-t border-line px-5 py-4">
             <p className="mb-2 text-sm text-muted">{t.nav.language}</p>
             <LanguageSwitcher variant="inline" className="[&_a]:text-ink [&_a[aria-current]]:font-semibold" />
-            <p className="mb-2 mt-5 text-sm text-muted">{t.theme.label}</p>
-            <ThemeSwitcher variant="inline" />
+            <ThemeSwitcher variant="inline" className="mt-5" />
           </div>
         </Dialog.Content>
       </Dialog.Portal>

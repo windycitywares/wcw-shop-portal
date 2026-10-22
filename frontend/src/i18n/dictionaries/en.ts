@@ -402,6 +402,9 @@ const en = {
     choose: "Color theme",
     classic: "Default",
     midnight: "Dark",
+    dark: "Dark mode",
+    toDark: "Switch to dark mode",
+    toLight: "Switch to light mode",
   },
   auth: {
     signIn: "Sign in",

@@ -406,6 +406,9 @@ const es: Dictionary = {
     choose: "Tema de color",
     classic: "Predeterminado",
     midnight: "Oscuro",
+    dark: "Modo oscuro",
+    toDark: "Cambiar a modo oscuro",
+    toLight: "Cambiar a modo claro",
   },
   auth: {
     signIn: "Iniciar sesión",
