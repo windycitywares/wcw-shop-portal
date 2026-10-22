@@ -1,5 +1,6 @@
 "use client";
 
+import { Menu01 } from "@untitledui/icons";
 import * as Dialog from "@radix-ui/react-dialog";
 import Link from "next/link";
 import { useState } from "react";
@@ -48,9 +49,7 @@ export function MobileNav({ tree }: { tree: CategoryNode[] }) {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger className="-ml-2 grid size-10 place-items-center rounded-full hover:bg-sand lg:hidden" title={t.nav.openMenu}>
-        <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
-        </svg>
+        <Menu01 aria-hidden="true" className="size-5" strokeWidth={1.6} />
         <span className="sr-only">{t.nav.openMenu}</span>
       </Dialog.Trigger>
       <Dialog.Portal>

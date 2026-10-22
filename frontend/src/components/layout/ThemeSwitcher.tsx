@@ -1,5 +1,6 @@
 "use client";
 
+import { Moon01, Sun as SunIcon } from "@untitledui/icons";
 import { useEffect, useState } from "react";
 import { useOptionalI18n } from "@/i18n/client";
 import { applyTheme, DEFAULT_THEME, resolveTheme, THEME_KEY, THEMES, type ThemeChoice } from "@/lib/themes";
@@ -44,20 +45,11 @@ function useDarkMode() {
 }
 
 function Moon({ className }: { className?: string }) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z" />
-    </svg>
-  );
+  return <Moon01 aria-hidden="true" className={className} strokeWidth={1.75} />;
 }
 
 function Sun({ className }: { className?: string }) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2.5v2 M12 19.5v2 M4.6 4.6l1.4 1.4 M18 18l1.4 1.4 M2.5 12h2 M19.5 12h2 M4.6 19.4 6 18 M18 6l1.4-1.4" />
-    </svg>
-  );
+  return <SunIcon aria-hidden="true" className={className} strokeWidth={1.75} />;
 }
 
 /**

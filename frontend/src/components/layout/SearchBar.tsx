@@ -1,5 +1,6 @@
 "use client";
 
+import { SearchLg } from "@untitledui/icons";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
@@ -33,10 +34,7 @@ export function SearchBar({
         title={t.nav.search}
         className="absolute right-1 top-1 grid size-8 place-items-center rounded-full text-muted hover:bg-sand hover:text-ink"
       >
-        <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8">
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" strokeLinecap="round" />
-        </svg>
+        <SearchLg aria-hidden="true" className="size-4" strokeWidth={1.8} />
         <span className="sr-only">{t.nav.search}</span>
       </button>
     </form>

@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown } from "@untitledui/icons";
 import * as NavigationMenu from "@radix-ui/react-navigation-menu";
 import Link from "next/link";
 import { useI18n } from "@/i18n/client";
@@ -45,13 +46,7 @@ export function MegaMenu({ tree }: { tree: CategoryNode[] }) {
             <NavigationMenu.Item key={node.id}>
               <NavigationMenu.Trigger className={`${linkClass} group gap-1.5`}>
                 {node.name}
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 12 12"
-                  className="size-3 transition-transform group-data-[state=open]:rotate-180"
-                >
-                  <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                </svg>
+                <ChevronDown aria-hidden="true" className="size-3.5 transition-transform group-data-[state=open]:rotate-180" />
               </NavigationMenu.Trigger>
               <NavigationMenu.Content className="w-full">
                 <Container className="grid grid-cols-[18rem_1fr] gap-12 py-10">

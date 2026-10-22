@@ -1,5 +1,6 @@
 "use client";
 
+import { ShoppingBag01 } from "@untitledui/icons";
 import { useI18n } from "@/i18n/client";
 import { useCart } from "@/lib/cart";
 
@@ -13,10 +14,7 @@ export function CartButton() {
       title={fmt(t.cart.open, { count })}
       className="relative grid size-10 place-items-center rounded-full hover:bg-sand"
     >
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M5 8h14l-1.2 11.1a2 2 0 0 1-2 1.9H8.2a2 2 0 0 1-2-1.9L5 8Z" strokeLinejoin="round" />
-        <path d="M9 8V6a3 3 0 0 1 6 0v2" />
-      </svg>
+      <ShoppingBag01 aria-hidden="true" className="size-5" strokeWidth={1.6} />
       {count > 0 && (
         <span
           aria-hidden="true"
