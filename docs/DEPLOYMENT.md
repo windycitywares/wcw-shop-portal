@@ -27,7 +27,7 @@ ready, follow [Go live on the main domain](#go-live-on-the-main-domain).
 |---|---|---|---|
 | `https://windycitywares.com` | existing `index.html` | `public_html` | unchanged until launch |
 | `https://shop.windycitywares.com` | Next.js storefront (Node 20) | `~/apps/wcw-storefront` | build-out |
-| `https://api.windycitywares.com` | FastAPI (Python 3.11) | `~/repos/wcw-shop-portal/backend` | build-out → stays |
+| `https://shop-api.windycitywares.com` | FastAPI (Python 3.11) | `~/repos/wcw-shop-portal/backend` | build-out → stays |
 
 ## 1. Database
 
@@ -59,14 +59,14 @@ Connection string: `postgresql+asyncpg://windycit_wcw:PASSWORD@localhost:5432/wi
 
 ## 3. API (Setup Python App)
 
-> **Live since 2026-10-11** at `https://api.windycitywares.com` — database `windycit_wcw`, user
+> **Live since 2026-10-11** at `https://shop-api.windycitywares.com` — database `windycit_wcw`, user
 > `windycit_wcwapp`, app root `repos/wcw-shop-portal/backend`, startup file `wsgi.py`. Secrets are in
 > `backend/.env` and `~/.wcw-secrets` (both chmod 600, never committed).
 
-1. cPanel → **Domains** → create `api.windycitywares.com` (document root e.g. `api.windycitywares.com`).
+1. cPanel → **Domains** → create `shop-api.windycitywares.com` (document root e.g. `shop-api.windycitywares.com`).
 2. **Setup Python App** → Create application:
    - Python version **3.11.17** · Application root `repos/wcw-shop-portal/backend`
-   - Application URL `api.windycitywares.com` · Startup file **`wsgi.py`** · Entry point `application`
+   - Application URL `shop-api.windycitywares.com` · Startup file **`wsgi.py`** · Entry point `application`
    - (cPanel writes its own `passenger_wsgi.py` that loads `wsgi.py` — don't name our file `passenger_wsgi.py`,
      or the generated loader imports itself and every request fails with a RecursionError.)
 3. Copy the "source …/activate" command it shows, then in Terminal:
@@ -84,7 +84,7 @@ Connection string: `postgresql+asyncpg://windycit_wcw:PASSWORD@localhost:5432/wi
    alembic upgrade head
    python -m app.seed
    ```
-4. **Restart** the app in Setup Python App. Check `https://api.windycitywares.com/health` → `{"status":"ok"}`.
+4. **Restart** the app in Setup Python App. Check `https://shop-api.windycitywares.com/health` → `{"status":"ok"}`.
 
 ## 4. Storefront (Setup Node.js App)
 
@@ -355,7 +355,7 @@ while the Python app is recreated, so do it at a quiet time. In cPanel:
    ```
 2. **Setup Python App** — the application root of an existing app can't be changed, so: note the old app's
    settings, **delete** it (this doesn't delete files), then **create** it again with application root
-   `repos/wcw-shop-portal/backend`, URL `api.windycitywares.com`, startup file `wsgi.py`, entry point
+   `repos/wcw-shop-portal/backend`, URL `shop-api.windycitywares.com`, startup file `wsgi.py`, entry point
    `application`, Python 3.11.17.
 3. **Terminal** — install the packages into the new virtualenv and restart:
    ```bash
@@ -365,6 +365,13 @@ while the Python app is recreated, so do it at a quiet time. In cPanel:
    ```
 4. **Cron Jobs** — change the auto-deploy line to
    `* * * * * bash $HOME/repos/wcw-shop-portal/deploy/auto-deploy.sh >> $HOME/logs/wcw-deploy.log 2>&1`.
-5. Check `https://api.windycitywares.com/health` and the shop, then remove the old virtualenv
+5. Check `https://shop-api.windycitywares.com/health` and the shop, then remove the old virtualenv
    (`rm -rf ~/virtualenv/repos/wcw-portal`).
 
+
+## Clean reinstall
+
+`deploy/clean-install.sh` installs the shop from GitHub on a server that has the domains, database, deploy key and a
+filled-in `~/wcw-shop.env` (see the comments at the top of the script). It creates only what is missing — the code,
+the API app on `shop-api.windycitywares.com`, migrations and the admin user, the storefront app and the cron line — and
+never deletes data, so it is safe to run again. Wiping the old install is a separate, manual step.
