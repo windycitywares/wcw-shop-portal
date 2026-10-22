@@ -90,6 +90,8 @@ export interface ShopConfig {
   payment_methods: string[];
   guest_checkout: boolean;
   reminders_opt_in: boolean;
+  /** Signed-in customers are reminded without the tickbox (Settings → Cart reminders). */
+  reminders_signed_in: boolean;
   max_quantity_per_line: number;
   low_stock_threshold: number;
   analytics_enabled: boolean;

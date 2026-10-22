@@ -339,6 +339,49 @@ class NewsletterAndCartTests(unittest.TestCase):
         w.place(email, [item(p, 2)], cart_token=token)
         self.assertEqual(w.get(f"/cart/recover/{token}").json()["items"], [])
 
+    def test_signed_in_customers_are_reminded_unless_they_ordered_since(self):
+        w = self.w
+        p = w.product("30.00")
+
+        async def remind(session):
+            from app.services.carts import CartRecoveryJob
+
+            return await CartRecoveryJob(session).run()
+
+        # Signed in: the account address is enough, no tickbox (Settings → Cart reminders, on by default).
+        self.assertTrue(w.get("/shop/config").json()["reminders_signed_in"])
+        email, shopper = w.register("member")
+        token = w.post("/cart/sync", {"items": [item(p)], "locale": "en"}, shopper).json()["token"]
+        self.assertEqual(w.value("SELECT email FROM carts WHERE token = :t", t=token), email)
+        self.assertTrue(w.value("SELECT reminders_ok FROM carts WHERE token = :t", t=token))
+
+        # A different address typed at checkout still needs the box.
+        other = w.post("/cart/sync", {"items": [item(p)], "email": w.email("elsewhere"), "locale": "en"}, w.register("typed")[1]).json()["token"]
+        self.assertIsNone(w.value("SELECT email FROM carts WHERE token = :t", t=other))
+
+        # Switched off: signed-in customers are asked like guests.
+        w.put("/admin/settings/cart_recovery", {"remind_signed_in": False}, w.admin)
+        self.assertFalse(w.get("/shop/config").json()["reminders_signed_in"])
+        quiet_email, quiet = w.register("quietmember")
+        quiet_token = w.post("/cart/sync", {"items": [item(p)], "locale": "en"}, quiet).json()["token"]
+        self.assertIsNone(w.value("SELECT email FROM carts WHERE token = :t", t=quiet_token))
+        w.put("/admin/settings/cart_recovery", {"remind_signed_in": True}, w.admin)
+
+        # Ordered since (another device, a new cart): no "you left something" email.
+        w.sql("UPDATE carts SET last_activity_at = now() - interval '25 hours' WHERE token = :t", t=token)
+        w.place(email, [item(p)], shopper)
+        w.db(remind)
+        self.assertEqual(len(w.mails_to(email, "cart")), 0)
+        self.assertFalse(w.value("SELECT reminders_ok FROM carts WHERE token = :t", t=token))
+
+        # Not ordered: reminded once.
+        email2, shopper2 = w.register("member2")
+        token2 = w.post("/cart/sync", {"items": [item(p)], "locale": "en"}, shopper2).json()["token"]
+        w.sql("UPDATE carts SET last_activity_at = now() - interval '25 hours' WHERE token = :t", t=token2)
+        w.db(remind)
+        self.assertEqual(len(w.mails_to(email2, "cart")), 1)
+        self.assertEqual(len(w.mails_to(quiet_email, "cart")), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
