@@ -61,7 +61,7 @@ const HELP: Record<string, HelpEntry> = {
     title: "Customers",
     body: [
       "Shoppers grouped by value (RFM). Click one to see their orders and addresses.",
-      "A shopper with no paid order may not appear here — Customer accounts lists every shopper who has signed up.",
+      "Buyers lists everyone who paid, guests included; Accounts lists every shopper who signed up.",
     ],
   },
   "/admin/messages": {

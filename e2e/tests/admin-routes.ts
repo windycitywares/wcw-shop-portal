@@ -28,7 +28,7 @@ export const ADMIN_ROUTES: { path: string; heading: RegExp; name: string }[] = [
   { path: "/admin/categories", heading: /^Categories$/, name: "categories" },
   { path: "/admin/import", heading: /^Import and export$/, name: "import" },
   { path: "/admin/team", heading: /^Team$/, name: "team" },
-  { path: "/admin/users", heading: /^Customer accounts$/, name: "users" },
+  { path: "/admin/customers?view=accounts", heading: /^Customers$/, name: "customers-accounts" },
   { path: "/admin/reviews", heading: /^Reviews$/, name: "reviews" },
   { path: "/admin/settings", heading: /^Settings$/, name: "settings" },
   { path: "/admin/settings?tab=tax", heading: /^Settings$/, name: "settings-tax" },

@@ -41,8 +41,9 @@ function suggestPassword(length = 14): string {
 
 export type AccountScope = "team" | "customers";
 
-/** Team (staff roles) or customer accounts. Two admin pages share this: /admin/team and /admin/users. */
-export function AccountsAdmin({ scope }: { scope: AccountScope }) {
+/** Team (staff roles) or customer accounts: /admin/team, and the Accounts view of /admin/customers.
+ *  `embedded` drops the page heading when another page supplies it. */
+export function AccountsAdmin({ scope, embedded = false }: { scope: AccountScope; embedded?: boolean }) {
   const { user: me } = useAuth();
   const { push } = useToast();
   const [data, setData] = useState<Page<User> | null>(null);
@@ -250,7 +251,7 @@ export function AccountsAdmin({ scope }: { scope: AccountScope }) {
 
   return (
     <div>
-      <PageHeader
+      {!embedded && <PageHeader
         title={view === "team" ? "Team" : "Customer accounts"}
         description={
           view === "team"
@@ -265,7 +266,7 @@ export function AccountsAdmin({ scope }: { scope: AccountScope }) {
             </Button>
           ) : undefined
         }
-      />
+      />}
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}
