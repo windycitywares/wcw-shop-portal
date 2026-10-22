@@ -195,6 +195,10 @@ html.theme-switching * {
     font-size: 0.9375rem;
     line-height: 1.5;
   }
+  /* Quicksand: headings, the menu and the brand */
+  .font-admin {
+    font-family: var(--font-admin-heading);
+  }
   .admin-root .num {
     font-variant-numeric: tabular-nums;
   }
