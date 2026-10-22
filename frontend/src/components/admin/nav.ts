@@ -38,6 +38,7 @@ export const NAV: NavGroup[] = [
       { href: "/admin/stock-requests", label: "Stock requests", icon: "bell", permission: "customers:view" },
       { href: "/admin/campaigns", label: "Email campaigns", icon: "mail", permission: "promotions:manage" },
       { href: "/admin/carts", label: "Abandoned carts", icon: "cart", permission: "customers:view" },
+      { href: "/admin/users", label: "Customer accounts", icon: "users", permission: "users:manage" },
     ],
   },
   {
@@ -53,7 +54,7 @@ export const NAV: NavGroup[] = [
     label: "Settings",
     items: [
       { href: "/admin/settings", label: "Store settings", icon: "sliders", permission: "settings:manage", hidden: true },
-      { href: "/admin/users", label: "Team and customers", icon: "users", permission: "users:manage", hidden: true },
+      { href: "/admin/team", label: "Team", icon: "users", permission: "users:manage" },
       { href: "/admin/audit", label: "Audit log", icon: "shield", permission: "audit:view", hidden: true },
       { href: "/admin/environment", label: "Test mode", icon: "flask", permission: "environment:manage", hidden: true },
       { href: "/admin/backups", label: "Backups", icon: "archive", permission: "backups:manage", hidden: true },
