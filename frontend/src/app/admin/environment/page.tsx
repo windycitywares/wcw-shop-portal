@@ -174,6 +174,11 @@ export default function AdminEnvironment() {
             <div className="skeleton h-24" />
           ) : (
             <>
+              {test && !env.test_mail_to && (
+                <Alert tone="danger">
+                  Test mode is on and no test inbox is set, so <strong>no email is sent</strong>. That includes password reset links, order confirmations and abandoned-cart reminders. Set a test inbox below to see them.
+                </Alert>
+              )}
               {env.mode === "test" && !env.test_exists && (
                 <Alert tone="danger">Test mode is selected but the test data is missing, so the shop is on live data. Switch to test again to make a new copy.</Alert>
               )}
