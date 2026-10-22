@@ -32,7 +32,7 @@ INLINE_SEND = 20  # the rest is delivered by the scheduled job
 
 SUBSCRIBERS_SQL = text("""
 SELECT email, locale, unsubscribe_token FROM newsletter_subscribers
-WHERE unsubscribed_at IS NULL AND source <> ALL(CAST(:service_only AS text[]))
+WHERE unsubscribed_at IS NULL AND paused_at IS NULL AND source <> ALL(CAST(:service_only AS text[]))
 ORDER BY id
 """)
 

@@ -38,4 +38,6 @@ class NewsletterSubscriber(TimestampMixin, Base):
         String(40), unique=True, server_default=text("md5(random()::text || clock_timestamp()::text)")
     )
     unsubscribed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Paused by staff: still subscribed, but campaigns skip them until resumed. Service email is unaffected.
+    paused_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     welcome_coupon: Mapped[str | None] = mapped_column(String(40))

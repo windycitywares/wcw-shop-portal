@@ -57,6 +57,32 @@ class SubscriberAdminTests(unittest.TestCase):
         self.assertEqual(w.delete(f"/admin/subscribers/{added.json()['id']}", w.admin).status_code, 204)
         self.assertEqual(self.listing(q=email)["total"], 0)
 
+    def test_pause_leaves_them_out_of_campaigns_until_resumed(self):
+        w = self.w
+        email = w.email("pause")
+        row = w.post("/admin/subscribers", {"email": email, "locale": "en"}, w.admin).json()
+        audience = lambda: w.get("/admin/campaigns/audience", w.admin, segment="subscribers").json()["count"]
+        before = audience()
+
+        paused = w.post(f"/admin/subscribers/{row['id']}/pause", None, w.admin)
+        self.assertEqual(paused.status_code, 200, paused.text)
+        self.assertEqual((paused.json()["paused"], paused.json()["subscribed"]), (True, True))
+        self.assertEqual(audience(), before - 1)
+        found = self.listing(q=email, status="paused")
+        self.assertEqual(found["total"], 1)
+        self.assertGreaterEqual(found["counts"]["paused"], 1)
+        self.assertEqual(self.listing(q=email, status="subscribed")["total"], 1)  # still on the list
+
+        resumed = w.post(f"/admin/subscribers/{row['id']}/resume", None, w.admin)
+        self.assertEqual(resumed.status_code, 200)
+        self.assertFalse(resumed.json()["paused"])
+        self.assertEqual(audience(), before)
+        self.assertEqual(self.listing(q=email, status="paused")["total"], 0)
+
+        # Someone who already left cannot be paused.
+        w.post(f"/admin/subscribers/{row['id']}/unsubscribe", None, w.admin)
+        self.assertEqual(w.post(f"/admin/subscribers/{row['id']}/pause", None, w.admin).status_code, 409)
+
     def test_service_only_rows_are_not_subscribers_and_access_is_limited(self):
         w = self.w
         email = w.email("cartonly")

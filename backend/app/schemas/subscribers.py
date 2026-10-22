@@ -14,6 +14,8 @@ class SubscriberOut(BaseModel):
     subscribed: bool
     subscribed_at: datetime
     unsubscribed_at: datetime | None
+    paused: bool = False
+    paused_at: datetime | None = None
     welcome_coupon: str | None
     has_ordered: bool
 
@@ -21,6 +23,7 @@ class SubscriberOut(BaseModel):
 class SubscriberCounts(BaseModel):
     all: int
     subscribed: int
+    paused: int = 0
     unsubscribed: int
 
 

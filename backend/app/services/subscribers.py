@@ -3,9 +3,12 @@
 Rows made only so a service email (cart reminder, order update) can carry an unsubscribe link are not
 subscribers and are never listed. Staff can add an address, take one off the list, or delete the row;
 they cannot sign someone back up, because only the person can agree to marketing email again.
+Staff can also pause someone: they stay subscribed but campaigns skip them until resumed.
 """
 
 from __future__ import annotations
+
+from datetime import datetime, timezone
 
 from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +21,7 @@ from app.schemas.subscribers import SubscriberCounts, SubscriberList, Subscriber
 from app.services import audit
 from app.services.auth import NewsletterService
 
-STATUSES = ("all", "subscribed", "unsubscribed")
+STATUSES = ("all", "subscribed", "paused", "unsubscribed")
 _ORDERED = text(
     "SELECT lower(email) FROM orders WHERE status <> 'cancelled' AND lower(email) = ANY(CAST(:emails AS text[]))"
 )
@@ -36,6 +39,8 @@ class SubscriberService:
         conds = [_real()]
         if status == "subscribed":
             conds.append(NewsletterSubscriber.unsubscribed_at.is_(None))
+        elif status == "paused":
+            conds += [NewsletterSubscriber.unsubscribed_at.is_(None), NewsletterSubscriber.paused_at.is_not(None)]
         elif status == "unsubscribed":
             conds.append(NewsletterSubscriber.unsubscribed_at.is_not(None))
         if q and q.strip():
@@ -54,17 +59,21 @@ class SubscriberService:
         return [
             SubscriberOut(
                 id=r.id, email=r.email, locale=r.locale, source=r.source, subscribed=r.unsubscribed_at is None,
-                subscribed_at=r.created_at, unsubscribed_at=r.unsubscribed_at, welcome_coupon=r.welcome_coupon,
+                subscribed_at=r.created_at, unsubscribed_at=r.unsubscribed_at,
+                paused=r.unsubscribed_at is None and r.paused_at is not None, paused_at=r.paused_at, welcome_coupon=r.welcome_coupon,
                 has_ordered=r.email.lower() in ordered,
             )
             for r in rows
         ]
 
     async def counts(self) -> SubscriberCounts:
-        total, left = (await self.session.execute(
-            select(func.count(), func.count(NewsletterSubscriber.unsubscribed_at)).where(_real())
+        total, left, paused = (await self.session.execute(
+            select(
+                func.count(), func.count(NewsletterSubscriber.unsubscribed_at),
+                func.count().filter(NewsletterSubscriber.unsubscribed_at.is_(None), NewsletterSubscriber.paused_at.is_not(None)),
+            ).where(_real())
         )).one()
-        return SubscriberCounts(all=total, subscribed=total - left, unsubscribed=left)
+        return SubscriberCounts(all=total, subscribed=total - left, paused=paused, unsubscribed=left)
 
     async def list(self, q: str | None, status: str, page: int, page_size: int) -> SubscriberList:
         total = (await self.session.execute(select(func.count()).select_from(NewsletterSubscriber).where(*self._filters(q, status)))).scalar_one()
@@ -75,7 +84,7 @@ class SubscriberService:
         rows = await self._rows(q, status)
         header = ["Email", "Status", "Language", "Joined from", "Joined", "Unsubscribed", "Has ordered", "Welcome code"]
         return to_csv(header, [
-            (r.email, "subscribed" if r.subscribed else "unsubscribed", r.locale, r.source, r.subscribed_at, r.unsubscribed_at,
+            (r.email, "paused" if r.paused else "subscribed" if r.subscribed else "unsubscribed", r.locale, r.source, r.subscribed_at, r.unsubscribed_at,
              r.has_ordered, r.welcome_coupon) for r in rows
         ])
 
@@ -104,6 +113,25 @@ class SubscriberService:
         if row.unsubscribed_at is None:
             await NewsletterService(self.session).unsubscribe(row.unsubscribe_token)
             audit.record(self.session, actor, "subscriber.unsubscribe", "subscriber", row.id, f"Took {row.email} off the newsletter")
+            await self.session.commit()
+        return next(r for r in await self._rows(row.email, "all") if r.id == row.id)
+
+    async def pause(self, subscriber_id: int, actor: User) -> SubscriberOut:
+        """Hold campaign email for a while (a complaint, a bounce to check, a VIP handled by hand). Still subscribed."""
+        row = await self._get(subscriber_id)
+        if row.unsubscribed_at is not None:
+            raise ConflictError("This person already unsubscribed, so there is nothing to pause.")
+        if row.paused_at is None:
+            row.paused_at = datetime.now(timezone.utc)
+            audit.record(self.session, actor, "subscriber.pause", "subscriber", row.id, f"Paused campaign email to {row.email}")
+            await self.session.commit()
+        return next(r for r in await self._rows(row.email, "all") if r.id == row.id)
+
+    async def resume(self, subscriber_id: int, actor: User) -> SubscriberOut:
+        row = await self._get(subscriber_id)
+        if row.paused_at is not None:
+            row.paused_at = None
+            audit.record(self.session, actor, "subscriber.resume", "subscriber", row.id, f"Resumed campaign email to {row.email}")
             await self.session.commit()
         return next(r for r in await self._rows(row.email, "all") if r.id == row.id)
 
