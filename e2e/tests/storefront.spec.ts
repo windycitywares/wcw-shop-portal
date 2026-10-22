@@ -29,7 +29,7 @@ test.describe("browsing", () => {
     // Reviews section and the wishlist heart (signed out: both invite to sign in).
     await expect(page.getByRole("heading", { level: 2, name: "Reviews" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Sign in to write a review" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Sign in to save designs" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Sign in to save items" })).toBeVisible();
     seen.expectClean();
     await a11y(page, { enforce: false });
   });
