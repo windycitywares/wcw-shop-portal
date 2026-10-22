@@ -68,7 +68,7 @@ export default function AdminEnvironment() {
   const router = useRouter();
   const [env, setEnv] = useState<Environment | null>(null);
   const [mailTo, setMailTo] = useState("");
-  const [loginsText, setLoginsText] = useState("");
+  const [logins, setLogins] = useState("");
   const [confirm, setConfirm] = useState<Confirm>(null);
   const [busy, setBusy] = useState(false);
   const [switched, setSwitched] = useState<"live" | "test" | null>(null);
@@ -79,7 +79,7 @@ export default function AdminEnvironment() {
       (d) => {
         setEnv(d);
         setMailTo(d.test_mail_to ?? "");
-        setLoginsText((d.test_login_emails ?? []).join("\n"));
+        setLogins(d.test_login_emails.join("\n"));
         setError("");
       },
       (e) => setError(e.message),
@@ -120,25 +120,6 @@ export default function AdminEnvironment() {
       const d = await apiFetch<Environment>("/admin/environment/mail-to", { method: "PUT", body: JSON.stringify({ email: mailTo.trim() || null }) });
       setEnv(d);
       push({ title: "Test inbox saved", description: d.test_mail_to ?? "Emails won't be sent in test mode" });
-    } catch (err) {
-      push({ title: "That didn't work", description: err instanceof Error ? err.message : undefined, tone: "danger" });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function saveLogins(e: React.FormEvent) {
-    e.preventDefault();
-    const emails = loginsText
-      .split(/[\s,;]+/)
-      .map((x) => x.trim())
-      .filter(Boolean);
-    setBusy(true);
-    try {
-      const d = await apiFetch<Environment>("/admin/environment/test-logins", { method: "PUT", body: JSON.stringify({ emails }) });
-      setEnv(d);
-      setLoginsText(d.test_login_emails.join("\n"));
-      push({ title: "Test sign-in saved", description: d.test_login_emails.length ? `${d.test_login_emails.length} account(s) can sign in` : "Only admin accounts can sign in" });
     } catch (err) {
       push({ title: "That didn't work", description: err instanceof Error ? err.message : undefined, tone: "danger" });
     } finally {
@@ -264,31 +245,10 @@ export default function AdminEnvironment() {
           </PanelBody>
         </Panel>
         <Panel>
-          <PanelHeader title="Test sign-in" description="The copy holds real customers' password hashes, so in test mode only these accounts can sign in." />
-          <PanelBody>
-            <form onSubmit={saveLogins} className="grid gap-2">
-              <label htmlFor="test-logins" className="text-sm font-medium">
-                Accounts that can sign in
-              </label>
-              <textarea
-                id="test-logins"
-                rows={4}
-                value={loginsText}
-                onChange={(e) => setLoginsText(e.target.value)}
-                placeholder={"qa@windycitywares.com\ncustomer@windycitywares.com"}
-                className="min-h-24 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
-              />
-              <div>
-                <Button type="submit" size="sm" variant="secondary" disabled={busy}>
-                  Save sign-in list
-                </Button>
-              </div>
-            </form>
-            <p className="mt-2 text-xs text-muted">One email per line. Leave empty to allow only admin accounts. Accounts that are not listed cannot sign in while test mode is on.</p>
-          </PanelBody>
-        </Panel>
-        <Panel>
-          <PanelHeader title="While test mode is on" />
+          <PanelHeader
+            title="Who can sign in"
+            description="On the copy, staff always can. A real customer copied into the test data cannot sign in until their address is listed here: the copy holds their password. Anyone who signs up while testing can sign in again."
+          />
           <PanelBody>
             <form onSubmit={saveLogins} className="space-y-2">
               <label htmlFor="test-logins" className="sr-only">

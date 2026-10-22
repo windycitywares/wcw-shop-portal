@@ -12,7 +12,7 @@ class EnvironmentOut(BaseModel):
     test_exists: bool
     test_synced_at: datetime | None
     test_mail_to: str | None
-    test_login_emails: list[str] = Field(default_factory=list)
+    test_login_emails: list[str] = []
     test_size_bytes: int | None
     out_of_date: bool
     changed_at: datetime | None
@@ -29,8 +29,7 @@ class MailToIn(BaseModel):
     email: EmailStr | None = None
 
 
-class TestLoginsIn(BaseModel):
-    emails: list[EmailStr] = Field(default_factory=list, max_length=50)
+class LoginsIn(BaseModel):
+    """Shopper addresses allowed to sign in on the test copy (staff always may)."""
 
-    def normalized(self) -> list[str]:
-        return sorted({str(e).strip().lower() for e in self.emails})
+    emails: list[EmailStr] = Field(default_factory=list, max_length=200)
