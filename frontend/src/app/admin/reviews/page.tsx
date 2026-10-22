@@ -10,6 +10,7 @@ import { Panel } from "@/components/admin/ui/Panel";
 import { Pill } from "@/components/admin/ui/Pill";
 import { Tabs } from "@/components/admin/ui/Tabs";
 import { useToast } from "@/components/admin/ui/Toast";
+import { IconButton } from "@/components/admin/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
@@ -174,10 +175,7 @@ export default function AdminReviews() {
                       <span className="sr-only"> review of {r.product_title}</span>
                     </Button>
                   )}
-                  <Button size="sm" variant="ghost" onClick={() => setDeleting(r)}>
-                    Delete
-                    <span className="sr-only"> review of {r.product_title}</span>
-                  </Button>
+                  <IconButton icon="trash" tone="danger" label={`Delete review of ${r.product_title}`} onClick={() => setDeleting(r)} />
                 </div>
               </li>
             ))}

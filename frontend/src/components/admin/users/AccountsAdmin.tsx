@@ -6,6 +6,7 @@ import { API_URL, apiFetch } from "@/lib/client-api";
 import type { Page, Role, User } from "@/lib/types";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
 import { Icon } from "@/components/admin/ui/Icon";
+import { IconButton, RowActions } from "@/components/admin/ui/IconButton";
 import { ConfirmDialog, Modal } from "@/components/admin/ui/Modal";
 import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { Panel } from "@/components/admin/ui/Panel";
@@ -25,6 +26,8 @@ const ROLE_HELP: Record<Role, string> = {
 
 /** A change waiting for "are you sure?": a new role, or switching the account on or off. */
 type Pending = { user: User; role: Role } | { user: User; active: boolean };
+/** An edit waiting for "save these changes?". */
+type EditDraft = { user: User; name: string | null; email: string; role: Role };
 
 const who = (u: User) => u.full_name || u.email;
 
@@ -55,6 +58,8 @@ export function AccountsAdmin({ scope }: { scope: AccountScope }) {
   const [editing, setEditing] = useState<User | null>(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [editRole, setEditRole] = useState<Role>("customer");
+  const [draft, setDraft] = useState<EditDraft | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [testMode, setTestMode] = useState(false);
 
@@ -96,20 +101,28 @@ export function AccountsAdmin({ scope }: { scope: AccountScope }) {
   function openEdit(u: User) {
     setEditName(u.full_name ?? "");
     setEditEmail(u.email);
+    setEditRole(u.role);
     setEditing(u);
   }
 
-  async function saveEdit(e: React.FormEvent<HTMLFormElement>) {
+  /** Saving only asks "are you sure?"; the change is made when it is confirmed. */
+  function saveEdit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!editing) return;
+    setDraft({ user: editing, name: editName.trim() || null, email: editEmail.trim(), role: editRole });
+  }
+
+  async function confirmEdit() {
+    if (!draft) return;
+    const { user, name, email, role } = draft;
     setSaving(true);
     setError("");
     try {
-      await apiFetch(`/users/${editing.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ full_name: editName.trim() || null, email: editEmail.trim() }),
-      });
-      push({ title: "Account updated", description: who(editing) });
+      const body: Record<string, unknown> = { full_name: name, email };
+      if (role !== user.role) body.role = role;
+      await apiFetch(`/users/${user.id}`, { method: "PATCH", body: JSON.stringify(body) });
+      push({ title: "Account updated", description: role !== user.role ? `${who(user)} is now ${role === "admin" ? "an" : "a"} ${role}.` : who(user) });
+      setDraft(null);
       setEditing(null);
       await load();
     } catch (err) {
@@ -203,29 +216,7 @@ export function AccountsAdmin({ scope }: { scope: AccountScope }) {
     {
       key: "role",
       header: "Role",
-      cell: (u) => (
-        <>
-          <label htmlFor={`role-${u.id}`} className="sr-only">
-            Role for {u.email}
-          </label>
-          <Select
-            id={`role-${u.id}`}
-            value={u.role}
-            disabled={u.id === me?.id}
-            onChange={(e) => {
-              const role = e.target.value as Role;
-              if (role !== u.role) setPending({ user: u, role });
-            }}
-            className="h-8 w-36 py-0 capitalize"
-          >
-            {ROLES.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </Select>
-        </>
-      ),
+      cell: (u) => <Pill tone={u.role === "admin" ? "accent" : "neutral"} dot={false}><span className="capitalize">{u.role}</span></Pill>,
     },
     {
       key: "active",
@@ -245,27 +236,15 @@ export function AccountsAdmin({ scope }: { scope: AccountScope }) {
       ),
     },
     {
-      key: "edit",
-      header: "",
+      key: "actions",
+      header: <span className="sr-only">Actions</span>,
+      align: "right",
       cell: (u) => (
-        <Button size="sm" variant="ghost" className="h-8" onClick={() => openEdit(u)}>
-          Edit
-          <span className="sr-only"> {u.email}</span>
-        </Button>
+        <RowActions>
+          <IconButton icon="edit" label={`Edit ${u.email}`} onClick={() => openEdit(u)} />
+          {u.id !== me?.id && <IconButton icon="key" label={`Set password for ${u.email}`} onClick={() => openReset(u)} />}
+        </RowActions>
       ),
-    },
-    {
-      key: "password",
-      header: "Password",
-      cell: (u) =>
-        u.id === me?.id ? (
-          <span className="text-xs text-muted">In Your account</span>
-        ) : (
-          <Button size="sm" variant="secondary" className="h-8" onClick={() => openReset(u)}>
-            Set password
-            <span className="sr-only"> for {u.email}</span>
-          </Button>
-        ),
     },
   ];
 
@@ -442,7 +421,7 @@ export function AccountsAdmin({ scope }: { scope: AccountScope }) {
               Cancel
             </Button>
             <Button type="submit" form="edit-user-form" size="sm" className="h-9" disabled={saving}>
-              {saving ? "Saving…" : "Save"}
+              Save changes
             </Button>
           </>
         }
@@ -454,8 +433,44 @@ export function AccountsAdmin({ scope }: { scope: AccountScope }) {
           <Field label="Email">
             {(p) => <Input {...p} type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} required />}
           </Field>
+          <Field label="Role" hint={editing?.id === me?.id ? "You can't change your own role." : ROLE_HELP[editRole]}>
+            {(p) => (
+              <Select {...p} value={editRole} disabled={editing?.id === me?.id} onChange={(e) => setEditRole(e.target.value as Role)} className="capitalize">
+                {ROLES.filter((r) => (scope === "team" ? r !== "customer" : true) || r === editRole).map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        open={!!draft}
+        title="Save these changes?"
+        tone="primary"
+        confirmLabel="Save changes"
+        busy={saving}
+        onCancel={() => setDraft(null)}
+        onConfirm={() => void confirmEdit()}
+        message={
+          draft && (
+            <div className="space-y-2">
+              <p>
+                Update <strong className="text-ink">{who(draft.user)}</strong> ({draft.user.email})?
+              </p>
+              {draft.role !== draft.user.role && (
+                <p>
+                  Role changes from <strong className="capitalize text-ink">{draft.user.role}</strong> to <strong className="capitalize text-ink">{draft.role}</strong>. {ROLE_HELP[draft.role]}
+                </p>
+              )}
+              {draft.email !== draft.user.email && <p>The sign-in email changes to {draft.email}.</p>}
+            </div>
+          )
+        }
+      />
 
       <ConfirmDialog
         open={!!pending}

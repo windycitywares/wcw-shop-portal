@@ -74,7 +74,7 @@ export function DataTable<T>({
             })}
           </tr>
         </thead>
-        <tbody className={cn("divide-y divide-line transition-opacity duration-200", loading && "opacity-50")}>
+        <tbody className={cn("divide-y divide-line transition-opacity duration-200 [&>tr:nth-child(even)]:bg-canvas/70", loading && "opacity-50")}>
           {rows === null
             ? Array.from({ length: 6 }, (_, i) => (
                 <tr key={i} aria-hidden="true">

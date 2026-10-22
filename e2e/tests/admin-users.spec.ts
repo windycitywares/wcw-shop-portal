@@ -25,26 +25,29 @@ test("add a team member, change their role and switch the account off", async ({
   await expect(row).toHaveCount(1);
   await expect(row.getByText("Active", { exact: true })).toBeVisible();
 
-  // Changing a role asks first; cancelling keeps the old one.
-  const role = row.getByLabel(`Role for ${email}`);
-  await role.selectOption("publisher");
-  const confirm = page.getByRole("dialog", { name: "Change role?" });
+  // The role is changed in the edit dialog, and saving asks first; cancelling keeps the old one.
+  const edit = page.getByRole("dialog", { name: "Edit account" });
+  const confirm = page.getByRole("dialog", { name: "Save these changes?" });
+  await row.getByRole("button", { name: `Edit ${email}` }).click();
+  await edit.getByLabel("Role").selectOption("publisher");
+  await edit.getByRole("button", { name: "Save changes" }).click();
   await expect(confirm).toContainText("from author to publisher", { ignoreCase: true });
   await confirm.getByRole("button", { name: "Cancel" }).click();
   await expect(confirm).toBeHidden();
-  await expect(role).toHaveValue("author");
+  await expect(row.getByText("author", { exact: true })).toBeVisible();
 
-  await role.selectOption("publisher");
-  await confirm.getByRole("button", { name: "Make publisher" }).click();
-  await expect(page.getByText("Role changed", { exact: true })).toBeVisible();
+  await edit.getByRole("button", { name: "Save changes" }).click();
+  await confirm.getByRole("button", { name: "Save changes" }).click();
+  await expect(page.getByText("Account updated", { exact: true })).toBeVisible();
   await expect(confirm).toBeHidden();
-  await expect(role).toHaveValue("publisher");
+  await expect(edit).toBeHidden();
+  await expect(row.getByText("publisher", { exact: true })).toBeVisible();
   // Saved on the server, not just in the page.
   await page.reload();
   await adminReady(page);
   await page.getByRole("searchbox", { name: "Search people" }).fill(email);
   await page.getByRole("button", { name: "Search" }).click();
-  await expect(row.getByLabel(`Role for ${email}`)).toHaveValue("publisher");
+  await expect(row.getByText("publisher", { exact: true })).toBeVisible();
 
   // An admin can set a new password for someone who lost theirs.
   await row.getByRole("button", { name: `Set password for ${email}` }).click();
@@ -81,6 +84,8 @@ test("you cannot change your own role or switch yourself off", async ({ page }) 
   await adminReady(page);
   const email = process.env.ADMIN_EMAIL || "";
   const row = page.getByRole("row").filter({ hasText: email });
-  await expect(row.getByLabel(`Role for ${email}`)).toBeDisabled();
+  await row.getByRole("button", { name: `Edit ${email}` }).click();
+  await expect(page.getByRole("dialog", { name: "Edit account" }).getByLabel("Role")).toBeDisabled();
+  await page.keyboard.press("Escape");
   await expect(row.getByLabel(`Account active for ${email}`)).toBeDisabled();
 });

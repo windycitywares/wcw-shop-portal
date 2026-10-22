@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { API, adminApi, adminReady, adminState, unique, watch } from "./support";
+import { API, adminApi, adminReady, adminState, unique, watch, confirmDelete } from "./support";
 
 test.use({ storageState: adminState });
 
@@ -63,8 +63,8 @@ test.describe("product lifecycle", () => {
     // Delete it
     await row.getByRole("link", { name: title }).click();
     await expect(page.locator("#admin-main h1")).toHaveText(title);
-    await page.getByRole("button", { name: "Delete" }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "Delete product" }).click();
+    await page.getByRole("button", { name: "Delete product", exact: true }).click();
+    await confirmDelete(page, "Delete product");
     await expect(page).toHaveURL(/\/admin\/products$/);
     await page.getByRole("searchbox", { name: "Search products" }).fill(sku);
     await page.getByRole("button", { name: "Search" }).click();

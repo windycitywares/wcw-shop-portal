@@ -13,6 +13,7 @@ import { Panel, PanelBody, PanelHeader } from "@/components/admin/ui/Panel";
 import { Pill, type Tone } from "@/components/admin/ui/Pill";
 import { Tabs } from "@/components/admin/ui/Tabs";
 import { useToast } from "@/components/admin/ui/Toast";
+import { IconButton } from "@/components/admin/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
@@ -370,9 +371,7 @@ export default function AdminMessages() {
                         Mark as spam
                       </Button>
                     )}
-                    <Button size="sm" variant="ghost" disabled={busy} onClick={() => setDeleting(true)}>
-                      Delete
-                    </Button>
+                    <IconButton icon="trash" tone="danger" label="Delete message" disabled={busy} onClick={() => setDeleting(true)} />
                   </PanelBody>
                 </Panel>
               </div>

@@ -9,6 +9,7 @@ import { ConfirmDialog, Modal } from "../ui/Modal";
 import { Pagination } from "../ui/Pagination";
 import { Panel, PanelHeader } from "../ui/Panel";
 import { useToast } from "../ui/Toast";
+import { IconButton, RowActions } from "@/components/admin/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
@@ -338,16 +339,10 @@ export function CouponsTab() {
       header: <span className="sr-only">Actions</span>,
       align: "right",
       cell: (c) => (
-        <div className="flex justify-end gap-2">
-          <Button size="sm" variant="secondary" className="h-8" onClick={() => openSingle(c)}>
-            Edit
-            <span className="sr-only"> {c.code}</span>
-          </Button>
-          <Button size="sm" variant="ghost" className="h-8" onClick={() => setDeleting(c)}>
-            {c.used_count > 0 ? "Pause" : "Delete"}
-            <span className="sr-only"> {c.code}</span>
-          </Button>
-        </div>
+        <RowActions>
+          <IconButton icon="edit" label={`Edit ${c.code}`} onClick={() => openSingle(c)} />
+          <IconButton icon={c.used_count > 0 ? "clock" : "trash"} tone="danger" label={`${c.used_count > 0 ? "Pause" : "Delete"} ${c.code}`} onClick={() => setDeleting(c)} />
+        </RowActions>
       ),
     },
   ];
