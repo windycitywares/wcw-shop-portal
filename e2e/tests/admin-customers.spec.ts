@@ -22,9 +22,13 @@ test("a shopper who signed up without ordering is in Customers and their account
   const detail = page.getByRole("dialog", { name: "E2E Signup" });
   await detail.getByRole("button", { name: "Switch account off" }).click();
   await page.getByRole("dialog", { name: "Switch this account off?" }).getByRole("button", { name: "Switch account off" }).click();
-  await expect(page.getByText("Account switched off", { exact: true })).toBeVisible();
-  await expect(detail.getByRole("button", { name: "Switch account on" })).toBeVisible();
-  await page.keyboard.press("Escape");
+  await expect(page.locator("[aria-live=polite]").getByText("Account switched off", { exact: true })).toBeVisible();
   await expect(row.getByText("Switched off", { exact: true })).toBeVisible();
+
+  // And back on, from the profile again.
+  await row.getByRole("button", { name: "E2E Signup" }).click();
+  await detail.getByRole("button", { name: "Switch account on" }).click();
+  await page.getByRole("dialog", { name: "Switch this account on?" }).getByRole("button", { name: "Switch account on" }).click();
+  await expect(row.getByText("Account", { exact: true })).toBeVisible();
   seen.expectClean();
 });

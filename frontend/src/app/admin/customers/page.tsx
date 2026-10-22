@@ -141,7 +141,7 @@ function Buyers({ onManageLogin }: { onManageLogin?: (email: string) => void }) 
   const { push } = useToast();
   const canAccounts = can("users:manage");
   const [account, setAccount] = useState("all");
-  const [switching, setSwitching] = useState<{ id: number; active: boolean } | null>(null);
+  const [switching, setSwitching] = useState<{ id: number; active: boolean; email: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [segment, setSegment] = useState("");
   const [sort, setSort] = useState("revenue");
@@ -186,13 +186,12 @@ function Buyers({ onManageLogin }: { onManageLogin?: (email: string) => void }) 
     apiFetch<CustomerDetail>(`/admin/customers/detail?email=${encodeURIComponent(email)}`).then(setDetail, (e) => setError(e.message));
 
   async function switchAccount() {
-    if (!switching || !detail) return;
+    if (!switching) return;
     setBusy(true);
     try {
       await apiFetch(`/users/${switching.id}`, { method: "PATCH", body: JSON.stringify({ is_active: switching.active }) });
-      push({ title: switching.active ? "Account switched on" : "Account switched off", description: detail.summary.email });
+      push({ title: switching.active ? "Account switched on" : "Account switched off", description: switching.email });
       setSwitching(null);
-      await openDetail(detail.summary.email);
       load();
     } catch (e) {
       push({ title: "Not changed", description: e instanceof Error ? e.message : undefined, tone: "danger" });
@@ -368,7 +367,11 @@ function Buyers({ onManageLogin }: { onManageLogin?: (email: string) => void }) 
                   <Button
                     size="sm"
                     variant="secondary"
-                    onClick={() => setSwitching({ id: detail.summary.account_id as number, active: !detail.summary.account_active })}
+                    onClick={() => {
+                      // The profile closes first: two dialogs open at once would close each other.
+                      setSwitching({ id: detail.summary.account_id as number, active: !detail.summary.account_active, email: detail.summary.email });
+                      setDetail(null);
+                    }}
                   >
                     {detail.summary.account_active ? "Switch account off" : "Switch account on"}
                   </Button>
@@ -427,8 +430,8 @@ function Buyers({ onManageLogin }: { onManageLogin?: (email: string) => void }) 
         message={
           <p>
             {switching?.active
-              ? `${detail?.summary.email} can sign in again.`
-              : `${detail?.summary.email} can't sign in until you switch the account back on. If they try, they're told the account is disabled and you get an email. Their orders are kept.`}
+              ? `${switching.email} can sign in again.`
+              : `${switching?.email} can't sign in until you switch the account back on. If they try, they're told the account is disabled and you get an email. Their orders are kept.`}
           </p>
         }
       />
