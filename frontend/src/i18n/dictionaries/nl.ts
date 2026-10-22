@@ -397,12 +397,8 @@ const nl: Dictionary = {
   theme: {
     label: "Thema",
     choose: "Kleurthema",
-    classic: "Meeroever",
-    linen: "Linnen",
-    sage: "Salie",
-    blush: "Blos",
-    midnight: "Middernacht",
-    system: "Zoals mijn apparaat",
+    classic: "Standaard",
+    midnight: "Donker",
   },
   auth: {
     signIn: "Inloggen",

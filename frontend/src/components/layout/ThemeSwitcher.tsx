@@ -46,8 +46,6 @@ function Swatch({ colors, className }: { colors: readonly string[]; className?: 
   );
 }
 
-const SYSTEM_SWATCH = ["#f2f3ef", "#0f151c", "#c9902f"] as const;
-
 /** Radio group of themes. `variant="menu"`: palette button + popover (header); "inline": row of swatches (mobile menu). */
 export function ThemeSwitcher({ className, variant = "menu" }: { className?: string; variant?: "menu" | "inline" }) {
   const { t } = useOptionalI18n();
@@ -74,10 +72,7 @@ export function ThemeSwitcher({ className, variant = "menu" }: { className?: str
     };
   }, [variant]);
 
-  const options = [
-    ...THEMES.map((th) => ({ id: th.id as ThemeChoice, label: t.theme[th.id], swatch: th.swatch })),
-    { id: "system" as ThemeChoice, label: t.theme.system, swatch: SYSTEM_SWATCH },
-  ];
+  const options = THEMES.map((th) => ({ id: th.id as ThemeChoice, label: t.theme[th.id], swatch: th.swatch }));
 
   const group = (
     <fieldset className={variant === "inline" ? "flex flex-wrap gap-2" : "space-y-0.5"}>

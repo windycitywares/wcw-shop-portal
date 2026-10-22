@@ -86,47 +86,7 @@ html[data-theme="midnight"] {
   --viz-8: #e66767;
   color-scheme: dark;
 }
-html[data-theme="linen"] {
-  --color-canvas: #f6f1ea;
-  --color-surface: #fffdf9;
-  --color-sand: #ece4d8;
-  --color-line: #ddd2c3;
-  --color-ink: #2b2420;
-  --color-muted: #685b50;
-  --color-accent: #9a4a2a;
-  --color-accent-strong: #7b3a20;
-  --color-accent-soft: #f3e3d8;
-  --color-night: #2b2420;
-  --color-night-muted: #cdbfb2;
-  --color-sale: #a33b22;
-}
-html[data-theme="sage"] {
-  --color-canvas: #eef2ec;
-  --color-surface: #ffffff;
-  --color-sand: #dfe7dc;
-  --color-line: #cdd8c9;
-  --color-ink: #1d2921;
-  --color-muted: #4d5d51;
-  --color-accent: #3a684c;
-  --color-accent-strong: #2b4f39;
-  --color-accent-soft: #dbe8de;
-  --color-night: #1a2920;
-  --color-night-muted: #b3c4b7;
-}
-html[data-theme="blush"] {
-  --color-canvas: #f8f1f1;
-  --color-surface: #ffffff;
-  --color-sand: #efe2e3;
-  --color-line: #e2cfd1;
-  --color-ink: #2e2226;
-  --color-muted: #6a575d;
-  --color-accent: #874459;
-  --color-accent-strong: #6c3546;
-  --color-accent-soft: #f3e1e6;
-  --color-night: #2a1d22;
-  --color-night-muted: #cfbcc2;
-  --color-sale: #9b3324;
-}
+
 /* Smooth hand-over when the shopper switches theme (not on first paint). */
 html.theme-switching,
 html.theme-switching * {
