@@ -5,10 +5,13 @@ Pages are client components that call the API with `apiFetch`. Nothing here need
 
 ## Look and feel
 
-- Dark sidebar (`bg-night`, always dark, whatever the theme) with a gold marker on the current page; a light
-  work area; plain white panels with a 4px radius. Headings are the sans face, sentence case, no all-caps labels.
-- The five storefront themes apply to the admin too (`html[data-theme]`). Use the tokens (`bg-surface`,
-  `text-muted`, `text-accent`, `bg-sand`, `border-line`, `text-warning`…), never hex values, so every theme works.
+- A clean dashboard look: a white sidebar with a soft shadow (Quicksand menu items, small uppercase section headings,
+  the current page tinted with an accent bar and accent icon), a white top bar with a shadow, a soft grey-blue work
+  area and white cards with a soft shadow (`--shadow-card`, 6px radius). Headings and the menu use Quicksand
+  (`.font-admin`), text uses Open Sans at 14px. Page titles and labels are sentence case.
+- The admin has its own palette for the two themes (Default and Dark), declared on `.admin-root` in `globals.css`,
+  so it never changes the storefront. Use the tokens (`bg-surface`, `text-muted`, `text-accent`, `bg-sand`,
+  `border-line`, `text-warning`…), never hex values, so both themes work.
 - Numbers use `.num` (tabular figures) so columns line up. Money and dates come from `charts/format.ts`.
 - Writing: name things the way the shop owner does ("Orders", "Coupons"), buttons say what happens
   ("Save changes", "Delete coupon"), and the toast repeats the verb ("Saved", "Coupon deleted").
