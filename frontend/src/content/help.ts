@@ -7,7 +7,7 @@
  * legal pages checked) before launch.
  */
 
-export const HELP_TOPICS = ["faq", "shipping", "returns", "privacy", "terms"] as const;
+export const HELP_TOPICS = ["guide", "faq", "shipping", "returns", "privacy", "terms"] as const;
 export type HelpTopic = (typeof HELP_TOPICS)[number];
 
 export interface HelpSection {
@@ -25,13 +25,25 @@ export interface HelpPage {
 type Lang = "en" | "es" | "nl";
 
 export const HELP_NAV: Record<Lang, Record<HelpTopic, string>> = {
-  en: { faq: "FAQ", shipping: "Shipping", returns: "Returns", privacy: "Privacy", terms: "Terms" },
-  es: { faq: "Preguntas frecuentes", shipping: "Envíos", returns: "Devoluciones", privacy: "Privacidad", terms: "Condiciones" },
-  nl: { faq: "Veelgestelde vragen", shipping: "Verzending", returns: "Retourneren", privacy: "Privacy", terms: "Voorwaarden" },
+  en: { guide: "How to shop", faq: "FAQ", shipping: "Shipping", returns: "Returns", privacy: "Privacy", terms: "Terms" },
+  es: { guide: "Cómo comprar", faq: "Preguntas frecuentes", shipping: "Envíos", returns: "Devoluciones", privacy: "Privacidad", terms: "Condiciones" },
+  nl: { guide: "Hoe te winkelen", faq: "Veelgestelde vragen", shipping: "Verzending", returns: "Retourneren", privacy: "Privacy", terms: "Voorwaarden" },
 };
 
 export const HELP: Record<Lang, Record<HelpTopic, HelpPage>> = {
   en: {
+    guide: {
+      title: "How to shop",
+      description: "A short guide to finding, buying and tracking your order at Windy City Wares.",
+      sections: [
+        { heading: "Finding something", paragraphs: ["Browse by theme from the menu, or use the search box at the top. On a list of products you can narrow things down with the filters (price, in stock, on sale, rating) and sort by newest, price or name.", "Choose how many products to show at a time with “Show … per page”. More products load by themselves as you scroll."] },
+        { heading: "Choosing and buying", paragraphs: ["Open a product to see photos, size, materials and reviews. Pick any options, then press Add to cart.", "Open the cart to change quantities, add a discount code, and see shipping and tax before you pay.", "Checkout asks for your delivery address and email, then takes you to Stripe’s secure page to pay by card. We never see your card number."] },
+        { heading: "Your account", paragraphs: ["You can check out without an account, but an account lets you follow orders, keep a wishlist and check out faster.", "Forgot your password? Use “Forgot password” on the sign-in page. If the address has an account we send a link to choose a new password; if not, we email you how to sign up."] },
+        { heading: "After you order", paragraphs: ["You’ll get a confirmation email, and another when your order ships with the tracking number.", "To see where it is at any time, use the link in your email, or Find my order with your order number and email address.", "Need to return something? See Returns and refunds."] },
+        { heading: "Newsletter and welcome offer", paragraphs: ["Subscribe at the bottom of any page for occasional notes about new pieces. New subscribers who haven’t ordered yet may get a personal welcome code. Every email has an unsubscribe link."] },
+        { heading: "Still stuck?", paragraphs: ["Write to us from the Contact page and a real person will reply."] },
+      ],
+    },
     faq: {
       title: "Frequently asked questions",
       description: "Sizes, materials, shipping, payment and orders: answers to the questions shoppers ask us most.",
@@ -88,6 +100,18 @@ export const HELP: Record<Lang, Record<HelpTopic, HelpPage>> = {
     },
   },
   es: {
+    guide: {
+      title: "Cómo comprar",
+      description: "Una guía breve para encontrar, comprar y seguir tu pedido en Windy City Wares.",
+      sections: [
+        { heading: "Cómo encontrar algo", paragraphs: ["Explora por temas desde el menú o usa el buscador de arriba. En una lista de productos puedes afinar con los filtros (precio, disponible, en oferta, valoración) y ordenar por novedad, precio o nombre.", "Elige cuántos productos ver a la vez con “Mostrar … por página”. Al desplazarte se cargan más productos automáticamente."] },
+        { heading: "Elegir y comprar", paragraphs: ["Abre un producto para ver fotos, tamaño, materiales y reseñas. Elige las opciones y pulsa Añadir al carrito.", "En el carrito puedes cambiar cantidades, añadir un código de descuento y ver el envío y los impuestos antes de pagar.", "En el pago te pedimos la dirección de entrega y el correo, y después pasas a la página segura de Stripe para pagar con tarjeta. Nunca vemos el número de tu tarjeta."] },
+        { heading: "Tu cuenta", paragraphs: ["Puedes comprar sin cuenta, pero con una cuenta sigues tus pedidos, guardas una lista de deseos y pagas más rápido.", "¿Olvidaste tu contraseña? Usa “Olvidé mi contraseña” en el inicio de sesión. Si la dirección tiene cuenta te enviamos un enlace para crear una nueva; si no, te escribimos cómo registrarte."] },
+        { heading: "Después del pedido", paragraphs: ["Recibirás un correo de confirmación y otro cuando salga el envío, con el número de seguimiento.", "Para ver dónde está en cualquier momento, usa el enlace del correo o Buscar mi pedido con tu número de pedido y correo.", "¿Quieres devolver algo? Consulta Devoluciones y reembolsos."] },
+        { heading: "Boletín y oferta de bienvenida", paragraphs: ["Suscríbete al final de cualquier página para recibir novedades de vez en cuando. Los nuevos suscriptores que aún no han comprado pueden recibir un código de bienvenida personal. Todos los correos incluyen un enlace para darte de baja."] },
+        { heading: "¿Sigues atascado?", paragraphs: ["Escríbenos desde la página de Contacto y una persona real te responderá."] },
+      ],
+    },
     faq: {
       title: "Preguntas frecuentes",
       description: "Tamaños, materiales, envíos, pagos y pedidos: respuestas a las preguntas más habituales.",
@@ -144,6 +168,18 @@ export const HELP: Record<Lang, Record<HelpTopic, HelpPage>> = {
     },
   },
   nl: {
+    guide: {
+      title: "Hoe te winkelen",
+      description: "Een korte gids om je bestelling bij Windy City Wares te vinden, te kopen en te volgen.",
+      sections: [
+        { heading: "Iets vinden", paragraphs: ["Blader per thema via het menu of gebruik het zoekveld bovenaan. Op een productlijst verfijn je met de filters (prijs, op voorraad, in de aanbieding, beoordeling) en sorteer je op nieuwste, prijs of naam.", "Kies met “Toon … per pagina” hoeveel producten je tegelijk ziet. Terwijl je scrolt, worden vanzelf meer producten geladen."] },
+        { heading: "Kiezen en kopen", paragraphs: ["Open een product voor foto’s, maat, materialen en beoordelingen. Kies de opties en druk op In winkelwagen.", "In de winkelwagen wijzig je aantallen, voeg je een kortingscode toe en zie je verzending en belasting voordat je betaalt.", "Bij het afrekenen vragen we je bezorgadres en e-mail, daarna ga je naar de beveiligde pagina van Stripe om met kaart te betalen. Wij zien nooit je kaartnummer."] },
+        { heading: "Je account", paragraphs: ["Je kunt zonder account bestellen, maar met een account volg je bestellingen, bewaar je een verlanglijst en reken je sneller af.", "Wachtwoord vergeten? Gebruik “Wachtwoord vergeten” op de inlogpagina. Heeft het adres een account, dan sturen we een link voor een nieuw wachtwoord; zo niet, dan mailen we hoe je je aanmeldt."] },
+        { heading: "Na je bestelling", paragraphs: ["Je krijgt een bevestigingsmail en nog een zodra je bestelling is verzonden, met het trackingnummer.", "Wil je weten waar hij is? Gebruik de link in je e-mail, of Zoek mijn bestelling met je bestelnummer en e-mailadres.", "Iets retourneren? Zie Retourneren en terugbetalen."] },
+        { heading: "Nieuwsbrief en welkomstaanbieding", paragraphs: ["Schrijf je onderaan elke pagina in voor af en toe nieuws over nieuwe stukken. Nieuwe abonnees die nog niet besteld hebben, kunnen een persoonlijke welkomstcode krijgen. Elke e-mail heeft een uitschrijflink."] },
+        { heading: "Nog vragen?", paragraphs: ["Schrijf ons via de Contactpagina en een echt mens antwoordt."] },
+      ],
+    },
     faq: {
       title: "Veelgestelde vragen",
       description: "Maten, materialen, verzending, betalen en bestellingen: antwoorden op de vragen die klanten ons het vaakst stellen.",
