@@ -268,6 +268,21 @@ html.theme-switching * {
     border-radius: var(--radius-control);
     animation: admin-pulse 1.4s ease-in-out infinite;
   }
+  /* A light sweep over a placeholder while its content loads (like the grey boxes in a social feed). */
+  .shimmer {
+    background-color: var(--color-sand);
+    background-image: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.65) 50%, transparent 80%);
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+    animation: shimmer 1.3s linear infinite;
+  }
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -100% 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .shimmer { animation: none; }
+  }
   @keyframes toast-in {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: none; }
