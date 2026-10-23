@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { fmt, localePath, type Locale } from "@/i18n/config";
+import { defaultLocale, fmt, localePath, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getFacets, getProducts } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Breadcrumbs, Container, EmptyState, type Crumb } from "@/components/ui/misc";
 import { TrackOnView } from "@/components/analytics/TrackOnView";
 import { FilterPanel } from "./FilterPanel";
-import { ProductGrid } from "./ProductCard";
+import { InfiniteProducts } from "./InfiniteProducts";
 import { SortSelect } from "./SortSelect";
 import { PageSizeSelect } from "./PageSizeSelect";
 import { PAGE_SIZES, DEFAULT_PAGE_SIZE } from "./pageSizes";
@@ -87,6 +87,10 @@ export async function ProductListing({
     getFacets(categorySlug),
   ]);
   const page = result.page;
+  const apiParams = toApiParams(searchParams, categorySlug, fixedParams);
+  apiParams.delete("page");
+  if (locale !== defaultLocale) apiParams.set("lang", locale);
+  const apiQuery = apiParams.toString();
   const pages = Math.max(1, Math.ceil(result.total / result.page_size));
 
   return (
@@ -148,9 +152,22 @@ export async function ProductListing({
               .
             </EmptyState>
           ) : (
-            <ProductGrid products={result.items} locale={locale} priorityCount={3} columns={3} />
+            <InfiniteProducts
+              key={apiQuery}
+              initial={result.items}
+              total={result.total}
+              startPage={page}
+              pageSize={result.page_size}
+              query={apiQuery}
+              priorityCount={3}
+            />
           )}
-          {pages > 1 && <Pager page={page} pages={pages} href={(n) => pageHref(searchParams, n, basePath)} t={t} />}
+          {/* Without JavaScript (and for crawlers) the numbered pages remain. */}
+          {pages > 1 && (
+            <noscript>
+              <Pager page={page} pages={pages} href={(n) => pageHref(searchParams, n, basePath)} t={t} />
+            </noscript>
+          )}
         </section>
       </div>
     </Container>
