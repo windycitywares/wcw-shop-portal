@@ -9,11 +9,20 @@ import { TrackOnView } from "@/components/analytics/TrackOnView";
 import { FilterPanel } from "./FilterPanel";
 import { ProductGrid } from "./ProductCard";
 import { SortSelect } from "./SortSelect";
+import { PageSizeSelect } from "./PageSizeSelect";
+import { PAGE_SIZES, DEFAULT_PAGE_SIZE } from "./pageSizes";
+import { Pager } from "./Pager";
 
 export type SearchParams = Record<string, string | string[] | undefined>;
 
-const PAGE_SIZE = 24;
 const PASSTHROUGH = ["q", "min_price", "max_price", "in_stock", "on_sale", "min_rating", "sort", "page"];
+
+/** How many products per page: the visitor's pick if it is one of the offered sizes, else the default. */
+function pageSizeOf(searchParams: SearchParams): number {
+  const raw = Array.isArray(searchParams.page_size) ? searchParams.page_size[0] : searchParams.page_size;
+  const n = Number(raw);
+  return (PAGE_SIZES as readonly number[]).includes(n) ? n : DEFAULT_PAGE_SIZE;
+}
 
 /** Converts Next's searchParams into the API's query string. */
 function toApiParams(searchParams: SearchParams, category?: string, fixed?: Record<string, string>): URLSearchParams {
@@ -26,7 +35,7 @@ function toApiParams(searchParams: SearchParams, category?: string, fixed?: Reco
   }
   if (category) params.set("category", category);
   for (const [key, value] of Object.entries(fixed ?? {})) params.set(key, value);
-  params.set("page_size", String(PAGE_SIZE));
+  params.set("page_size", String(pageSizeOf(searchParams)));
   return params;
 }
 
@@ -121,9 +130,12 @@ export async function ProductListing({
             <h2 id="results-heading" className="font-sans text-sm font-normal text-muted" aria-live="polite">
               {result.total === 1 ? t.listing.productOne : fmt(t.listing.productOther, { count: result.total })}
             </h2>
-            <Suspense fallback={null}>
-              <SortSelect />
-            </Suspense>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <Suspense fallback={null}>
+                <PageSizeSelect value={pageSizeOf(searchParams)} />
+                <SortSelect />
+              </Suspense>
+            </div>
           </div>
           {result.items.length === 0 && emptyState && result.page === 1 ? (
             emptyState
@@ -138,29 +150,7 @@ export async function ProductListing({
           ) : (
             <ProductGrid products={result.items} locale={locale} priorityCount={3} columns={3} />
           )}
-          {pages > 1 && (
-            <nav aria-label={t.listing.pagination} className="mt-16 flex items-center justify-center gap-2 text-sm">
-              {page > 1 && (
-                <Link
-                  href={pageHref(searchParams, page - 1, basePath)}
-                  rel="prev"
-                  className="rounded-[var(--radius-control)] border border-line bg-surface px-4 py-2 hover:border-ink/40"
-                >
-                  {t.listing.previous}
-                </Link>
-              )}
-              <span className="px-3 text-muted">{fmt(t.listing.pageOf, { page, pages })}</span>
-              {page < pages && (
-                <Link
-                  href={pageHref(searchParams, page + 1, basePath)}
-                  rel="next"
-                  className="rounded-[var(--radius-control)] border border-line bg-surface px-4 py-2 hover:border-ink/40"
-                >
-                  {t.listing.next}
-                </Link>
-              )}
-            </nav>
-          )}
+          {pages > 1 && <Pager page={page} pages={pages} href={(n) => pageHref(searchParams, n, basePath)} t={t} />}
         </section>
       </div>
     </Container>
