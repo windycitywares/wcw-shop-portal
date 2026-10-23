@@ -42,6 +42,7 @@ export function Footer({ locale }: { locale: Locale }) {
         { label: HELP_NAV[locale].privacy, href: l("/help/privacy") },
         { label: HELP_NAV[locale].terms, href: l("/help/terms") },
         { label: t.footer.contact, href: l("/contact") },
+        { label: ({ en: "Site map", es: "Mapa del sitio", nl: "Sitemap" } as Record<string, string>)[locale] ?? "Site map", href: l("/site-map") },
       ],
     },
   ];

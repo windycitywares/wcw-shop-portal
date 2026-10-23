@@ -17,7 +17,8 @@ export default function AdminWiki() {
 
   return (
     <>
-      <PageHeader title="Admin wiki" description="How to run the shop and use each setting, in plain language. Only signed-in staff can see this." />
+      <PageHeader title="Admin wiki" actions={<a href="/sitemap.xml" target="_blank" rel="noreferrer" className="text-sm text-muted underline hover:text-ink">View sitemap.xml</a>}
+        description="How to run the shop and use each setting, in plain language. Only signed-in staff can see this." />
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
         <nav aria-label="Wiki contents" className="lg:sticky lg:top-4 lg:self-start">
           <label htmlFor="wiki-search" className="mb-1.5 block text-sm font-medium text-ink">Search the wiki</label>

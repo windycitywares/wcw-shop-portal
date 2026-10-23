@@ -124,6 +124,7 @@ export const SETTINGS_HREFS = [
   "/admin/environment",
   "/admin/backups",
   "/admin/deployments",
+  "/admin/wiki",
 ];
 
 /** One plain sentence per admin tool, for the Settings overview. */
@@ -135,6 +136,7 @@ export const TOOL_ABOUT: Record<string, string> = {
   "/admin/environment": "Practise on a copy of the shop's data without touching the real shop.",
   "/admin/backups": "Save and restore copies of the shop's data.",
   "/admin/deployments": "Publish the latest changes to the live shop.",
+  "/admin/wiki": "Plain-language help for running the shop and every setting. Staff only.",
 };
 
 export function inSettings(pathname: string): boolean {
