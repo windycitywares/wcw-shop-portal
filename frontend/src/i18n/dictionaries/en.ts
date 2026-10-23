@@ -434,7 +434,7 @@ const en = {
     forgotText: "Enter the email you use for your account and we'll send you a link to choose a new password.",
     send: "Send reset link",
     sending: "Sending…",
-    sent: "If an account exists for {email}, a reset link is on its way. It works once and expires in 60 minutes. Check your spam folder if it doesn't arrive.",
+    sent: "If you have an account for {email}, a reset link is on its way. It works once and expires in 60 minutes. If you don't, we've emailed you how to sign up. Check your spam folder if nothing arrives.",
     backToSignIn: "Back to sign in",
     resetTitle: "Choose a new password",
     resetText: "You'll be signed out on every other device.",

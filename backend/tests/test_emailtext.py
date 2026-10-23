@@ -46,6 +46,7 @@ class Rendering(unittest.TestCase):
             "welcome_offer": {"name": "", "percent": 10, "expires": "Nov 1", "code": "WELCOME-ABCD", "shop_url": "https://shop.example", "unsubscribe_url": "https://shop.example/u/1"},
             "subscribe_confirmation": {"name": "", "shop_url": "https://shop.example", "unsubscribe_url": "https://shop.example/u/1"},
             "account_welcome": {"name": "Ana", "account_url": "https://shop.example/account"},
+            "password_reset_no_account": {"name": "", "signup_url": "https://shop.example/login?mode=register"},
             "password_reset": {"name": "Ana", "link": "https://shop.example/reset-password?token=abc", "minutes": 60},
             "abandoned_cart": {"name": "Ana", "items": ITEMS, "link": "https://shop.example/cart", "step": 1, "unsubscribe_url": "https://shop.example/u/1"},
             "review_request": {"name": "Ana", "items": [{"title": "Oak urn", "url": "https://shop.example/p/oak#reviews"}], "unsubscribe_url": "https://shop.example/u/1"},
@@ -105,7 +106,7 @@ class Rendering(unittest.TestCase):
     def test_registry_covers_all_kinds(self):
         self.assertEqual(set(emailtext.RENDERERS), {
             "order_received", "order_confirmation", "order_shipped", "order_delivered", "order_cancelled", "order_refunded", "welcome_offer",
-            "subscribe_confirmation", "account_welcome", "password_reset",
+            "subscribe_confirmation", "account_welcome", "password_reset", "password_reset_no_account",
             "abandoned_cart", "review_request", "back_in_stock", "request_available", "campaign", "admin_new_order", "digest",
         })
 

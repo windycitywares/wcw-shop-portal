@@ -37,9 +37,24 @@ class PasswordResetService:
         self.tokens = PasswordResetRepository(session)
 
     async def request(self, email: str, locale: str = "en") -> None:
-        """Email a reset link if the account exists. Says nothing either way (no account probing)."""
-        user = await self.users.get_by_email(email.strip().lower())
-        if not user or not user.is_active:
+        """Email a reset link if the account exists, or an "you have no account, sign up" note if it doesn't.
+
+        The caller always gets the same answer (no account probing): the difference is only in the mailbox of the
+        address asked about. A disabled account is told nothing.
+        """
+        email = email.strip().lower()
+        user = await self.users.get_by_email(email)
+        if user is None:
+            locale = locale if locale in LANGUAGES else "en"
+            from app.services.settings import SettingsService
+            await SettingsService(self.session).load()  # the owner's email wording
+            row = emails.enqueue(self.session, "password_reset_no_account", email,
+                                 {"name": "", "signup_url": f"{get_settings().site_url.rstrip('/')}{localized_path(locale, '/login')}?mode=register"},
+                                 locale=locale, related_type="user")
+            await self.session.commit()
+            await emails.deliver(self.session, [row])
+            return
+        if not user.is_active:
             return
         settings = get_settings()
         now = datetime.now(timezone.utc)

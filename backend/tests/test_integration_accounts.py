@@ -83,10 +83,14 @@ class AccountFlowTests(unittest.TestCase):
         self.assertIn("/es/reset-password?token=", mail.text)
         token = mail.text.split("token=")[1].split()[0]
 
-        # Unknown email: same answer, no email.
-        r = self.client.post(f"{self.api}/auth/forgot-password", json={"email": "nobody@example.com"})
+        # Unknown email: the same answer to the caller, but the address is told it has no account and how to sign up.
+        r = self.client.post(f"{self.api}/auth/forgot-password", json={"email": "nobody@example.com", "locale": "es"})
         self.assertEqual(r.status_code, 202)
-        self.assertEqual(len(self.sent), 1)
+        self.assertEqual(len(self.sent), 2)
+        note = self.sent[1]
+        self.assertEqual(note.to, "nobody@example.com")
+        self.assertIn("/es/login?mode=register", note.text)
+        self.assertNotIn("token=", note.text)
 
         time.sleep(1.1)  # token "issued at" has 1-second resolution; real resets come much later
         r = self.client.post(f"{self.api}/auth/reset-password", json={"token": token, "new_password": "second-password-2"})

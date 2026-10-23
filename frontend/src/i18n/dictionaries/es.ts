@@ -438,7 +438,7 @@ const es: Dictionary = {
     forgotText: "Escribe el correo de tu cuenta y te enviaremos un enlace para elegir una nueva contraseña.",
     send: "Enviar enlace",
     sending: "Enviando…",
-    sent: "Si existe una cuenta para {email}, te hemos enviado un enlace. Funciona una vez y caduca en 60 minutos. Si no llega, revisa la carpeta de spam.",
+    sent: "Si tienes una cuenta con {email}, un enlace para restablecerla va en camino. Funciona una sola vez y caduca en 60 minutos. Si no la tienes, te hemos escrito cómo registrarte. Revisa tu carpeta de spam si no llega nada.",
     backToSignIn: "Volver a iniciar sesión",
     resetTitle: "Elige una nueva contraseña",
     resetText: "Se cerrará tu sesión en todos los demás dispositivos.",
