@@ -278,6 +278,22 @@ def _welcome_offer(ctx: dict[str, Any]) -> Rendered:
     return _render(subject, blocks)
 
 
+def _subscribe_confirmation(ctx: dict[str, Any]) -> Rendered:
+    """Sent when someone joins the newsletter and there is no welcome offer to say so. Confirms what they signed up for."""
+    l = loc(ctx.get("locale"))
+    subject = {"en": "You're subscribed to WindyCityWares", "es": "Te has suscrito a WindyCityWares",
+               "nl": "Je bent ingeschreven bij WindyCityWares"}[l]
+    intro = {
+        "en": "Thanks for subscribing. We'll send you the occasional note about new handmade, vintage and home pieces and offers. Never more than we'd want in our own inbox.",
+        "es": "Gracias por suscribirte. Te enviaremos de vez en cuando novedades de piezas artesanales, vintage y para el hogar, y ofertas. Nunca más de lo que querríamos en nuestra propia bandeja.",
+        "nl": "Bedankt voor je inschrijving. Af en toe sturen we je een bericht over nieuwe handgemaakte, vintage en woonstukken en aanbiedingen. Nooit meer dan we zelf zouden willen ontvangen.",
+    }[l]
+    blocks: list[Block] = [("p", _greet(ctx)), ("p", intro),
+                           ("button", {"en": "Browse the shop", "es": "Ver la tienda", "nl": "Bekijk de winkel"}[l], ctx["shop_url"]),
+                           ("p", s("thanks_sign", l)), *_unsub(ctx)]
+    return _render(subject, blocks)
+
+
 def _account_welcome(ctx: dict[str, Any]) -> Rendered:
     """The hello that follows a new account. Not marketing: the address did not opt in, so no unsubscribe footer."""
     l = loc(ctx.get("locale"))
@@ -419,6 +435,7 @@ RENDERERS = {
     "order_cancelled": _order_cancelled,
     "order_refunded": _order_refunded,
     "welcome_offer": _welcome_offer,
+    "subscribe_confirmation": _subscribe_confirmation,
     "account_welcome": _account_welcome,
     "password_reset": _password_reset,
     "abandoned_cart": _abandoned_cart,

@@ -297,6 +297,26 @@ class NewsletterAndCartTests(unittest.TestCase):
         self.assertEqual(w.post("/newsletter/unsubscribe", {"token": "x" * 20}).status_code, 404)
         w.post("/newsletter", {"email": email})
         self.assertEqual(len(w.mails_to(email, "welcome")), 1)  # coming back gets no second offer
+        self.assertEqual(len(w.mails_to(email, "subscribed")), 1)  # but is told they are subscribed again
+        w.post("/newsletter", {"email": email})
+        self.assertEqual(len(w.mails_to(email, "subscribed")), 1)  # already subscribed: nothing more is sent
+
+    def test_subscribing_without_a_welcome_offer_still_confirms(self):
+        w = self.w
+        w.put("/admin/settings/welcome", {"enabled": False}, w.admin)
+        try:
+            email = w.email("plain")
+            self.assertEqual(w.post("/newsletter", {"email": email}).status_code, 202)
+            mails = w.mails_to(email, "subscribed")
+            self.assertEqual(len(mails), 1)
+            self.assertIn("/unsubscribe?token=", mails[0].text)
+            self.assertEqual(w.mails_to(email, "welcome"), [])
+            # Staff adding someone by hand also tells them what they were signed up for.
+            added = w.email("byhand")
+            self.assertEqual(w.post("/admin/subscribers", {"email": added, "locale": "en"}, w.admin).status_code, 201)
+            self.assertEqual(len(w.mails_to(added, "subscribed")), 1)
+        finally:
+            w.put("/admin/settings/welcome", {"enabled": True}, w.admin)
 
     def test_cart_snapshot_reminder_and_recovery(self):
         w = self.w
