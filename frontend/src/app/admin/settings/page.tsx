@@ -126,23 +126,6 @@ const GROUPS: Group[] = [
     ],
   },
   {
-    id: "email",
-    label: "Email sending",
-    description:
-      "Who your emails come from and which mail server sends them. Leave a box empty to use the server's own setup. Welcome, password-reset and order emails all use this.",
-    fields: [
-      { key: "from_name", label: "Sender name", hint: "What customers see, e.g. Windy City Wares.", type: "text" },
-      { key: "from_address", label: "Sender address", hint: "e.g. hello@windycitywares.com. Must be allowed by your mail server.", type: "email" },
-      { key: "reply_to", label: "Replies go to", hint: "Empty: the sender address.", type: "email" },
-      { key: "smtp_host", label: "Mail server (SMTP host)", hint: "e.g. mail.windycitywares.com. Empty: use the server's setup. When set, the fields below replace the server's mail login too.", type: "text" },
-      { key: "smtp_port", label: "Port", hint: "Usually 465 (SSL) or 587 (STARTTLS).", type: "number", min: 1, max: 65535, optional: true },
-      { key: "smtp_security", label: "Connection security", type: "select", options: [["", "Choose…"], ["ssl", "SSL/TLS (port 465)"], ["starttls", "STARTTLS (port 587)"], ["none", "None (not recommended)"]] },
-      { key: "smtp_user", label: "Login name", hint: "Often the full email address.", type: "text" },
-      { key: "smtp_password", label: "Password", hint: "Stored encrypted and never shown again. Leave empty to keep the saved one.", type: "secret" },
-      { key: "clear_smtp_password", label: "Remove the saved password", type: "bool" },
-    ],
-  },
-  {
     id: "general",
     label: "General",
     description: "Banner, order alerts and checkout rules.",
@@ -333,8 +316,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function AdminSettings() {
-  const { push } = useToast();
-  const { user, can } = useAuth();
+  const { can } = useAuth();
   const [tab, setTab] = useState("shipping");
   const [data, setData] = useState<{ settings: Settings; status: Record<string, boolean> } | null>(null);
   const [error, setError] = useState("");
@@ -346,7 +328,8 @@ export default function AdminSettings() {
   useEffect(() => {
     apiFetch<{ settings: Settings; status: Record<string, boolean> }>("/admin/settings").then(setData, (e) => setError(e.message));
     const t = new URLSearchParams(window.location.search).get("tab");
-    if (t && GROUPS.some((g) => g.id === t)) setTab(t);
+    if (t === "email") window.location.replace("/admin/email");
+    else if (t && GROUPS.some((g) => g.id === t)) setTab(t);
   }, []);
 
   const group = GROUPS.find((g) => g.id === tab) ?? GROUPS[0];
@@ -360,7 +343,7 @@ export default function AdminSettings() {
       )}
       {data && (
         <Panel className="mb-6">
-          <PanelHeader title="Setup status" description="Payments and spam protection are set on the server (backend .env). Email can be set below under Email sending. Green means it's in place." />
+          <PanelHeader title="Setup status" description="Payments and spam protection are set on the server (backend .env); email is set under Email sending. Green means it's in place." />
           <PanelBody>
             <ul className="flex flex-wrap gap-2">
               {Object.entries(STATUS_LABEL).map(([key, label]) => (
@@ -371,19 +354,9 @@ export default function AdminSettings() {
                 </li>
               ))}
             </ul>
-            <Button
-              size="sm"
-              variant="secondary"
-              className="mt-4"
-              onClick={() =>
-                apiFetch<{ detail: string }>("/admin/settings/test-email", { method: "POST" }).then(
-                  (r) => push({ title: "Test email sent", description: r.detail }),
-                  (e) => push({ title: "Email not sent", description: e.message, tone: "danger" }),
-                )
-              }
-            >
-              Send a test email to {user?.email ?? "me"}
-            </Button>
+            <Link href="/admin/email" className="mt-4 inline-block text-sm font-medium text-accent underline">
+              Email sending settings and test
+            </Link>
           </PanelBody>
         </Panel>
       )}
