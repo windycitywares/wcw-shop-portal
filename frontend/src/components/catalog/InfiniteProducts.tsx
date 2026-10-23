@@ -6,6 +6,24 @@ import { useI18n } from "@/i18n/client";
 import type { Page, Product } from "@/lib/types";
 import { ProductGrid } from "./ProductCard";
 
+/** A card-shaped placeholder: photo, title and price lines, with a light sweep over them. */
+function SkeletonCards({ count }: { count: number }) {
+  return (
+    <ul
+      aria-hidden="true"
+      className="mt-12 grid grid-cols-2 gap-x-4 gap-y-12 sm:gap-x-6 md:grid-cols-3 lg:gap-x-8"
+    >
+      {Array.from({ length: count }, (_, i) => (
+        <li key={i}>
+          <div className="shimmer aspect-[4/5] w-full rounded-[var(--radius-control)]" />
+          <div className="shimmer mt-4 h-4 w-4/5 rounded-full" />
+          <div className="shimmer mt-2 h-3.5 w-1/3 rounded-full" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /**
  * The product grid that keeps filling as the visitor scrolls (like a social feed). The first page is rendered
  * by the server, so it appears at once and search engines see it; further pages are fetched in the background
@@ -68,8 +86,11 @@ export function InfiniteProducts({
 
   return (
     <>
-      <ProductGrid products={items} locale={locale} priorityCount={priorityCount} columns={3} />
-      <div ref={sentinel} className="mt-14 flex flex-col items-center gap-3 text-sm text-muted" aria-live="polite">
+      <div aria-busy={loading}>
+        <ProductGrid products={items} locale={locale} priorityCount={priorityCount} columns={3} />
+      </div>
+      {loading && <SkeletonCards count={Math.min(6, Math.max(3, Math.min(pageSize, total - items.length)))} />}
+      <div ref={sentinel} className="mt-10 flex flex-col items-center gap-3 text-sm text-muted" aria-live="polite">
         <p>{done ? fmt(t.listing.allShown, { total }) : fmt(t.listing.showing, { shown: items.length, total })}</p>
         {!done && (
           <>
@@ -83,7 +104,14 @@ export function InfiniteProducts({
               disabled={loading}
               className="inline-flex h-10 items-center rounded-full border border-line bg-surface px-6 text-ink hover:border-ink/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60"
             >
-              {loading ? t.listing.loadingMore : t.listing.loadMore}
+              {loading ? (
+                <>
+                  <span aria-hidden="true" className="mr-2 inline-block size-4 animate-spin rounded-full border-2 border-ink/20 border-t-ink" />
+                  {t.listing.loadingMore}
+                </>
+              ) : (
+                t.listing.loadMore
+              )}
             </button>
           </>
         )}
