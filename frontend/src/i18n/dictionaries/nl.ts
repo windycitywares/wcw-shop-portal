@@ -432,7 +432,7 @@ const nl: Dictionary = {
     forgotText: "Vul het e-mailadres van je account in. We sturen je een link om een nieuw wachtwoord te kiezen.",
     send: "Link versturen",
     sending: "Versturen…",
-    sent: "Als er een account bestaat voor {email}, is er een link onderweg. Die werkt één keer en verloopt na 60 minuten. Niets ontvangen? Kijk ook in je spammap.",
+    sent: "Heb je een account met {email}, dan is er een link onderweg om je wachtwoord opnieuw in te stellen. Hij werkt één keer en verloopt na 60 minuten. Heb je er geen, dan hebben we je gemaild hoe je je aanmeldt. Kijk in je spam als er niets aankomt.",
     backToSignIn: "Terug naar inloggen",
     resetTitle: "Kies een nieuw wachtwoord",
     resetText: "Je wordt op alle andere apparaten uitgelogd.",

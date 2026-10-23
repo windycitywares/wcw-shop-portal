@@ -82,7 +82,7 @@ async def forgot_password(request: Request, session: SessionDep, data: ForgotPas
         )
     reset_requests_by_email.hit(email_key)
     await PasswordResetService(session).request(email_key, data.locale)
-    return Message(detail="If an account exists for that email, we've sent a link to reset the password.")
+    return Message(detail="We've emailed that address: a reset link if it has an account, or how to sign up if it doesn't.")
 
 
 @router.post("/reset-password", response_model=Message)

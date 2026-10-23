@@ -14,6 +14,7 @@ LABELS: dict[str, tuple[str, str]] = {
     "welcome_offer": ("Welcome offer", "Sent to a new subscriber with their personal discount code."),
     "account_welcome": ("New account", "Sent after someone creates an account."),
     "password_reset": ("Password reset", "Sent when someone asks to reset a password. The link is added by the shop."),
+    "password_reset_no_account": ("Password reset: no account", "Sent when someone asks to reset a password for an address that has no account. It points them to sign up."),
     "order_received": ("Order received (waiting for payment)", "Sent when an order is placed but not paid yet."),
     "order_confirmation": ("Order confirmed", "Sent when payment is received."),
     "order_shipped": ("Order shipped", "Sent when the order has shipped, with tracking."),
@@ -40,7 +41,7 @@ def _sample(kind: str, locale: str) -> dict[str, Any]:
     from app.services.emails import site_link
 
     return {**SAMPLE, "locale": locale, "link": site_link("/account/orders", locale), "account_url": site_link("/account", locale),
-            "shop_url": site_link("/shop", locale), "unsubscribe_url": site_link("/unsubscribe", locale) + "?token=sample"}
+            "shop_url": site_link("/shop", locale), "signup_url": site_link("/login", locale) + "?mode=register", "unsubscribe_url": site_link("/unsubscribe", locale) + "?token=sample"}
 
 
 def _clean(fields: dict[str, Any]) -> dict[str, str]:

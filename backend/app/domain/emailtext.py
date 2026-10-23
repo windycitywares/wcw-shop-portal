@@ -122,6 +122,7 @@ EDITABLE: dict[str, tuple[str, ...]] = {  # kind -> the {placeholders} its text 
     "welcome_offer": ("percent", "expires"),
     "account_welcome": (),
     "password_reset": ("minutes",),
+    "password_reset_no_account": (),
     "order_received": ("number",),
     "order_confirmation": ("number",),
     "order_shipped": ("number",),
@@ -397,6 +398,27 @@ def _password_reset(ctx: dict[str, Any]) -> Rendered:
     return _render(subject, blocks)
 
 
+def _password_reset_no_account(ctx: dict[str, Any]) -> Rendered:
+    """Someone asked to reset the password of an address with no account here: say so, and show the way in."""
+    l = loc(ctx.get("locale"))
+    subject = {"en": "About your WindyCityWares password request", "es": "Sobre tu solicitud de contraseña de WindyCityWares",
+               "nl": "Over je wachtwoordaanvraag bij WindyCityWares"}[l]
+    intro = {
+        "en": "Someone asked to reset a password for this email address, but we don't have an account for it, so there is nothing to reset. If it was you, you may have signed up with a different address, or you can create an account now.",
+        "es": "Alguien pidió restablecer la contraseña de esta dirección de correo, pero no tenemos ninguna cuenta con ella, así que no hay nada que restablecer. Si fuiste tú, quizá te registraste con otra dirección, o puedes crear una cuenta ahora.",
+        "nl": "Iemand vroeg om het wachtwoord van dit e-mailadres opnieuw in te stellen, maar we hebben er geen account voor, dus er valt niets opnieuw in te stellen. Was jij dit? Misschien heb je je met een ander adres aangemeld, of je kunt nu een account maken.",
+    }[l]
+    note = {
+        "en": "If it wasn't you, you can ignore this email: nothing has changed.",
+        "es": "Si no fuiste tú, puedes ignorar este correo: nada ha cambiado.",
+        "nl": "Was jij dit niet? Dan kun je deze e-mail negeren: er is niets veranderd.",
+    }[l]
+    blocks: list[Block] = [("p", _greet(ctx)), ("p", intro),
+                           ("button", {"en": "Create an account", "es": "Crear una cuenta", "nl": "Account maken"}[l], ctx["signup_url"]),
+                           ("p", note), ("p", s("thanks_sign", l))]
+    return _render(subject, blocks)
+
+
 def _abandoned_cart(ctx: dict[str, Any]) -> Rendered:
     l = loc(ctx.get("locale"))
     second = ctx.get("step", 1) >= 2
@@ -498,6 +520,7 @@ RENDERERS = {
     "subscribe_confirmation": _subscribe_confirmation,
     "account_welcome": _account_welcome,
     "password_reset": _password_reset,
+    "password_reset_no_account": _password_reset_no_account,
     "abandoned_cart": _abandoned_cart,
     "review_request": _review_request,
     "back_in_stock": _back_in_stock,
