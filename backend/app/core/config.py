@@ -78,6 +78,7 @@ class Settings(BaseSettings):
     smtp_password: str | None = None
     mail_from: str = "no-reply@windycitywares.com"
     mail_from_name: str = "WindyCityWares"
+    mail_reply_to: str | None = None  # where customers' replies go; empty: the from address
     contact_to: str | None = None  # inbox for contact-form messages
 
     # Cloudflare Turnstile (CAPTCHA). The site key is public; the secret stays on the server.

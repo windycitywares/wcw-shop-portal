@@ -21,6 +21,8 @@ type Def =
   | { key: string; label: string; hint?: string; type: "bool" }
   | { key: string; label: string; hint?: string; type: "number" | "money"; min?: number; max?: number; optional?: boolean }
   | { key: string; label: string; hint?: string; type: "text" | "email" }
+  | { key: string; label: string; hint?: string; type: "select"; options: readonly (readonly [string, string])[] }
+  | { key: string; label: string; hint?: string; type: "secret" }
   | { key: string; label: string; hint?: string; type: "list"; upper?: boolean }
   | { key: string; label: string; hint?: string; type: "langs"; long?: boolean };
 
@@ -124,6 +126,23 @@ const GROUPS: Group[] = [
     ],
   },
   {
+    id: "email",
+    label: "Email sending",
+    description:
+      "Who your emails come from and which mail server sends them. Leave a box empty to use the server's own setup. Welcome, password-reset and order emails all use this.",
+    fields: [
+      { key: "from_name", label: "Sender name", hint: "What customers see, e.g. Windy City Wares.", type: "text" },
+      { key: "from_address", label: "Sender address", hint: "e.g. hello@windycitywares.com. Must be allowed by your mail server.", type: "email" },
+      { key: "reply_to", label: "Replies go to", hint: "Empty: the sender address.", type: "email" },
+      { key: "smtp_host", label: "Mail server (SMTP host)", hint: "e.g. mail.windycitywares.com. Empty: use the server's setup. When set, the fields below replace the server's mail login too.", type: "text" },
+      { key: "smtp_port", label: "Port", hint: "Usually 465 (SSL) or 587 (STARTTLS).", type: "number", min: 1, max: 65535, optional: true },
+      { key: "smtp_security", label: "Connection security", type: "select", options: [["", "Choose…"], ["ssl", "SSL/TLS (port 465)"], ["starttls", "STARTTLS (port 587)"], ["none", "None (not recommended)"]] },
+      { key: "smtp_user", label: "Login name", hint: "Often the full email address.", type: "text" },
+      { key: "smtp_password", label: "Password", hint: "Stored encrypted and never shown again. Leave empty to keep the saved one.", type: "secret" },
+      { key: "clear_smtp_password", label: "Remove the saved password", type: "bool" },
+    ],
+  },
+  {
     id: "general",
     label: "General",
     description: "Banner, order alerts and checkout rules.",
@@ -144,7 +163,7 @@ const LANGS = [
   ["nl", "Dutch"],
 ] as const;
 
-function GroupForm({ group, initial, onSaved }: { group: Group; initial: Record<string, Value>; onSaved: (s: Settings) => void }) {
+function GroupForm({ group, initial, onSaved, status }: { group: Group; initial: Record<string, Value>; onSaved: (s: Settings, status?: Record<string, boolean>) => void; status?: Record<string, boolean> }) {
   const { push } = useToast();
   const [values, setValues] = useState<Record<string, Value>>(initial);
   const [problem, setProblem] = useState("");
@@ -161,8 +180,8 @@ function GroupForm({ group, initial, onSaved }: { group: Group; initial: Record<
       const patch = Object.fromEntries(
         changed.map((f) => [f.key, f.type === "list" ? ((values[f.key] as string[]) ?? []).filter(Boolean) : values[f.key]]),
       );
-      const res = await apiFetch<{ settings: Settings }>(`/admin/settings/${group.id}`, { method: "PUT", body: JSON.stringify(patch) });
-      onSaved(res.settings);
+      const res = await apiFetch<{ settings: Settings; status?: Record<string, boolean> }>(`/admin/settings/${group.id}`, { method: "PUT", body: JSON.stringify(patch) });
+      onSaved(res.settings, res.status);
       push({ title: "Settings saved", description: group.label });
     } catch (e) {
       setProblem(e instanceof Error ? e.message : "Couldn't save");
@@ -184,6 +203,44 @@ function GroupForm({ group, initial, onSaved }: { group: Group; initial: Record<
                 <input type="checkbox" className="mt-0.5 size-4 accent-[var(--color-accent)]" checked={!!v} onChange={(e) => set(f.key, e.target.checked)} />
                 <span>{f.label}</span>
               </label>
+            );
+          }
+          if (f.type === "select") {
+            return (
+              <Field key={f.key} label={f.label} hint={f.hint}>
+                {(p) => (
+                  <select
+                    {...p}
+                    value={(v as string) ?? ""}
+                    onChange={(e) => set(f.key, e.target.value || null)}
+                    className="h-10 w-full max-w-md rounded-[var(--radius-control)] border border-line bg-white px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+                  >
+                    {f.options.map(([val, name]) => (
+                      <option key={val} value={val}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </Field>
+            );
+          }
+          if (f.type === "secret") {
+            const saved = group.id === "email" && status?.email_password_set;
+            return (
+              <Field key={f.key} label={f.label} hint={f.hint}>
+                {(p) => (
+                  <Input
+                    {...p}
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder={saved ? "•••••••• (saved)" : ""}
+                    value={(v as string) ?? ""}
+                    onChange={(e) => set(f.key, e.target.value)}
+                    className="max-w-md"
+                  />
+                )}
+              </Field>
             );
           }
           if (f.type === "langs") {
@@ -303,7 +360,7 @@ export default function AdminSettings() {
       )}
       {data && (
         <Panel className="mb-6">
-          <PanelHeader title="Server setup" description="These are set on the server (backend .env), not here. Green means it's in place." />
+          <PanelHeader title="Setup status" description="Payments and spam protection are set on the server (backend .env). Email can be set below under Email sending. Green means it's in place." />
           <PanelBody>
             <ul className="flex flex-wrap gap-2">
               {Object.entries(STATUS_LABEL).map(([key, label]) => (
@@ -363,7 +420,7 @@ export default function AdminSettings() {
         </nav>
         <div>
           {data ? (
-            <GroupForm key={group.id} group={group} initial={data.settings[group.id] ?? {}} onSaved={(settings) => setData({ ...data, settings })} />
+            <GroupForm key={group.id} group={group} initial={data.settings[group.id] ?? {}} status={data.status} onSaved={(settings, status) => setData({ settings, status: status ?? data.status })} />
           ) : (
             <div className="skeleton h-64" />
           )}
