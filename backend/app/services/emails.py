@@ -18,7 +18,7 @@ from app.models.commerce import EmailOutbox
 
 log = logging.getLogger("wcw.emails")
 MAX_ATTEMPTS = 5
-MARKETING_KINDS = frozenset({"welcome_offer", "abandoned_cart", "review_request", "back_in_stock", "campaign"})
+MARKETING_KINDS = frozenset({"welcome_offer", "subscribe_confirmation", "abandoned_cart", "review_request", "back_in_stock", "campaign"})
 
 
 def localized_path(locale: str | None, path: str) -> str:

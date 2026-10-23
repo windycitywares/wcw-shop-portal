@@ -210,6 +210,7 @@ class NewsletterService:
     def __init__(self, session: AsyncSession):
         self.session = session
         self.repo = NewsletterRepository(session)
+        self.last_queued: list = []  # outbox rows made by the last add(), for callers that commit and then send them
 
     async def _has_ordered(self, email: str) -> bool:
         return (await self.session.execute(
@@ -224,13 +225,18 @@ class NewsletterService:
         locale = locale if locale in LANGUAGES else "en"
         row = await self.repo.get_by(email=email)
         if row is not None and row.source not in SERVICE_ONLY_SOURCES:
-            if row.unsubscribed_at is not None:  # coming back: no second welcome offer
+            queued = []
+            if row.unsubscribed_at is not None:  # coming back: no second welcome offer, but they are told they're back on
                 row.unsubscribed_at = None
                 row.locale = locale
+                queued.append(self._confirmation(row, locale))
+            # Already subscribed: nothing changed and nothing is sent, so the public form can't be used to spam an address.
             if source != "admin":
                 row.paused_at = None  # they signed up again themselves: they want the email
+            self.last_queued = queued
             if commit:
                 await self.session.commit()
+                await emails.deliver(self.session, queued)
             return row
         if row is not None:  # so far only allowed to send service emails: now a real subscriber
             row.source, row.unsubscribed_at, row.locale = source, None, locale
@@ -252,6 +258,9 @@ class NewsletterService:
                 "code": coupon.code, "shop_url": emails.site_link("/shop", locale),
                 "unsubscribe_url": emails.unsubscribe_url(row.unsubscribe_token, locale),
             }, locale=locale, related_type="newsletter"))
+        if not queued:  # no welcome offer to carry the news: say plainly that they're subscribed
+            queued.append(self._confirmation(row, locale))
+        self.last_queued = queued  # for callers that commit themselves and then send these
         if commit:
             try:
                 await self.session.commit()
@@ -260,6 +269,13 @@ class NewsletterService:
                 return await self.repo.get_by(email=email) or row
             await emails.deliver(self.session, queued)
         return row
+
+    def _confirmation(self, row: NewsletterSubscriber, locale: str):
+        """"You're subscribed", with the way out. One per sign-up: the welcome offer replaces it when there is one."""
+        return emails.enqueue(self.session, "subscribe_confirmation", row.email, {
+            "name": None, "shop_url": emails.site_link("/shop", locale),
+            "unsubscribe_url": emails.unsubscribe_url(row.unsubscribe_token, locale),
+        }, locale=locale, related_type="newsletter")
 
     async def contact(self, email: str, locale: str | None, source: str) -> NewsletterSubscriber:
         """The consent row for an address, created (for service emails only) when missing. Flushes, no commit."""
