@@ -38,7 +38,7 @@ export default function AdminEmailTemplates() {
   const [kind, setKind] = useState("");
   const [lang, setLang] = useState("en");
   const [draft, setDraft] = useState<Parts>({});
-  const [preview, setPreview] = useState<{ subject: string; html: string } | null>(null);
+  const [preview, setPreview] = useState<{ subject: string; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const timer = useRef<number | undefined>(undefined);
@@ -65,7 +65,7 @@ export default function AdminEmailTemplates() {
       if (!kind) return;
       window.clearTimeout(timer.current);
       timer.current = window.setTimeout(() => {
-        apiFetch<{ subject: string; html: string }>(`/admin/email-templates/${kind}/${lang}/preview`, { method: "POST", body: JSON.stringify(parts) }).then(setPreview, () => setPreview(null));
+        apiFetch<{ subject: string; text: string }>(`/admin/email-templates/${kind}/${lang}/preview`, { method: "POST", body: JSON.stringify(parts) }).then(setPreview, () => setPreview(null));
       }, 350);
     },
     [kind, lang],
@@ -175,9 +175,16 @@ export default function AdminEmailTemplates() {
                 </PanelBody>
               </Panel>
               <Panel>
-                <PanelHeader title="Preview" description={preview ? `Subject: ${preview.subject}` : "Shown with sample details."} />
+                <PanelHeader title="Preview" description={preview ? `Subject: ${preview.subject}` : "Shown with sample details (the plain-text version; the HTML email has the same words)."} />
                 <PanelBody>
-                  <iframe title="Email preview" sandbox="" srcDoc={preview?.html ?? ""} className="h-[34rem] w-full rounded-[var(--radius-control)] border border-line bg-white" />
+                  <div
+                    role="region"
+                    aria-label="Email preview"
+                    tabIndex={0}
+                    className="max-h-[34rem] overflow-auto whitespace-pre-wrap rounded-[var(--radius-control)] border border-line bg-white p-4 text-sm leading-relaxed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  >
+                    {preview?.text ?? ""}
+                  </div>
                 </PanelBody>
               </Panel>
             </div>
