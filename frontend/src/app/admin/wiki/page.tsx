@@ -20,7 +20,8 @@ export default function AdminWiki() {
       <PageHeader title="Admin wiki" description="How to run the shop and use each setting, in plain language. Only signed-in staff can see this." />
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
         <nav aria-label="Wiki contents" className="lg:sticky lg:top-4 lg:self-start">
-          <Input label="Search the wiki" type="search" value={q} onChange={(e) => setQ(e.target.value)} />
+          <label htmlFor="wiki-search" className="mb-1.5 block text-sm font-medium text-ink">Search the wiki</label>
+          <Input id="wiki-search" type="search" value={q} onChange={(e) => setQ(e.target.value)} />
           <ul className="mt-3 space-y-1 text-sm">
             {shown.map((a) => (
               <li key={a.id}>
