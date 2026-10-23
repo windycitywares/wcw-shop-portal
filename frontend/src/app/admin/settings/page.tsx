@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/lib/auth";
+import { useSearchParams } from "next/navigation";
 import { apiFetch } from "@/lib/client-api";
 import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { Panel, PanelBody, PanelHeader } from "@/components/admin/ui/Panel";
 import { Pill } from "@/components/admin/ui/Pill";
 import { useToast } from "@/components/admin/ui/Toast";
-import { Icon } from "@/components/admin/ui/Icon";
-import { NAV } from "@/components/admin/nav";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
@@ -315,27 +313,25 @@ const STATUS_LABEL: Record<string, string> = {
   production: "Live mode",
 };
 
-export default function AdminSettings() {
-  const { can } = useAuth();
-  const [tab, setTab] = useState("shipping");
+function SettingsInner() {
+  const searchParams = useSearchParams();
+  const wanted = searchParams.get("tab");
+  const tab = GROUPS.some((g) => g.id === wanted) ? (wanted as string) : GROUPS[0].id;
   const [data, setData] = useState<{ settings: Settings; status: Record<string, boolean> } | null>(null);
   const [error, setError] = useState("");
 
-  const adminSections = (NAV.find((g) => g.label === "Settings")?.items ?? []).filter(
-    (i) => i.hidden && i.href !== "/admin/settings" && (!i.permission || can(i.permission)),
-  );
 
   useEffect(() => {
     apiFetch<{ settings: Settings; status: Record<string, boolean> }>("/admin/settings").then(setData, (e) => setError(e.message));
-    const t = new URLSearchParams(window.location.search).get("tab");
-    if (t === "email") window.location.replace("/admin/email");
-    else if (t && GROUPS.some((g) => g.id === t)) setTab(t);
   }, []);
+  useEffect(() => {
+    if (searchParams.get("tab") === "email") window.location.replace("/admin/email");
+  }, [searchParams]);
 
   const group = GROUPS.find((g) => g.id === tab) ?? GROUPS[0];
   return (
     <div>
-      <PageHeader title="Settings" description="Everything the shop runs by: shipping, tax, payments, emails and rules, plus the audit log, test mode, backups and deployments." />
+      <PageHeader title="Settings" description="Everything the shop runs by. Pick a section in the menu on the left." />
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}
@@ -360,45 +356,21 @@ export default function AdminSettings() {
           </PanelBody>
         </Panel>
       )}
-      <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
-        <nav aria-label="Settings sections" className="space-y-1">
-          {GROUPS.map((g) => (
-            <button
-              key={g.id}
-              type="button"
-              onClick={() => {
-                setTab(g.id);
-                window.history.replaceState(null, "", `?tab=${g.id}`);
-              }}
-              className={`block w-full rounded-[var(--radius-control)] px-3 py-2 text-left text-sm ${tab === g.id ? "bg-sand font-medium text-ink" : "text-muted hover:bg-sand/60 hover:text-ink"}`}
-            >
-              {g.label}
-            </button>
-          ))}
-          {adminSections.length > 0 && (
-            <>
-              <p className="px-3 pb-1 pt-4 text-xs font-medium uppercase tracking-wide text-muted">Admin</p>
-              {adminSections.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex items-center gap-2 rounded-[var(--radius-control)] px-3 py-2 text-sm text-muted hover:bg-sand/60 hover:text-ink"
-                >
-                  <Icon name={item.icon} className="size-4" />
-                  {item.label}
-                </Link>
-              ))}
-            </>
-          )}
-        </nav>
-        <div>
+      <div className="max-w-4xl">
           {data ? (
             <GroupForm key={group.id} group={group} initial={data.settings[group.id] ?? {}} status={data.status} onSaved={(settings, status) => setData({ settings, status: status ?? data.status })} />
           ) : (
             <div className="skeleton h-64" />
           )}
-        </div>
       </div>
     </div>
+  );
+}
+
+export default function AdminSettings() {
+  return (
+    <Suspense fallback={<div className="skeleton h-64" />}>
+      <SettingsInner />
+    </Suspense>
   );
 }
