@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
+from contextvars import ContextVar
 from html import escape
 from typing import Any
 
@@ -111,7 +112,66 @@ def _html(blocks: list[Block], preheader: str) -> str:
     )
 
 
+# ---------------------------------------------------------------------------------------------
+# Wording the shop owner has changed (Admin → Email templates). Only these four parts of the editable emails can be
+# changed: links, codes, order lines and totals always come from the system, so an edit can't break an email.
+# ---------------------------------------------------------------------------------------------
+FIELDS = ("subject", "intro", "button", "signoff")
+EDITABLE: dict[str, tuple[str, ...]] = {  # kind -> the {placeholders} its text may use
+    "subscribe_confirmation": (),
+    "welcome_offer": ("percent", "expires"),
+    "account_welcome": (),
+    "password_reset": ("minutes",),
+    "order_received": ("number",),
+    "order_confirmation": ("number",),
+    "order_shipped": ("number",),
+    "order_delivered": ("number",),
+    "order_cancelled": ("number",),
+    "order_refunded": ("number", "amount"),
+}
+_overrides: dict[str, dict[str, dict[str, str]]] = {}
+_active: ContextVar[tuple[str, dict[str, Any], dict, dict | None] | None] = ContextVar("email_render", default=None)
+
+
+def set_overrides(value: dict[str, dict[str, dict[str, str]]] | None) -> None:
+    global _overrides
+    _overrides = value or {}
+
+
+def _fill(text: str, kind: str, ctx: dict[str, Any]) -> str:
+    for key in EDITABLE.get(kind, ()):  # plain replacement of known names: no format() tricks, no attribute access
+        text = text.replace("{" + key + "}", str(ctx.get(key, "")))
+    return text
+
+
+def _customize(subject: str, blocks: list[Block]) -> tuple[str, list[Block]]:
+    active = _active.get()
+    if active is None or active[0] not in EDITABLE:
+        return subject, blocks
+    kind, ctx, overrides, capture = active
+    l = loc(ctx.get("locale"))
+    blocks = list(blocks)
+    intro_at = 1 if len(blocks) > 1 and blocks[1][0] == "p" else None
+    button_at = next((i for i, b in enumerate(blocks) if b[0] == "button"), None)
+    sign = s("thanks_sign", l)
+    sign_at = next((i for i, b in enumerate(blocks) if b[0] == "p" and b[1] == sign), None)
+    if capture is not None:
+        capture.update(subject=subject, intro=blocks[intro_at][1] if intro_at is not None else "",
+                       button=blocks[button_at][1] if button_at is not None else "", signoff=sign if sign_at is not None else "")
+    mine = (overrides.get(kind) or {}).get(l) or {}
+    if mine.get("subject"):
+        subject = _fill(mine["subject"], kind, ctx)
+    if mine.get("intro") and intro_at is not None:
+        blocks[intro_at] = ("p", _fill(mine["intro"], kind, ctx))
+    if mine.get("button") and button_at is not None:
+        blocks[button_at] = ("button", mine["button"], blocks[button_at][2])
+    if mine.get("signoff") and sign_at is not None:
+        blocks[sign_at] = ("p", mine["signoff"])
+    return subject, blocks
+
+
 def _render(subject: str, blocks: list[Block], preheader: str = "") -> Rendered:
+    subject, blocks = _customize(subject, blocks)
     subject = " ".join(subject.split())  # no line breaks in headers
     return Rendered(subject=subject, text=_text(blocks), html=_html(blocks, preheader or subject))
 
@@ -448,5 +508,10 @@ RENDERERS = {
 }
 
 
-def render(kind: str, ctx: dict[str, Any]) -> Rendered:
-    return RENDERERS[kind](ctx)
+def render(kind: str, ctx: dict[str, Any], *, overrides: dict | None = None, capture: dict | None = None) -> Rendered:
+    """Render one email. `overrides` replaces the saved wording (e.g. a preview of unsaved text); `capture` receives the default wording."""
+    token = _active.set((kind, ctx, _overrides if overrides is None else overrides, capture))
+    try:
+        return RENDERERS[kind](ctx)
+    finally:
+        _active.reset(token)

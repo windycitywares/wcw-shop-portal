@@ -122,6 +122,7 @@ class AuthService:
         from app.services.contacts import ContactService
         await ContactService(self.session).upsert(data.email, full_name=data.full_name, source="signup", user_id=user.id, marketing_opt_in=False)
         locale = data.locale if data.locale in LANGUAGES else "en"
+        await SettingsService(self.session).load()  # the owner's email wording
         queued = [emails.enqueue(
             self.session, "account_welcome", user.email,
             {"name": user.full_name or "", "account_url": emails.site_link("/account", locale)},
@@ -226,6 +227,7 @@ class NewsletterService:
         row = await self.repo.get_by(email=email)
         if row is not None and row.source not in SERVICE_ONLY_SOURCES:
             queued = []
+            await SettingsService(self.session).load()  # the owner's email wording
             if row.unsubscribed_at is not None:  # coming back: no second welcome offer, but they are told they're back on
                 row.unsubscribed_at = None
                 row.locale = locale

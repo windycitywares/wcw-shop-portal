@@ -51,6 +51,8 @@ class PasswordResetService:
         ))
         locale = locale if locale in LANGUAGES else "en"
         link = f"{settings.site_url.rstrip('/')}{localized_path(locale, '/reset-password')}?token={token}"
+        from app.services.settings import SettingsService
+        await SettingsService(self.session).load()  # the owner's email wording
         queued = [emails.enqueue(
             self.session, "password_reset", user.email,
             {"name": user.full_name or "", "link": link, "minutes": settings.password_reset_minutes},
