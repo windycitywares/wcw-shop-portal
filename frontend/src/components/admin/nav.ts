@@ -64,6 +64,7 @@ export const NAV: NavGroup[] = [
     items: [
       { href: "/admin/settings", label: "Store settings", icon: "sliders", permission: "settings:manage", hidden: true },
       { href: "/admin/team", label: "Team", icon: "users", permission: "users:manage" },
+      { href: "/admin/email", label: "Email sending", icon: "mail", permission: "settings:manage", hidden: true },
       { href: "/admin/email-templates", label: "Email templates", icon: "mail", permission: "settings:manage", hidden: true },
       { href: "/admin/audit", label: "Audit log", icon: "shield", permission: "audit:view", hidden: true },
       { href: "/admin/environment", label: "Test mode", icon: "flask", permission: "environment:manage", hidden: true },

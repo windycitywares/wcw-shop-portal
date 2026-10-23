@@ -131,6 +131,16 @@ class AdminEmailSettingsTests(unittest.TestCase):
         self.assertEqual(r.status_code, 200, r.text)
         self.assertTrue(any(m.subject.startswith("Test email") for m in w.sent[before:]))
 
+    def test_test_email_can_go_to_another_address_but_only_a_real_one(self):
+        w = self.w
+        before = len(w.sent)
+        r = w.post("/admin/settings/test-email", {"to": "someone@example.com"}, w.admin)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertTrue(any(m.to == "someone@example.com" for m in w.sent[before:]))
+        for bad in ("nope", "a b@c.com", "x@y.z\nBcc: q@r.s"):
+            with self.subTest(bad=bad):
+                self.assertEqual(w.post("/admin/settings/test-email", {"to": bad}, w.admin).status_code, 422)
+
 
 if __name__ == "__main__":
     unittest.main()
