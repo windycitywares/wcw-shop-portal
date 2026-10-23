@@ -35,6 +35,7 @@ export function Footer({ locale }: { locale: Locale }) {
       title: t.footer.help,
       links: [
         { label: t.footer.findOrder, href: l("/track-order") },
+        { label: HELP_NAV[locale].guide, href: l("/help/guide") },
         { label: HELP_NAV[locale].faq, href: l("/help/faq") },
         { label: HELP_NAV[locale].shipping, href: l("/help/shipping") },
         { label: HELP_NAV[locale].returns, href: l("/help/returns") },

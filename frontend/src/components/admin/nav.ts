@@ -72,6 +72,10 @@ export const NAV: NavGroup[] = [
       { href: "/admin/deployments", label: "Deployments", icon: "download", permission: "settings:manage", hidden: true },
     ],
   },
+  {
+    label: "Help",
+    items: [{ href: "/admin/wiki", label: "Admin wiki", icon: "bulb", permission: null }],
+  },
 ];
 
 function matches(pathname: string, href: string): boolean {

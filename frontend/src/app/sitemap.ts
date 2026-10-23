@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { HELP_TOPICS } from "@/content/help";
 import { localePath, locales } from "@/i18n/config";
 import { getAllProducts, getCategoryTree } from "@/lib/api";
 import { absoluteUrl } from "@/lib/site";
@@ -25,8 +26,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry("/", { changeFrequency: "daily", priority: 1 }),
     entry("/shop", { changeFrequency: "daily", priority: 0.9 }),
     entry("/deals", { changeFrequency: "daily", priority: 0.7 }),
-    ...["faq", "shipping", "returns", "privacy", "terms"].map((topic) => entry(`/help/${topic}`, { changeFrequency: "monthly", priority: 0.3 })),
+    ...HELP_TOPICS.map((topic) => entry(`/help/${topic}`, { changeFrequency: "monthly", priority: topic === "guide" || topic === "faq" ? 0.5 : 0.3 })),
     entry("/contact", { changeFrequency: "yearly", priority: 0.3 }),
+    entry("/track-order", { changeFrequency: "yearly", priority: 0.2 }),
     ...flatten(tree).map((c) => entry(`/category/${c.slug}`, { changeFrequency: "weekly", priority: 0.7 })),
     ...products.map((p) =>
       entry(`/product/${p.slug}`, { lastModified: new Date(p.updated_at), changeFrequency: "weekly", priority: 0.8 }),
