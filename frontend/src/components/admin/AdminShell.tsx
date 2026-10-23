@@ -2,24 +2,129 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { isStaff, useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { TestModeBanner } from "@/components/TestModeBanner";
 import { NotificationBell } from "./notifications/NotificationBell";
-import { NAV, isActive, titleFor } from "./nav";
+import { NAV, SETTINGS_TABS, crumbsFor, inSettings, isActive, settingsPages, titleFor } from "./nav";
 import { Icon } from "./ui/Icon";
 import { Popover } from "@/components/ui/Popover";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { ToastProvider } from "./ui/Toast";
 
+const linkClass = (active: boolean, collapsed: boolean) =>
+  cn(
+    "font-admin group relative flex items-center gap-3 rounded-[var(--radius-control)] py-2 text-[0.95rem] transition-[color,background-color,transform] duration-150 focus-visible:outline-offset-0",
+    collapsed ? "justify-center px-2" : "px-3",
+    active ? "bg-sand font-bold text-ink" : "text-ink hover:bg-sand/60 hover:text-accent motion-safe:hover:translate-x-0.5",
+  );
+
+/** The menu while in Settings: a way back to the dashboard, the store settings sections, and the admin tools. */
+function SettingsNav({ onNavigate, collapsed }: { onNavigate?: () => void; collapsed: boolean }) {
+  const { can } = useAuth();
+  const pathname = usePathname();
+  const tab = useSearchParams().get("tab");
+  const onSettingsPage = pathname === "/admin/settings";
+  const current = onSettingsPage ? (SETTINGS_TABS.some((t) => t.id === tab) ? tab : SETTINGS_TABS[0].id) : null;
+  const tools = settingsPages().filter((i) => !i.permission || can(i.permission));
+  const showStore = can("settings:manage");
+  return (
+    <nav aria-label="Settings" className={cn("flex-1 overflow-y-auto pb-6 pt-2", collapsed ? "px-2" : "px-4")}>
+      <Link
+        href="/admin"
+        onClick={onNavigate}
+        title={collapsed ? "Back to dashboard" : undefined}
+        className={cn(
+          "font-admin mb-4 flex items-center gap-2 rounded-[var(--radius-control)] border border-line py-2 text-sm font-semibold text-ink hover:border-accent hover:text-accent",
+          collapsed ? "justify-center px-2" : "px-3",
+        )}>
+        <Icon name="chevronLeft" className="size-4 shrink-0" />
+        {collapsed ? <span className="sr-only">Back to dashboard</span> : "Back to dashboard"}
+      </Link>
+      {showStore && (
+        <div>
+          {collapsed ? <hr className="mx-2 mb-2 border-line" /> : <p className="font-admin px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-muted">Store settings</p>}
+          <ul className="space-y-0.5">
+            {SETTINGS_TABS.map((t) => {
+              const active = current === t.id;
+              return (
+                <li key={t.id}>
+                  <Link href={`/admin/settings?tab=${t.id}`} onClick={onNavigate} aria-current={active ? "page" : undefined} title={collapsed ? t.label : undefined} className={linkClass(active, collapsed)}>
+                    {active && <span aria-hidden="true" className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-accent" />}
+                    <Icon name="sliders" className={cn("size-[1.15rem] shrink-0", active ? "text-accent" : "text-muted group-hover:text-accent")} />
+                    {!collapsed && <span>{t.label}</span>}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+      {tools.length > 0 && (
+        <div className="mt-4">
+          {collapsed ? <hr className="mx-2 mb-2 border-line" /> : <p className="font-admin px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-muted">Admin</p>}
+          <ul className="space-y-0.5">
+            {tools.map((item) => {
+              const active = isActive(pathname, item.href);
+              return (
+                <li key={item.href}>
+                  <Link href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined} title={collapsed ? item.label : undefined} className={linkClass(active, collapsed)}>
+                    {active && <span aria-hidden="true" className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-accent" />}
+                    <Icon name={item.icon} className={cn("size-[1.15rem] shrink-0", active ? "text-accent" : "text-muted group-hover:text-accent")} />
+                    {!collapsed && <span>{item.label}</span>}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </nav>
+  );
+}
+
+/** Dashboard › Settings › Shipping: where you are, with a link back up. */
+function Crumbs() {
+  const pathname = usePathname();
+  const crumbs = crumbsFor(pathname, useSearchParams().get("tab"));
+  if (crumbs.length === 0) return null;
+  return (
+    <nav aria-label="Breadcrumb" className="mb-4">
+      <ol className="font-admin flex flex-wrap items-center gap-1.5 text-sm text-muted">
+        {crumbs.map((c, i) => (
+          <li key={`${c.label}-${i}`} className="flex items-center gap-1.5">
+            {i > 0 && <Icon name="chevronRight" className="size-3.5" />}
+            {c.href && i < crumbs.length - 1 ? (
+              <Link href={c.href} className="hover:text-accent hover:underline">
+                {c.label}
+              </Link>
+            ) : (
+              <span aria-current={i === crumbs.length - 1 ? "page" : undefined} className={i === crumbs.length - 1 ? "font-medium text-ink" : undefined}>
+                {c.label}
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
+
 function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collapsed: boolean }) {
   const { can } = useAuth();
   const pathname = usePathname();
+  if (inSettings(pathname)) {
+    return (
+      <Suspense fallback={null}>
+        <SettingsNav onNavigate={onNavigate} collapsed={collapsed} />
+      </Suspense>
+    );
+  }
   return (
     <nav aria-label="Admin" className={cn("flex-1 overflow-y-auto pb-6 pt-2", collapsed ? "px-2" : "px-4")}>
       {NAV.map((group, gi) => {
@@ -226,6 +331,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </header>
 
           <main id="admin-main" tabIndex={-1} className="mx-auto w-full max-w-[92rem] flex-1 px-4 py-6 focus:outline-none sm:px-6 lg:px-8 lg:py-8">
+            <Suspense fallback={null}>
+              <Crumbs />
+            </Suspense>
             {children}
           </main>
         </div>
