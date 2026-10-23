@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core import captcha
+from app.core import captcha, mailer, secretbox
 from app.core.config import get_settings
 from app.core.exceptions import NotFoundError, ValidationFailedError
 from app.domain.pricing import ShippingConfig, TaxConfig
@@ -54,13 +54,16 @@ def payment_methods(s: StoreSettings) -> list[str]:
     return methods
 
 
-def status_flags() -> dict[str, bool]:
+def status_flags(stored: StoreSettings | None = None) -> dict[str, bool]:
     app = get_settings()
+    mail = stored.email if stored else None
     return {
         "production": app.is_production,
         "stripe_configured": bool(app.stripe_secret_key),
         "stripe_webhook_configured": bool(app.stripe_webhook_secret),
-        "email_configured": bool(app.smtp_host),
+        "email_configured": bool(app.smtp_host or (mail and mail.smtp_host)),
+        "email_from_settings": bool(mail and mail.smtp_host),  # the mail server comes from Settings, not the server's setup
+        "email_password_set": bool(mail and secretbox.unseal(mail.smtp_password_enc)),
         "captcha_configured": bool(app.turnstile_secret),
     }
 
@@ -98,6 +101,21 @@ def _first_error(exc: ValidationError) -> str:
     return f"{where}: {err['msg']}" if where else err["msg"]
 
 
+def _email_patch(patch: dict) -> dict:
+    """The form sends the mail password as `smtp_password` (plain, once); it is stored sealed and never read back."""
+    if "smtp_password_enc" in patch:
+        raise ValidationFailedError("Unknown setting: smtp_password_enc")
+    clear = bool(patch.pop("clear_smtp_password", False))
+    password = patch.pop("smtp_password", None)
+    if clear:
+        patch["smtp_password_enc"] = None
+    elif isinstance(password, str) and password:
+        if len(password) > 200:
+            raise ValidationFailedError("smtp_password: too long")
+        patch["smtp_password_enc"] = secretbox.seal(password)
+    return patch
+
+
 class SettingsService:
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -122,7 +140,7 @@ class SettingsService:
         """What has to be in place before the store can sell with confidence (feeds the dashboard and the suggestions)."""
         s = await self.load()
         saved = set((await self.session.execute(select(StoreSetting.key))).scalars().all())
-        flags = status_flags()
+        flags = status_flags(s)
         return {
             "payments_live": flags["stripe_configured"],
             "shipping_configured": "shipping" in saved,
@@ -133,12 +151,18 @@ class SettingsService:
         }
 
     async def admin_view(self) -> AdminSettingsOut:
-        return AdminSettingsOut(settings=await self.load(), status=status_flags())
+        stored = await self.load()
+        shown = stored.model_copy(deep=True)
+        shown.email.smtp_password_enc = None  # the password never leaves the server; the page only learns whether one is saved
+        return AdminSettingsOut(settings=shown, status=status_flags(stored))
 
     async def update(self, group: str, patch: dict, user: User) -> AdminSettingsOut:
         model = GROUPS.get(group)
         if model is None:
             raise NotFoundError("Unknown settings group")
+        patch = dict(patch)
+        if group == "email":
+            patch = _email_patch(patch)
         unknown = set(patch) - set(model.model_fields)
         if unknown:
             raise ValidationFailedError(f"Unknown setting: {', '.join(sorted(unknown))}")
@@ -154,10 +178,11 @@ class SettingsService:
         else:
             row.value = value
             row.updated_by_id = user.id
-        changed = {k: value[k] for k in value if current.get(k) != value[k]}
+        changed = {k: ("(changed)" if k == "smtp_password_enc" else value[k]) for k in value if current.get(k) != value[k]}
         audit.record(self.session, user, "settings.update", "settings", group, f"Changed {group} settings", {"changed": changed})
         await self.session.commit()
         clear_cache()
+        mailer.clear_config_cache()
         return await self.admin_view()
 
 

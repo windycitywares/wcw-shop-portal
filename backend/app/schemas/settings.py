@@ -1,6 +1,8 @@
 """Store settings, grouped. Each group is saved as one JSON document (table store_settings)."""
 
+import re
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -107,7 +109,61 @@ class DigestSettings(_Group):
     recipients: list[str] = Field(default_factory=list, max_length=10)
 
 
+_ADDRESS = re.compile(r"^[^\s<>@,;]+@[^\s<>@,;]+\.[^\s<>@,;]+$")
+_HOST = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$")
+
+
+class EmailSettings(_Group):
+    """Who the shop's email comes from and which mail server sends it. Empty fields use the server's own setup."""
+
+    from_name: str | None = Field(default=None, max_length=80, description="The name customers see, e.g. Windy City Wares")
+    from_address: str | None = Field(default=None, max_length=320, description="The address mail is sent from")
+    reply_to: str | None = Field(default=None, max_length=320, description="Where customers' replies go (default: the from address)")
+    smtp_host: str | None = Field(default=None, max_length=255, description="Mail server. Empty: use the one set on the server")
+    smtp_port: int | None = Field(default=None, ge=1, le=65535)
+    smtp_security: Literal["ssl", "starttls", "none"] | None = None
+    smtp_user: str | None = Field(default=None, max_length=320)
+    smtp_password_enc: str | None = Field(default=None, max_length=1000)  # sealed (core/secretbox); never sent to the admin
+
+    @field_validator("from_name", "smtp_host", "smtp_user", "from_address", "reply_to", mode="before")
+    @classmethod
+    def _blank_is_none(cls, v):
+        if isinstance(v, str):
+            v = v.strip()
+            return v or None
+        return v
+
+    @field_validator("from_name")
+    @classmethod
+    def _one_line(cls, v: str | None) -> str | None:
+        if v is not None and ("\n" in v or "\r" in v or "<" in v or ">" in v):
+            raise ValueError("can't contain line breaks or < >")
+        return v
+
+    @field_validator("from_address", "reply_to")
+    @classmethod
+    def _address(cls, v: str | None) -> str | None:
+        if v is not None and not _ADDRESS.match(v):
+            raise ValueError("must be an email address like hello@example.com")
+        return v
+
+    @field_validator("smtp_host")
+    @classmethod
+    def _host(cls, v: str | None) -> str | None:
+        if v is not None and not _HOST.match(v):
+            raise ValueError("must be a server name like smtp.example.com")
+        return v
+
+    @field_validator("smtp_user")
+    @classmethod
+    def _user(cls, v: str | None) -> str | None:
+        if v is not None and ("\n" in v or "\r" in v):
+            raise ValueError("can't contain line breaks")
+        return v
+
+
 GROUPS: dict[str, type[_Group]] = {
+    "email": EmailSettings,
     "general": GeneralSettings,
     "shipping": ShippingSettings,
     "tax": TaxSettings,
@@ -130,6 +186,7 @@ class StoreSettings(BaseModel):
     reviews: ReviewSettings = Field(default_factory=ReviewSettings)
     analytics: AnalyticsSettings = Field(default_factory=AnalyticsSettings)
     digest: DigestSettings = Field(default_factory=DigestSettings)
+    email: EmailSettings = Field(default_factory=EmailSettings)
 
 
 class AdminSettingsOut(BaseModel):

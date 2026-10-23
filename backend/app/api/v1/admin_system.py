@@ -39,12 +39,19 @@ async def update_settings(group: str, session: SessionDep, user: SettingsStaff, 
 
 @router.post("/settings/test-email", response_model=Message)
 async def send_test_email(session: SessionDep, user: SettingsStaff):
-    """Send a short message to your own address to check that outgoing email works."""
-    await mailer.send(mailer.Mail(
-        to=user.email, subject="Test email from WindyCityWares",
-        text="If you can read this, outgoing email from the shop works.\n\nYou can delete this message.",
-    ))
-    return Message(detail=f"Test email sent to {user.email}")
+    """Send a short message to your own address to check that outgoing email works, saying what went wrong if it doesn't."""
+    sender = await mailer.effective_settings()
+    via = f"{sender.smtp_host}:{sender.smtp_port}" if sender.smtp_host else "no mail server set"
+    try:
+        await mailer.send(mailer.Mail(
+            to=user.email, subject="Test email from WindyCityWares",
+            text="If you can read this, outgoing email from the shop works.\n\nYou can delete this message.",
+        ))
+    except mailer.MailError as exc:
+        raise mailer.MailError(f"Couldn't send through {via}: {exc.reason or exc.message}") from exc
+    if not sender.smtp_host:
+        return Message(detail="No mail server is set up, so nothing was sent (the message was only logged).")
+    return Message(detail=f"Test email sent to {user.email} through {via}, from {sender.mail_from}")
 
 
 # ---- reviews ----------------------------------------------------------------------------------
