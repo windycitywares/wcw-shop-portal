@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core import captcha, mailer, secretbox
 from app.core.config import get_settings
 from app.core.exceptions import NotFoundError, ValidationFailedError
+from app.domain import emailtext
 from app.domain.pricing import ShippingConfig, TaxConfig
 from app.models.commerce import StoreSetting
 from app.models.user import User
@@ -123,6 +124,7 @@ class SettingsService:
     async def load(self) -> StoreSettings:
         cached = _cache.get()
         if cached is not None:
+            emailtext.set_overrides(cached.email_templates.templates)
             return cached
         rows = (await self.session.execute(select(StoreSetting))).scalars().all()
         groups = {}
@@ -134,7 +136,9 @@ class SettingsService:
                 groups[row.key] = model.model_validate(row.value or {})
             except ValidationError:
                 log.warning("Ignoring invalid stored settings for %s", row.key)
-        return _cache.set(StoreSettings(**groups))
+        loaded = _cache.set(StoreSettings(**groups))
+        emailtext.set_overrides(loaded.email_templates.templates)  # emails rendered from now on use the owner's wording
+        return loaded
 
     async def setup_checklist(self) -> dict[str, bool]:
         """What has to be in place before the store can sell with confidence (feeds the dashboard and the suggestions)."""

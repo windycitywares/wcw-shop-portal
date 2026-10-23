@@ -162,7 +162,39 @@ class EmailSettings(_Group):
         return v
 
 
+class EmailTemplateSettings(_Group):
+    """Wording the owner changed: {email kind: {language: {subject|intro|button|signoff: text}}}. Missing = the built-in wording."""
+
+    templates: dict[str, dict[str, dict[str, str]]] = Field(default_factory=dict)
+
+    @field_validator("templates")
+    @classmethod
+    def _clean(cls, v):
+        from app.domain.emailtext import EDITABLE, FIELDS
+
+        limits = {"subject": 150, "intro": 1500, "button": 40, "signoff": 300}
+        out: dict[str, dict[str, dict[str, str]]] = {}
+        for kind, langs in (v or {}).items():
+            if kind not in EDITABLE or not isinstance(langs, dict):
+                raise ValueError(f"unknown email: {kind}")
+            for lang, fields in langs.items():
+                if lang not in LANGS or not isinstance(fields, dict):
+                    raise ValueError(f"unknown language: {lang}")
+                for field, text in fields.items():
+                    if field not in FIELDS or not isinstance(text, str):
+                        raise ValueError(f"unknown part: {field}")
+                    text = text.replace("\r\n", "\n").strip()
+                    if field in ("subject", "button") and "\n" in text:
+                        raise ValueError(f"{field} must be one line")
+                    if len(text) > limits[field]:
+                        raise ValueError(f"{field} is too long (most {limits[field]} characters)")
+                    if text:
+                        out.setdefault(kind, {}).setdefault(lang, {})[field] = text
+        return out
+
+
 GROUPS: dict[str, type[_Group]] = {
+    "email_templates": EmailTemplateSettings,
     "email": EmailSettings,
     "general": GeneralSettings,
     "shipping": ShippingSettings,
@@ -187,6 +219,7 @@ class StoreSettings(BaseModel):
     analytics: AnalyticsSettings = Field(default_factory=AnalyticsSettings)
     digest: DigestSettings = Field(default_factory=DigestSettings)
     email: EmailSettings = Field(default_factory=EmailSettings)
+    email_templates: EmailTemplateSettings = Field(default_factory=EmailTemplateSettings)
 
 
 class AdminSettingsOut(BaseModel):
