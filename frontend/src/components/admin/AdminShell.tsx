@@ -30,7 +30,7 @@ function SettingsNav({ onNavigate, collapsed }: { onNavigate?: () => void; colla
   const pathname = usePathname();
   const tab = useSearchParams().get("tab");
   const onSettingsPage = pathname === "/admin/settings";
-  const current = onSettingsPage ? (SETTINGS_TABS.some((t) => t.id === tab) ? tab : SETTINGS_TABS[0].id) : null;
+  const current = onSettingsPage ? (SETTINGS_TABS.some((t) => t.id === tab) ? tab : "overview") : null;
   const tools = settingsPages().filter((i) => !i.permission || can(i.permission));
   const showStore = can("settings:manage");
   return (
@@ -50,6 +50,13 @@ function SettingsNav({ onNavigate, collapsed }: { onNavigate?: () => void; colla
         <div>
           {collapsed ? <hr className="mx-2 mb-2 border-line" /> : <p className="font-admin px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-muted">Store settings</p>}
           <ul className="space-y-0.5">
+            <li>
+              <Link href="/admin/settings" onClick={onNavigate} aria-current={current === "overview" ? "page" : undefined} title={collapsed ? "All settings" : undefined} className={linkClass(current === "overview", collapsed)}>
+                {current === "overview" && <span aria-hidden="true" className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-accent" />}
+                <Icon name="dashboard" className={cn("size-[1.15rem] shrink-0", current === "overview" ? "text-accent" : "text-muted group-hover:text-accent")} />
+                {!collapsed && <span>All settings</span>}
+              </Link>
+            </li>
             {SETTINGS_TABS.map((t) => {
               const active = current === t.id;
               return (

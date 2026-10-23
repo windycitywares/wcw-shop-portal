@@ -99,16 +99,16 @@ export function titleFor(pathname: string): string {
 }
 
 /** The store settings sections (each is /admin/settings?tab=<id>). */
-export const SETTINGS_TABS: { id: string; label: string }[] = [
-  { id: "shipping", label: "Shipping" },
-  { id: "tax", label: "Sales tax" },
-  { id: "payments", label: "Payments" },
-  { id: "welcome", label: "Welcome offer" },
-  { id: "cart_recovery", label: "Cart reminders" },
-  { id: "reviews", label: "Reviews" },
-  { id: "analytics", label: "Analytics" },
-  { id: "digest", label: "Weekly email" },
-  { id: "general", label: "General" },
+export const SETTINGS_TABS: { id: string; label: string; about: string }[] = [
+  { id: "shipping", label: "Shipping", about: "What shipping costs, free shipping, and how many days it takes." },
+  { id: "tax", label: "Sales tax", about: "Whether you collect sales tax, the rate and the states." },
+  { id: "payments", label: "Payments", about: "Card payments and what customers see when an order is waiting for money." },
+  { id: "welcome", label: "Welcome offer", about: "The discount code new newsletter subscribers receive." },
+  { id: "cart_recovery", label: "Cart reminders", about: "Friendly reminders to people who left items in their cart." },
+  { id: "reviews", label: "Reviews", about: "How reviews are collected and published." },
+  { id: "analytics", label: "Analytics", about: "Visit statistics, for visitors who agree to them." },
+  { id: "digest", label: "Weekly email", about: "The Monday summary email of last week’s numbers." },
+  { id: "general", label: "General", about: "Announcement bar, order alerts and checkout rules." },
 ];
 
 /** Pages that belong to Settings: while on one, the sidebar shows this menu instead of the main one. */
@@ -121,6 +121,17 @@ export const SETTINGS_HREFS = [
   "/admin/backups",
   "/admin/deployments",
 ];
+
+/** One plain sentence per admin tool, for the Settings overview. */
+export const TOOL_ABOUT: Record<string, string> = {
+  "/admin/email": "Which address your emails come from and the mail server that sends them. Send yourself a test.",
+  "/admin/email-templates": "Change the wording of the welcome, password-reset and order emails.",
+  "/admin/team": "Who can sign in to this admin, and what each person may do.",
+  "/admin/audit": "A record of who changed what, and when.",
+  "/admin/environment": "Practise on a copy of the shop's data without touching the real shop.",
+  "/admin/backups": "Save and restore copies of the shop's data.",
+  "/admin/deployments": "Publish the latest changes to the live shop.",
+};
 
 export function inSettings(pathname: string): boolean {
   return matches(pathname, "/admin/settings") || SETTINGS_HREFS.some((h) => matches(pathname, h));
@@ -144,8 +155,9 @@ export function crumbsFor(pathname: string, tab: string | null): Crumb[] {
   const item = items.find((i) => i.href === href);
   if (inSettings(pathname)) {
     if (matches(pathname, "/admin/settings")) {
-      const t = SETTINGS_TABS.find((x) => x.id === tab) ?? SETTINGS_TABS[0];
-      crumbs.push({ label: "Settings", href: "/admin/settings" }, { label: t.label });
+      const t = SETTINGS_TABS.find((x) => x.id === tab);
+      crumbs.push(t ? { label: "Settings", href: "/admin/settings" } : { label: "Settings" });
+      if (t) crumbs.push({ label: t.label });
       return crumbs;
     }
     crumbs.push({ label: "Settings", href: "/admin/settings" });
