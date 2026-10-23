@@ -5,6 +5,7 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 import { Analytics } from "@/components/analytics/Analytics";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
+import { BackToTop } from "@/components/ui/BackToTop";
 import { Header } from "@/components/layout/Header";
 import { TestModeBanner } from "@/components/TestModeBanner";
 import { JsonLd, organizationLd } from "@/components/seo/JsonLd";
@@ -71,6 +72,7 @@ export default async function LocaleLayout({ children, params }: Props) {
               {children}
             </main>
             <Footer locale={locale} />
+            <BackToTop label={({ en: "Back to top", es: "Volver arriba", nl: "Terug naar boven" } as Record<string, string>)[locale] ?? "Back to top"} />
             <CartDrawer />
             <Analytics />
           </Providers>

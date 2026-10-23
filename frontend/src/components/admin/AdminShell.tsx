@@ -15,6 +15,7 @@ import { Icon } from "./ui/Icon";
 import { Popover } from "@/components/ui/Popover";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
+import { BackToTop } from "@/components/ui/BackToTop";
 import { ToastProvider } from "./ui/Toast";
 
 const linkClass = (active: boolean, collapsed: boolean) =>
@@ -343,6 +344,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </Suspense>
             {children}
           </main>
+          <BackToTop />
         </div>
       </div>
     </ToastProvider>
