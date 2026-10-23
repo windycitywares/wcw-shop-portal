@@ -18,7 +18,7 @@ from app.domain.contacts import SERVICE_ONLY_SOURCES
 from app.domain.csvsafe import to_csv
 from app.models.user import NewsletterSubscriber, User
 from app.schemas.subscribers import SubscriberCounts, SubscriberList, SubscriberOut
-from app.services import audit
+from app.services import audit, emails
 from app.services.auth import NewsletterService
 
 STATUSES = ("all", "subscribed", "paused", "unsubscribed")
@@ -97,15 +97,17 @@ class SubscriberService:
         return row
 
     async def add(self, email: str, locale: str, actor: User) -> SubscriberOut:
-        """Sign up an address by hand (e.g. someone who asked in person). No welcome offer is sent."""
+        """Sign up an address by hand (e.g. someone who asked in person). No welcome offer is sent, but they get the "you're subscribed" email."""
         existing = (await self.session.execute(
             select(NewsletterSubscriber).where(NewsletterSubscriber.email == email.strip().lower(), _real())
         )).scalar_one_or_none()
         if existing is not None and existing.unsubscribed_at is not None:
             raise ConflictError("This person unsubscribed. Only they can sign up again, from the form on the site.")
-        row = await NewsletterService(self.session).add(email, locale, source="admin", welcome=False, commit=False)
+        news = NewsletterService(self.session)
+        row = await news.add(email, locale, source="admin", welcome=False, commit=False)
         audit.record(self.session, actor, "subscriber.add", "subscriber", row.id, f"Added {row.email} to the newsletter")
         await self.session.commit()
+        await emails.deliver(self.session, news.last_queued)  # "you're subscribed", with the way out
         return next(r for r in await self._rows(row.email, "all") if r.id == row.id)
 
     async def unsubscribe(self, subscriber_id: int, actor: User) -> SubscriberOut:
