@@ -3,7 +3,10 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/client-api";
+import { SETTINGS_TABS, TOOL_ABOUT, settingsPages } from "@/components/admin/nav";
+import { Icon } from "@/components/admin/ui/Icon";
 import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { Panel, PanelBody, PanelHeader } from "@/components/admin/ui/Panel";
 import { Pill } from "@/components/admin/ui/Pill";
@@ -316,7 +319,8 @@ const STATUS_LABEL: Record<string, string> = {
 function SettingsInner() {
   const searchParams = useSearchParams();
   const wanted = searchParams.get("tab");
-  const tab = GROUPS.some((g) => g.id === wanted) ? (wanted as string) : GROUPS[0].id;
+  const tab = GROUPS.some((g) => g.id === wanted) ? (wanted as string) : null;
+  const { can } = useAuth();
   const [data, setData] = useState<{ settings: Settings; status: Record<string, boolean> } | null>(null);
   const [error, setError] = useState("");
 
@@ -328,16 +332,28 @@ function SettingsInner() {
     if (searchParams.get("tab") === "email") window.location.replace("/admin/email");
   }, [searchParams]);
 
-  const group = GROUPS.find((g) => g.id === tab) ?? GROUPS[0];
+  const group = GROUPS.find((g) => g.id === tab);
+  const tools = settingsPages().filter((i) => !i.permission || can(i.permission));
   return (
     <div>
-      <PageHeader title="Settings" description="Everything the shop runs by. Pick a section in the menu on the left." />
+      <PageHeader
+        title="Settings"
+        description={group ? group.description : "Everything the shop runs by. Pick a topic below, or use the menu on the left to move around."}
+        actions={
+          group ? (
+            <Link href="/admin/settings" className="inline-flex items-center gap-1 text-sm font-medium text-accent underline">
+              <Icon name="chevronLeft" className="size-4" />
+              All settings
+            </Link>
+          ) : undefined
+        }
+      />
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}
         </Alert>
       )}
-      {data && (
+      {data && !group && (
         <Panel className="mb-6">
           <PanelHeader title="Setup status" description="Payments and spam protection are set on the server (backend .env); email is set under Email sending. Green means it's in place." />
           <PanelBody>
@@ -356,13 +372,51 @@ function SettingsInner() {
           </PanelBody>
         </Panel>
       )}
-      <div className="max-w-4xl">
+      {group ? (
+        <div className="max-w-4xl">
           {data ? (
             <GroupForm key={group.id} group={group} initial={data.settings[group.id] ?? {}} status={data.status} onSaved={(settings, status) => setData({ settings, status: status ?? data.status })} />
           ) : (
             <div className="skeleton h-64" />
           )}
-      </div>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          <section aria-labelledby="store-settings">
+            <h2 id="store-settings" className="mb-3 text-base font-semibold">
+              Your shop
+            </h2>
+            <ul className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {SETTINGS_TABS.map((t) => (
+                <li key={t.id}>
+                  <Link href={`/admin/settings?tab=${t.id}`} className="block h-full rounded-[var(--radius-card)] border border-line bg-surface p-4 hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                    <span className="font-medium">{t.label}</span>
+                    <span className="mt-1 block text-sm text-muted">{t.about}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+          <section aria-labelledby="admin-tools">
+            <h2 id="admin-tools" className="mb-3 text-base font-semibold">
+              Email, team and tools
+            </h2>
+            <ul className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {tools.map((i) => (
+                <li key={i.href}>
+                  <Link href={i.href} className="flex h-full gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-4 hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                    <Icon name={i.icon} className="mt-0.5 size-5 shrink-0 text-muted" />
+                    <span>
+                      <span className="font-medium">{i.label}</span>
+                      <span className="mt-1 block text-sm text-muted">{TOOL_ABOUT[i.href] ?? ""}</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
