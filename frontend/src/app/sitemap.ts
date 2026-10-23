@@ -28,6 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry("/deals", { changeFrequency: "daily", priority: 0.7 }),
     ...HELP_TOPICS.map((topic) => entry(`/help/${topic}`, { changeFrequency: "monthly", priority: topic === "guide" || topic === "faq" ? 0.5 : 0.3 })),
     entry("/contact", { changeFrequency: "yearly", priority: 0.3 }),
+    entry("/site-map", { changeFrequency: "weekly", priority: 0.2 }),
     entry("/track-order", { changeFrequency: "yearly", priority: 0.2 }),
     ...flatten(tree).map((c) => entry(`/category/${c.slug}`, { changeFrequency: "weekly", priority: 0.7 })),
     ...products.map((p) =>
