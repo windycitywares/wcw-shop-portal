@@ -68,6 +68,7 @@ const nl: Dictionary = {
     etsyCta: "Naar onze Etsy-winkel",
     shopsTitle: "Vind ons op andere marktplaatsen",
     shopsText: "Dezelfde handgemaakte stukken, waar je ook graag winkelt.",
+    shopsNotice: "De namen en logo's van de marktplaatsen zijn eigendom van hun eigenaren. Wij verkopen er zelfstandig en worden er niet door onderschreven.",
     shopOn: "op {platform}",
     shopOpens: "Opent in een nieuw tabblad",
     emptyTitle: "Er komen binnenkort nieuwe artikelen",

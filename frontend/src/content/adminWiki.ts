@@ -109,12 +109,12 @@ export const ADMIN_WIKI: WikiArticle[] = [
   },
   {
     "id": "set-shops",
-    "title": "Settings → Other shops",
+    "title": "Settings → Marketplaces",
     "summary": "Link your Etsy, Amazon and other marketplace shops.",
     "paragraphs": [
       "Press Add shop, pick the marketplace, give it a name and paste the address of your shop page. The address must belong to the marketplace you picked, so a wrong paste is caught.",
       "Visitors see each shop as a colour-coded tile on the home page (the colour and the “on Etsy” line show the marketplace) and as a link in the footer. Hovering a tile shows your short description; clicking it opens the shop in a new tab.",
-      "Use the arrows to change the order, the pause icon to hide a shop without deleting it, and the eye, pencil and bin to view, edit or delete. Until you add one, the home page keeps showing the Etsy link from the site settings."
+      "Paste the marketplace’s own official logo address if you have it (download it from the marketplace’s brand page and use it unchanged). Use the arrows to change the order, the pause icon to hide a shop without deleting it, and the eye, pencil and bin to view, edit or delete. Until you add one, the home page keeps showing the Etsy link from the site settings."
     ]
   },
   {

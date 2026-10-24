@@ -25,6 +25,7 @@ class ShopLinkTests(unittest.TestCase):
         link(platform="amazon", url="https://amazon.co.uk/stores/x")
         link(platform="ebay", url="https://www.ebay.com/str/shop")
         link(platform="other", url="https://example.org/shop")
+        link(url="https://www.etsy.com/shop/WindyCityWaresUS?ref=hdr&section_id=1#reviews")  # ? and # parts are fine
 
     def test_bad_links_are_refused(self):
         for bad in (

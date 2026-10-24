@@ -24,18 +24,17 @@ export function ShopLinkTiles({ links, locale }: { links: Item[]; locale: Locale
               className="flex min-w-60 items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-3 pr-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:-translate-y-0.5 focus-visible:shadow-lg motion-reduce:transition-none"
               style={{ borderLeft: `6px solid ${p.bg}` }}
             >
-              <span
-                aria-hidden="true"
-                className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-full text-xl font-bold"
-                style={{ background: p.bg, color: p.fg }}
-              >
-                {l.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={l.image_url} alt="" className="size-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
-                ) : (
-                  (p.id === "other" ? l.name : p.label).charAt(0).toUpperCase()
-                )}
-              </span>
+              {l.image_url ? (
+                // The owner's official logo, shown unchanged: never recoloured, cropped or stretched.
+                <span aria-hidden="true" className="grid h-12 w-16 shrink-0 place-items-center rounded-[var(--radius-control)] bg-white p-1.5 ring-1 ring-line">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={l.image_url} alt="" className="max-h-full max-w-full object-contain" loading="lazy" referrerPolicy="no-referrer" />
+                </span>
+              ) : (
+                <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-full text-xl font-bold" style={{ background: p.bg, color: p.fg }}>
+                  {(p.id === "other" ? l.name : p.label).charAt(0).toUpperCase()}
+                </span>
+              )}
               <span className="min-w-0">
                 <span className="block truncate font-semibold text-ink">{l.name}</span>
                 <span className="block text-sm text-muted">{p.id === "other" ? t.home.shopOpens : fmt(t.home.shopOn, { platform: p.label })}</span>
@@ -62,4 +61,9 @@ export function ShopLinkTiles({ links, locale }: { links: Item[]; locale: Locale
       })}
     </ul>
   );
+}
+
+/** The trademark line shown under the tiles. */
+export function MarketplaceNotice({ locale }: { locale: Locale }) {
+  return <p className="mt-6 max-w-2xl text-xs text-muted">{getDictionary(locale).home.shopsNotice}</p>;
 }

@@ -70,6 +70,7 @@ const en = {
     etsyCta: "Visit our Etsy shop",
     shopsTitle: "Find us on other marketplaces",
     shopsText: "The same handmade pieces, wherever you like to shop.",
+    shopsNotice: "Marketplace names and logos belong to their owners. We sell on these marketplaces independently and are not endorsed by them.",
     shopOn: "on {platform}",
     shopOpens: "Opens in a new tab",
     emptyTitle: "New items are on their way",
