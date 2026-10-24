@@ -109,7 +109,7 @@ Check: `https://shop.windycitywares.com/robots.txt` says `Disallow: /` while bui
 
 ## Updating (automatic) — Admin → Deployments
 
-**Recent versions and Restore.** The page lists the last five versions that went live, each described by its pull request, with the
+**Recent versions and Restore.** The page lists the latest version and the three before it (V1–V3), each described by its pull request, with the
 live one on top. *Restore this version* puts an earlier one back on the next cron run: the API code goes back to that commit (migrations
 are **not** run or undone, so restore is meant for changes that only add to the database) and the storefront comes back from the copy
 `update-storefront.sh` saved when it installed that build (`~/apps/wcw-storefront-releases`, the last five). The version is then
