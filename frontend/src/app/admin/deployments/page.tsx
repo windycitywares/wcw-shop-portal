@@ -23,13 +23,15 @@ interface Release {
   id: number;
   commit: string;
   pr_number: number | null;
+  pr_url: string | null;
   title: string;
   details: string | null;
   committed_at: string | null;
-  deployed_at: string;
+  deployed_at: string | null;
   storefront_build: string | null;
   main_site_build: string | null;
   current: boolean;
+  latest: boolean;
   restorable: boolean;
 }
 interface DeployStatus {
@@ -343,19 +345,36 @@ export default function AdminDeployments() {
                 <li key={r.id} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 py-3">
                   <div className="min-w-0 flex-1">
                     <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
-                      {r.current ? (
-                        <Pill tone="success">{status.pinned_commit ? "Live now · held" : "Latest · live now"}</Pill>
+                      {r.latest && r.current ? (
+                        <Pill tone="success">Latest · live now</Pill>
                       ) : (
-                        <Pill tone="neutral">Earlier</Pill>
+                        <>
+                          {r.latest && <Pill tone="accent">Latest</Pill>}
+                          {r.current && <Pill tone="success">Live now{status.pinned_commit ? " · held" : ""}</Pill>}
+                          {!r.latest && !r.current && <Pill tone="neutral">Earlier</Pill>}
+                        </>
                       )}
                       <span className="min-w-0 break-words">{r.title}</span>
                     </p>
-                    {r.details && <p className="mt-1 whitespace-pre-line break-words text-sm text-muted">{r.details}</p>}
+                    {r.details && <p className="mt-1 break-words text-sm text-muted">{r.details}</p>}
                     <p className="mt-1 text-xs text-muted">
-                      {r.pr_number ? `PR #${r.pr_number} · ` : ""}
-                      <span className="font-mono">{r.commit}</span> · live {dateTime(r.deployed_at)}
+                      {r.pr_number && r.pr_url ? (
+                        <>
+                          <a href={r.pr_url} target="_blank" rel="noopener noreferrer" className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-2">
+                            PR #{r.pr_number}
+                            <span className="sr-only"> on GitHub (opens in a new tab)</span>
+                          </a>
+                          {" · "}
+                        </>
+                      ) : null}
+                      <span className="font-mono">{r.commit}</span> · {r.deployed_at ? `went live ${dateTime(r.deployed_at)}` : "not installed yet"}
                     </p>
                   </div>
+                  {r.latest && !r.current && (
+                    <Button size="sm" disabled={busy || status.running || (status.restore_pending && !status.pinned_commit)} onClick={() => void returnToLatest()}>
+                      Switch to latest
+                    </Button>
+                  )}
                   {r.restorable && (
                     <Button size="sm" variant="secondary" disabled={busy || status.running || status.restore_pending} onClick={() => setToRestore(r)}>
                       Restore this version

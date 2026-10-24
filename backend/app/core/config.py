@@ -112,6 +112,7 @@ class Settings(BaseSettings):
     deploy_repo_dir: str = str(BACKEND_DIR.parent)
     storefront_app_dir: str = str(Path.home() / "apps" / "wcw-storefront")
     main_site_app_dir: str = str(Path.home() / "apps" / "wcw-main" / "site")
+    deploy_github_repo: str = "windycitywares/wcw-shop-portal"  # where Admin → Deployments links pull requests
     deploy_log: str = str(Path.home() / "logs" / "wcw-deploy.log")
 
     # Analytics ignores crawlers and headless browsers; the browser tests turn this on.
