@@ -143,8 +143,8 @@ export function ShopLinksAdmin({ initial, onSaved }: { initial: ShopLinkRow[]; o
     <div className="space-y-6">
       <Panel>
         <PanelHeader
-          title="Your shops"
-          description="Shown in this order as tiles on the home page, and as links in the footer. Hover a tile to see its short description."
+          title="Your marketplaces"
+          description="Your shops on other marketplaces. Shown in this order as tiles on the home page, and as links in the footer. Hover a tile to see its short description."
           actions={
             <Button size="sm" onClick={() => open("add", blank())}>
               <Icon name="plus" className="size-4" />
@@ -167,7 +167,7 @@ export function ShopLinksAdmin({ initial, onSaved }: { initial: ShopLinkRow[]; o
         onClose={() => setDialog(null)}
         size="md"
         title={dialog?.mode === "add" ? "Add shop" : dialog?.mode === "edit" ? "Edit shop" : (d?.name ?? "Shop")}
-        description={readOnly ? "Read only. Choose Edit to change it." : "Pick the marketplace, then paste the address of your shop page."}
+        description={readOnly ? "Read only. Choose Edit to change it." : "Pick the marketplace, then paste the address of your shop page. Addresses with ? or # parts are fine."}
         footer={
           readOnly ? (
             <>
@@ -218,9 +218,15 @@ export function ShopLinksAdmin({ initial, onSaved }: { initial: ShopLinkRow[]; o
             <Field label="Short description" hint={`Shown when a visitor hovers the tile. ${(d.blurb ?? "").length}/160`}>
               {(p) => <Textarea {...p} value={d.blurb ?? ""} onChange={(e) => set({ blurb: e.target.value || null })} maxLength={160} readOnly={readOnly} className="min-h-20" />}
             </Field>
-            <Field label="Logo or picture address (optional)" hint="An https:// image address. Leave empty to use the coloured badge.">
+            <Field label="Official logo or badge (optional)" hint="An https:// image address of the marketplace's own logo or badge, taken from its brand-guidelines page. Leave empty to use the coloured badge.">
               {(p) => <Input {...p} type="url" inputMode="url" value={d.image_url ?? ""} onChange={(e) => set({ image_url: e.target.value || null })} maxLength={500} readOnly={readOnly} />}
             </Field>
+            {!readOnly && (
+              <p className="rounded-[var(--radius-control)] bg-canvas p-3 text-xs text-muted">
+                Logos belong to their marketplaces. Download the official logo or “find us on” badge from the marketplace’s own brand or press page, use it unchanged
+                (no recolouring, stretching or cropping), and only to say you sell there. We never add a logo for you.
+              </p>
+            )}
             <label className="flex items-start gap-3 text-sm">
               <input type="checkbox" className="mt-0.5 size-4 accent-[var(--color-accent)]" checked={d.enabled} disabled={readOnly} onChange={(e) => set({ enabled: e.target.checked })} />
               <span>Show this shop on the site</span>

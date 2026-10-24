@@ -68,6 +68,7 @@ const es: Dictionary = {
     etsyCta: "Visitar nuestra tienda de Etsy",
     shopsTitle: "Encuéntranos en otros mercados",
     shopsText: "Las mismas piezas hechas a mano, donde prefieras comprar.",
+    shopsNotice: "Los nombres y logotipos de los mercados pertenecen a sus propietarios. Vendemos en ellos de forma independiente y no contamos con su respaldo.",
     shopOn: "en {platform}",
     shopOpens: "Se abre en una pestaña nueva",
     emptyTitle: "Pronto habrá nuevos artículos",

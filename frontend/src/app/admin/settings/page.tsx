@@ -121,7 +121,7 @@ const GROUPS: Group[] = [
   },
   {
     id: "shop_links",
-    label: "Other shops",
+    label: "Marketplaces",
     description: "Link your shops on Etsy, Amazon, eBay and other marketplaces. Visitors see them as colour-coded tiles on the home page and in the footer.",
     fields: [],
   },
