@@ -402,7 +402,6 @@ const nl: Dictionary = {
     findUsOn: "Vind ons op",
     followUs: "Volg ons",
     followText: "Zie als eerste nieuwe ontwerpen, een kijkje achter de schermen en aanbiedingen.",
-    followCta: "Volgen",
     followOn: "Volg ons op {platform} (opent in een nieuw tabblad)",
     newTab: "(opent in een nieuw tabblad)",
     help: "Hulp",

@@ -54,8 +54,7 @@ export async function Footer({ locale }: { locale: Locale }) {
   return (
     <>
     <MarketplaceBand links={shops} locale={locale} />
-    <FollowBand accounts={social} locale={locale} stacked={shops.length > 0} />
-    <footer className={`${shops.length > 0 || social.length > 0 ? "" : "mt-28"} bg-night text-night-muted [&_*:focus-visible]:outline-white`}>
+    <footer className={`${shops.length > 0 ? "" : "mt-28"} bg-night text-night-muted [&_*:focus-visible]:outline-white`}>
       <Container className="grid gap-12 py-16 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
         <div className="max-w-sm">
           <Logo tone="reverse" title="WindyCityWares" className="mb-8 h-10 w-auto" />
@@ -78,6 +77,7 @@ export async function Footer({ locale }: { locale: Locale }) {
           </nav>
         ))}
       </Container>
+      <FollowBand accounts={social} locale={locale} />
       <Container className="flex flex-col gap-5 border-t border-white/10 py-7 text-sm sm:flex-row sm:items-center sm:justify-between">
         <p>
           {fmt(t.footer.rights, { year })}{" "}
