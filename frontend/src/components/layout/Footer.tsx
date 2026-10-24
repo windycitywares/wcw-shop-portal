@@ -3,14 +3,17 @@ import { ConsentSettingsLink } from "@/components/analytics/Analytics";
 import { HELP_NAV } from "@/content/help";
 import { fmt, localePath, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { getShopConfig } from "@/lib/api";
+import { platformOf } from "@/lib/shopPlatforms";
 import { site } from "@/lib/site";
 import { Container } from "@/components/ui/misc";
 import { Logo } from "@/components/ui/Logo";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { NewsletterForm } from "./NewsletterForm";
 
-export function Footer({ locale }: { locale: Locale }) {
+export async function Footer({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
+  const shops = (await getShopConfig(locale))?.shop_links ?? [];
   const l = (p: string) => localePath(locale, p);
   const year = new Date().getFullYear();
   const columns = [
@@ -77,6 +80,19 @@ export function Footer({ locale }: { locale: Locale }) {
         </p>
         <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
           <LanguageSwitcher variant="inline" />
+          {shops.length > 0 ? (
+            <ul className="flex flex-wrap gap-x-4 gap-y-2" aria-label={t.footer.findUsOn}>
+              {shops.map((s) => (
+                <li key={s.id}>
+                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-white">
+                    <span aria-hidden="true" className="size-2.5 rounded-full" style={{ background: platformOf(s.platform).bg }} />
+                    {s.name}
+                    <span className="sr-only"> {t.footer.newTab}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : (
           <ul className="flex gap-4" aria-label={t.footer.social}>
             {site.social.map((s) => (
               <li key={s.href}>
@@ -87,6 +103,7 @@ export function Footer({ locale }: { locale: Locale }) {
               </li>
             ))}
           </ul>
+          )}
         </div>
       </Container>
     </footer>
