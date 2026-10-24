@@ -41,7 +41,7 @@ export const ADMIN_WIKI: WikiArticle[] = [
     "paragraphs": [
       "Promotions: create discount codes and automatic offers, with start and end dates.",
       "Email campaigns: write a newsletter and send it to subscribers. Every email carries an unsubscribe link; people who unsubscribe are never emailed again.",
-      "Check Email sending first (Settings) so campaigns can leave the building."
+      "Check Email config first (Settings) so campaigns can leave the building."
     ]
   },
   {
@@ -138,10 +138,10 @@ export const ADMIN_WIKI: WikiArticle[] = [
   },
   {
     "id": "email",
-    "title": "Email sending and templates",
+    "title": "Email config and templates",
     "summary": "Making email work.",
     "paragraphs": [
-      "Email sending: enter the From name and address and the mail server details your host gave you (host, port, username, password). The password is stored encrypted and is never shown again.",
+      "Email config: enter the From name and address and the mail server details your host gave you (host, port, username, password). The password is stored encrypted and is never shown again.",
       "Press Send test email to yourself. If it fails, the message says why; the most common causes are a wrong password or port.",
       "Email templates: change the wording of welcome, password-reset and order emails. Keep the {placeholders}; they are filled in for each customer. Use Preview before saving, and Reset to restore the original."
     ]

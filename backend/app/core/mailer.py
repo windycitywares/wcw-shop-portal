@@ -55,7 +55,7 @@ def build_message(mail: Mail, settings: Settings) -> EmailMessage:
     return msg
 
 
-# ---- settings made in the admin (Settings → Email sending) override the server's own ------------------------
+# ---- settings made in the admin (Settings → Email config) override the server's own ------------------------
 
 _DEFAULT_PORT = {"ssl": 465, "starttls": 587, "none": 25}
 CONFIG_SECONDS = 15.0

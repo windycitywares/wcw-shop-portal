@@ -362,7 +362,7 @@ function SettingsInner() {
       )}
       {data && !group && (
         <Panel className="mb-6">
-          <PanelHeader title="Setup status" description="Payments and spam protection are set on the server (backend .env); email is set under Email sending. Green means it's in place." />
+          <PanelHeader title="Setup status" description="Payments and spam protection are set on the server (backend .env); email is set under Email config. Green means it's in place." />
           <PanelBody>
             <ul className="flex flex-wrap gap-2">
               {Object.entries(STATUS_LABEL).map(([key, label]) => (
@@ -374,7 +374,7 @@ function SettingsInner() {
               ))}
             </ul>
             <Link href="/admin/email" className="mt-4 inline-block text-sm font-medium text-accent underline">
-              Email sending settings and test
+              Email config settings and test
             </Link>
           </PanelBody>
         </Panel>

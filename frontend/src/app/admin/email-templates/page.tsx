@@ -106,7 +106,7 @@ export default function AdminEmailTemplates() {
         description="Change the wording of the emails customers receive. Links, codes, order lines and totals are added by the shop. Leave a box empty to keep the built-in wording."
         actions={
           <Link href="/admin/email" className="text-sm font-medium text-accent underline">
-            Email sending settings
+            Email config settings
           </Link>
         }
       />
