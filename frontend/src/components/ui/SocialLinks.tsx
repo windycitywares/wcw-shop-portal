@@ -32,6 +32,16 @@ export function SocialIcons({ accounts, locale, className }: { accounts: Account
     <ul className={cn("flex items-center", className)} aria-label={t.footer.social}>
       {accounts.map((a) => {
         const p = socialOf(a.platform);
+        if (a.url === "#") {
+          // Not open yet: a plain icon with a tooltip, not a link that goes nowhere.
+          return (
+            <li key={a.id}>
+              <span role="img" aria-label={`${p.label}: ${t.home.shopSoon}`} title={t.home.shopSoon} className="grid size-11 cursor-default place-items-center rounded-full opacity-60">
+                <SocialGlyph platform={a.platform} />
+              </span>
+            </li>
+          );
+        }
         return (
           <li key={a.id}>
             <a
@@ -59,6 +69,20 @@ export function FollowPills({ accounts, locale, onDark = false }: { accounts: Ac
     <ul className="flex flex-wrap gap-3" aria-label={t.footer.followUs}>
       {accounts.map((a) => {
         const p = socialOf(a.platform);
+        if (a.url === "#") {
+          return (
+            <li key={a.id}>
+              <span
+                title={t.home.shopSoon}
+                className={cn("inline-flex min-h-11 cursor-default items-center gap-2 rounded-full border px-4 text-sm font-medium opacity-60", onDark ? "border-white/25 text-white" : "border-line bg-surface text-ink")}
+              >
+                <SocialGlyph platform={a.platform} className="size-[1.125rem]" />
+                {a.handle || p.label}
+                <span className="text-xs font-normal">· {t.home.shopSoon}</span>
+              </span>
+            </li>
+          );
+        }
         return (
           <li key={a.id}>
             <a

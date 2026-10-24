@@ -25,12 +25,13 @@ class SocialTests(unittest.TestCase):
         acct(platform="whatsapp", url="https://wa.me/15551234567")
         acct(platform="youtube", url="https://youtu.be/abc")
         acct(handle="")
+        self.assertEqual(acct(url=" # ").url, "#")  # not open yet
 
     def test_bad_accounts(self):
         for bad in (
             {"url": "http://www.instagram.com/x"},
             {"url": "javascript:alert(1)"},
-            {"url": "#"},
+            {"url": "#about"},  # only a lone # is a placeholder
             {"url": "https://u:p@instagram.com/x"},
             {"url": "https://instagram.com.evil.example/x"},
             {"platform": "facebook", "url": "https://www.instagram.com/x"},
