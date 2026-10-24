@@ -1,6 +1,15 @@
 /** Number, money and date formatting shared by the admin charts, tables and tiles. */
 
 const US = "en-US";
+
+let zone: string | undefined;
+/** The store's time zone (Settings → General): the admin shows clock times in it, whatever the browser's zone is. */
+export function setStoreTimeZone(name: string | undefined): void {
+  zone = name;
+}
+export function storeTimeZone(): string | undefined {
+  return zone;
+}
 const int = new Intl.NumberFormat(US, { maximumFractionDigits: 0 });
 const one = new Intl.NumberFormat(US, { maximumFractionDigits: 1 });
 const usd = new Intl.NumberFormat(US, { style: "currency", currency: "USD" });
@@ -37,7 +46,7 @@ export function dayLabel(iso: string, style: "short" | "long" = "short"): string
 }
 
 export function dateTime(iso: string): string {
-  return new Intl.DateTimeFormat(US, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+  return new Intl.DateTimeFormat(US, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: zone }).format(new Date(iso));
 }
 
 export function timeAgo(iso: string, now = Date.now()): string {

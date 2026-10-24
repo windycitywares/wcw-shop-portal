@@ -18,7 +18,7 @@ from app.core import appmode
 from app.core.config import get_settings
 from app.core.exceptions import ValidationFailedError
 from app.domain.deploy_policy import Decision, decide
-from app.domain.timeutil import STORE_TZ_NAME
+from app.domain.timeutil import store_tz_name
 from app.models.user import User
 from app.schemas.deploy import DeployConfigIn, DeployStatusOut, Version
 
@@ -96,7 +96,7 @@ class DeployService:
         api = await asyncio.to_thread(git_version, settings.deploy_repo_dir)
         return DeployStatusOut(
             mode=row["mode"], interval_minutes=row["interval_minutes"], schedule_times=list(row["schedule_times"] or []),
-            timezone=STORE_TZ_NAME, requested_at=row["requested_at"], requested_by=row["requested_by_email"],
+            timezone=store_tz_name(), requested_at=row["requested_at"], requested_by=row["requested_by_email"],
             last_check_at=row["last_check_at"], started_at=started, finished_at=finished, running=running,
             last_reason=row["last_reason"], last_result=row["last_result"], updated_at=row["updated_at"],
             updated_by=row["updated_by_email"], api=api,
@@ -132,7 +132,7 @@ class DeployService:
         row = await self._row()
         now = _now()
         decision = decide(now=now, mode=row["mode"], interval_minutes=row["interval_minutes"],
-                          schedule_times=list(row["schedule_times"] or []), tz=STORE_TZ_NAME,
+                          schedule_times=list(row["schedule_times"] or []), tz=store_tz_name(),
                           requested=row["requested_at"] is not None, last_check=row["last_check_at"])
         if decision.go:
             await self._rows(

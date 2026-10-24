@@ -16,6 +16,9 @@ import sys
 async def _main(argv: list[str]) -> str:
     from app.core.database import engine
     from app.services.deploy import DeployService
+    from app.services.settings import apply_store_timezone
+
+    await apply_store_timezone()
 
     try:
         service = DeployService(engine)

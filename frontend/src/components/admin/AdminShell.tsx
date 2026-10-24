@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { isStaff, useAuth } from "@/lib/auth";
+import { apiFetch } from "@/lib/client-api";
+import { setStoreTimeZone } from "./charts/format";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
@@ -196,6 +198,19 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [drawer, setDrawer] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [zoneReady, setZoneReady] = useState(false);
+
+  // Clock times in the admin follow the store's time zone (Settings → General), not the browser's.
+  useEffect(() => {
+    let live = true;
+    apiFetch<{ timezone?: string }>("/shop/config")
+      .then((c) => setStoreTimeZone(c.timezone))
+      .catch(() => setStoreTimeZone(undefined))
+      .finally(() => live && setZoneReady(true));
+    return () => {
+      live = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (loading) return;
@@ -208,7 +223,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     document.title = `${titleFor(pathname)} | Admin | WindyCityWares`;
   }, [pathname]);
 
-  if (!user || !isStaff(user)) {
+  if (!user || !isStaff(user) || !zoneReady) {
     return <div className="grid min-h-dvh place-items-center text-sm text-muted">Checking access…</div>;
   }
 

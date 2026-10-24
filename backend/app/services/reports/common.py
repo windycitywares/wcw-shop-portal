@@ -10,7 +10,7 @@ from typing import Any
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.timeutil import STORE_TZ_NAME, DateRange
+from app.domain.timeutil import store_tz_name, DateRange
 
 Row = dict[str, Any]
 
@@ -37,7 +37,7 @@ def avg(part: float | int | Decimal | None, whole: float | int | Decimal | None,
 
 
 def params(rng: DateRange, **extra: Any) -> dict[str, Any]:
-    return {"start": rng.start_utc, "end": rng.end_utc, "tz": STORE_TZ_NAME, "gran": rng.granularity(), **extra}
+    return {"start": rng.start_utc, "end": rng.end_utc, "tz": store_tz_name(), "gran": rng.granularity(), **extra}
 
 
 async def rows(session: AsyncSession, sql: str, p: Mapping[str, Any] | None = None) -> list[Row]:

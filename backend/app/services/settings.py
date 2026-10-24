@@ -11,6 +11,7 @@ from app.core import captcha, mailer, secretbox
 from app.core.config import get_settings
 from app.core.exceptions import NotFoundError, ValidationFailedError
 from app.domain import emailtext
+from app.domain.timeutil import set_store_tz
 from app.domain.pricing import ShippingConfig, TaxConfig
 from app.models.commerce import StoreSetting
 from app.models.user import User
@@ -20,6 +21,17 @@ from app.services.ttl import TtlCache
 
 log = logging.getLogger("wcw.settings")
 _cache: TtlCache[StoreSettings] = TtlCache(ttl=20)
+
+
+async def apply_store_timezone() -> None:
+    """For scripts outside the API (cron jobs, the deploy gate): learn the store's time zone. Never raises."""
+    from app.core.database import SessionFactory
+
+    try:
+        async with SessionFactory() as session:
+            await SettingsService(session).load()
+    except Exception:  # a broken settings table must not stop jobs or deploys: the default zone is used
+        log.warning("Couldn't read the store time zone; using the default", exc_info=True)
 
 
 def clear_cache() -> None:
@@ -92,6 +104,7 @@ def public_config(s: StoreSettings, lang: str) -> PublicConfig:
         max_quantity_per_line=s.general.max_quantity_per_line,
         low_stock_threshold=s.general.low_stock_threshold,
         analytics_enabled=s.analytics.enabled,
+        timezone=s.general.timezone,
         shop_links=[
             PublicShopLink(id=x.id, platform=x.platform, name=x.name, url=x.url, blurb=x.blurb, image_url=x.image_url)
             for x in s.shop_links.links
@@ -136,6 +149,7 @@ class SettingsService:
         cached = _cache.get()
         if cached is not None:
             emailtext.set_overrides(cached.email_templates.templates)
+            set_store_tz(cached.general.timezone)
             return cached
         rows = (await self.session.execute(select(StoreSetting))).scalars().all()
         groups = {}
@@ -148,6 +162,7 @@ class SettingsService:
             except ValidationError:
                 log.warning("Ignoring invalid stored settings for %s", row.key)
         loaded = _cache.set(StoreSettings(**groups))
+        set_store_tz(loaded.general.timezone)  # report days, job hours and deploy times follow the owner's zone
         emailtext.set_overrides(loaded.email_templates.templates)  # emails rendered from now on use the owner's wording
         return loaded
 

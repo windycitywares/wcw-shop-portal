@@ -7,6 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from app.domain.timezones import DEFAULT_TIMEZONE, TIMEZONE_IDS
 from app.schemas.common import Money
 
 LANGS = ("en", "es", "nl")
@@ -23,6 +24,14 @@ class GeneralSettings(_Group):
     low_stock_threshold: int = Field(default=3, ge=0, le=1000)
     max_quantity_per_line: int = Field(default=10, ge=1, le=100)
     guest_checkout: bool = True
+    timezone: str = Field(default=DEFAULT_TIMEZONE, description="The store's time zone: report days, scheduled jobs and deploy times follow it")
+
+    @field_validator("timezone")
+    @classmethod
+    def _known_zone(cls, v: str) -> str:
+        if v not in TIMEZONE_IDS:
+            raise ValueError("Pick a time zone from the list")
+        return v
 
     @field_validator("announcement")
     @classmethod
@@ -447,6 +456,7 @@ class PublicConfig(BaseModel):
     max_quantity_per_line: int
     low_stock_threshold: int
     analytics_enabled: bool
+    timezone: str = DEFAULT_TIMEZONE
     snippets: list[PublicSnippet] = Field(default_factory=list)
     shop_links: list[PublicShopLink] = Field(default_factory=list)
     social: list[PublicSocial] = Field(default_factory=list)

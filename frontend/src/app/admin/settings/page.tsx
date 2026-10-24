@@ -14,6 +14,8 @@ import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
+import { setStoreTimeZone } from "@/components/admin/charts/format";
+import { TIMEZONES } from "@/lib/timezones";
 import { SocialAdmin, type SocialRow } from "@/components/admin/settings/SocialAdmin";
 import { ShopLinksAdmin, type ShopLinkRow } from "@/components/admin/settings/ShopLinksAdmin";
 import { TrackingCode, type Snippet } from "@/components/admin/settings/TrackingCode";
@@ -150,7 +152,7 @@ const GROUPS: Group[] = [
   {
     id: "general",
     label: "General",
-    description: "Banner, order alerts and checkout rules.",
+    description: "Banner, order alerts, checkout rules and the store’s time zone.",
     fields: [
       { key: "announcement_enabled", label: "Show the announcement bar", type: "bool" },
       { key: "announcement", label: "Announcement", hint: "One short line at the top of every page.", type: "langs" },
@@ -158,6 +160,13 @@ const GROUPS: Group[] = [
       { key: "low_stock_threshold", label: "“Almost gone” from (units)", type: "number", min: 0, max: 1000 },
       { key: "max_quantity_per_line", label: "Most of one item per order", type: "number", min: 1, max: 100 },
       { key: "guest_checkout", label: "Allow checkout without an account", type: "bool" },
+      {
+        key: "timezone",
+        label: "Store time zone",
+        hint: "Report days, the Monday email, nightly jobs, backups and deploy times all follow it. Changing it moves them straight away; past orders and reports are not altered.",
+        type: "select",
+        options: TIMEZONES,
+      },
     ],
   },
 ];
@@ -411,7 +420,10 @@ function SettingsInner() {
               onSaved={(snippets) => setData({ ...data, settings: { ...data.settings, scripts: { snippets } as unknown as Record<string, Value> } })}
             />
           ) : data ? (
-            <GroupForm key={group.id} group={group} initial={data.settings[group.id] ?? {}} status={data.status} onSaved={(settings, status) => setData({ settings, status: status ?? data.status })} />
+            <GroupForm key={group.id} group={group} initial={data.settings[group.id] ?? {}} status={data.status} onSaved={(settings, status) => {
+                setStoreTimeZone((settings.general as { timezone?: string } | undefined)?.timezone);
+                setData({ settings, status: status ?? data.status });
+              }} />
           ) : (
             <div className="skeleton h-64" />
           )}
