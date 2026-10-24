@@ -14,7 +14,7 @@ from app.domain import emailtext
 from app.domain.pricing import ShippingConfig, TaxConfig
 from app.models.commerce import StoreSetting
 from app.models.user import User
-from app.schemas.settings import GROUPS, AdminSettingsOut, PublicConfig, PublicSnippet, StoreSettings
+from app.schemas.settings import GROUPS, AdminSettingsOut, PublicConfig, PublicShopLink, PublicSnippet, StoreSettings
 from app.services import audit
 from app.services.ttl import TtlCache
 
@@ -92,6 +92,11 @@ def public_config(s: StoreSettings, lang: str) -> PublicConfig:
         max_quantity_per_line=s.general.max_quantity_per_line,
         low_stock_threshold=s.general.low_stock_threshold,
         analytics_enabled=s.analytics.enabled,
+        shop_links=[
+            PublicShopLink(id=x.id, platform=x.platform, name=x.name, url=x.url, blurb=x.blurb, image_url=x.image_url)
+            for x in s.shop_links.links
+            if x.enabled
+        ],
         snippets=[
             PublicSnippet(id=x.id, placement=x.placement, code=x.code.strip(), require_consent=x.require_consent)
             for x in s.scripts.snippets
@@ -192,6 +197,8 @@ class SettingsService:
                 return "(changed)"
             if k == "snippets":  # names only: the code itself is long and does not belong in the log
                 return [f"{x['name']} ({x['placement']}{'' if x['enabled'] else ', off'})" for x in value[k]]
+            if k == "links":
+                return [f"{x['name']} ({x['platform']}{'' if x['enabled'] else ', off'})" for x in value[k]]
             return value[k]
 
         changed = {k: shown(k) for k in value if current.get(k) != value[k]}

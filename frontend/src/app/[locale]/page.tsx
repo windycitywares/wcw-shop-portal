@@ -3,7 +3,7 @@ import Link from "next/link";
 import { attrValue } from "@/i18n/attributes";
 import { fmt, isLocale, localePath, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { getCategoryPreview, getCategoryTree, getProducts } from "@/lib/api";
+import { getCategoryPreview, getCategoryTree, getProducts, getShopConfig } from "@/lib/api";
 import { alternates } from "@/lib/seo";
 import { site } from "@/lib/site";
 import type { Product } from "@/lib/types";
@@ -11,6 +11,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Container, EmptyState, Price } from "@/components/ui/misc";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { ProductGrid } from "@/components/catalog/ProductCard";
+import { ShopLinkTiles } from "@/components/catalog/ShopLinkTiles";
 
 export const revalidate = 300;
 
@@ -66,10 +67,12 @@ export default async function HomePage({ params }: Props) {
   const t = getDictionary(locale);
   const l = (p: string) => localePath(locale, p);
 
-  const [tree, latest] = await Promise.all([
+  const [tree, latest, config] = await Promise.all([
     getCategoryTree(locale),
     getProducts({ sort: "newest", page_size: "11" }, locale),
+    getShopConfig(locale),
   ]);
+  const shops = config?.shop_links ?? [];
   // With a single top-level category (e.g. "Home Decor"), feature its themes instead.
   const themes = tree.length === 1 ? tree[0].children : tree;
   const previews = await Promise.all(themes.map((c) => getCategoryPreview(c.slug)));
@@ -213,7 +216,20 @@ export default async function HomePage({ params }: Props) {
         </Container>
       </section>
 
-      {/* Etsy */}
+      {/* Other marketplaces: the owner's list (Admin → Settings → Other shops), or the Etsy shop until one is added */}
+      {shops.length > 0 ? (
+        <section aria-labelledby="shops-heading">
+          <Container>
+            <h2 id="shops-heading" className="text-3xl sm:text-4xl">
+              {t.home.shopsTitle}
+            </h2>
+            <p className="mt-2 text-muted">{t.home.shopsText}</p>
+            <div className="mt-8">
+              <ShopLinkTiles links={shops} locale={locale} />
+            </div>
+          </Container>
+        </section>
+      ) : (
       <section aria-labelledby="etsy-heading">
         <Container>
           <div className="flex flex-col items-start justify-between gap-6 rounded-[var(--radius-card)] border border-line bg-surface px-6 py-10 sm:flex-row sm:items-center sm:px-10">
@@ -235,6 +251,7 @@ export default async function HomePage({ params }: Props) {
           </div>
         </Container>
       </section>
+      )}
     </>
   );
 }

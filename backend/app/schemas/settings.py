@@ -2,6 +2,7 @@
 
 import re
 from decimal import Decimal
+from urllib.parse import urlsplit
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -156,6 +157,78 @@ class PublicSnippet(BaseModel):
     require_consent: bool
 
 
+PLATFORMS = ("etsy", "amazon", "ebay", "walmart", "shopify", "facebook", "instagram", "tiktok", "other")
+# A pasted link must belong to the platform picked, so an Etsy tile cannot point somewhere else by mistake.
+_PLATFORM_HOSTS = {
+    "etsy": ("etsy.com",), "amazon": ("amazon.", "amzn."), "ebay": ("ebay.",), "walmart": ("walmart.com",),
+    "facebook": ("facebook.com", "fb.com", "fb.me"), "instagram": ("instagram.com",), "tiktok": ("tiktok.com",),
+    "shopify": ("myshopify.com", "shop.app"),
+}
+
+
+class ShopLink(BaseModel):
+    """One of the owner's other shops (Etsy, Amazon, ...) shown to visitors as a tile."""
+
+    id: str = Field(min_length=1, max_length=40, pattern=r"^[A-Za-z0-9_-]+$")
+    platform: Literal["etsy", "amazon", "ebay", "walmart", "shopify", "facebook", "instagram", "tiktok", "other"] = "other"
+    name: str = Field(min_length=1, max_length=60)
+    url: str = Field(min_length=8, max_length=500)
+    blurb: str | None = Field(default=None, max_length=160, description="Shown when a visitor hovers the tile")
+    image_url: str | None = Field(default=None, max_length=500, description="Optional logo or shop picture (https)")
+    enabled: bool = True
+
+    @field_validator("name", "blurb")
+    @classmethod
+    def _tidy(cls, v: str | None) -> str | None:
+        v = " ".join((v or "").split())
+        return v or None
+
+    @field_validator("url", "image_url")
+    @classmethod
+    def _https(cls, v: str | None) -> str | None:
+        v = (v or "").strip() or None
+        if v is None:
+            return None
+        parsed = urlsplit(v)
+        if parsed.scheme != "https" or not parsed.hostname or "." not in parsed.hostname or parsed.username or parsed.password:
+            raise ValueError("Use the full https:// address")
+        return v
+
+    @model_validator(mode="after")
+    def _belongs(self):
+        if not self.name:
+            raise ValueError("Give the shop a name")
+        hosts = _PLATFORM_HOSTS.get(self.platform)
+        host = (urlsplit(self.url).hostname or "").lower()
+        if hosts and not any(
+            (host.startswith(h) or "." + h in host) if h.endswith(".") else (host == h or host.endswith("." + h)) for h in hosts
+        ):
+            raise ValueError(f"That address doesn't look like a {self.platform.title()} link")
+        return self
+
+
+class ShopLinkSettings(_Group):
+    """Links to the owner's shops on other marketplaces, shown on the home page and in the footer."""
+
+    links: list[ShopLink] = Field(default_factory=list, max_length=20)
+
+    @model_validator(mode="after")
+    def _unique_ids(self):
+        ids = [x.id for x in self.links]
+        if len(ids) != len(set(ids)):
+            raise ValueError("Two shops share an id")
+        return self
+
+
+class PublicShopLink(BaseModel):
+    id: str
+    platform: str
+    name: str
+    url: str
+    blurb: str | None = None
+    image_url: str | None = None
+
+
 class DigestSettings(_Group):
     enabled: bool = True
     recipients: list[str] = Field(default_factory=list, max_length=10)
@@ -257,6 +330,7 @@ GROUPS: dict[str, type[_Group]] = {
     "reviews": ReviewSettings,
     "analytics": AnalyticsSettings,
     "scripts": ScriptSettings,
+    "shop_links": ShopLinkSettings,
     "digest": DigestSettings,
 }
 
@@ -271,6 +345,7 @@ class StoreSettings(BaseModel):
     reviews: ReviewSettings = Field(default_factory=ReviewSettings)
     analytics: AnalyticsSettings = Field(default_factory=AnalyticsSettings)
     scripts: ScriptSettings = Field(default_factory=ScriptSettings)
+    shop_links: ShopLinkSettings = Field(default_factory=ShopLinkSettings)
     digest: DigestSettings = Field(default_factory=DigestSettings)
     email: EmailSettings = Field(default_factory=EmailSettings)
     email_templates: EmailTemplateSettings = Field(default_factory=EmailTemplateSettings)
@@ -307,4 +382,5 @@ class PublicConfig(BaseModel):
     low_stock_threshold: int
     analytics_enabled: bool
     snippets: list[PublicSnippet] = Field(default_factory=list)
+    shop_links: list[PublicShopLink] = Field(default_factory=list)
     turnstile_site_key: str | None

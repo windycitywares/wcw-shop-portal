@@ -14,6 +14,7 @@ import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
+import { ShopLinksAdmin, type ShopLinkRow } from "@/components/admin/settings/ShopLinksAdmin";
 import { TrackingCode, type Snippet } from "@/components/admin/settings/TrackingCode";
 
 type Value = string | number | boolean | null | string[] | Record<string, string>;
@@ -117,6 +118,12 @@ const GROUPS: Group[] = [
       { key: "enabled", label: "Collect visit statistics", type: "bool" },
       { key: "retention_days", label: "Keep statistics for (days)", type: "number", min: 30, max: 1100 },
     ],
+  },
+  {
+    id: "shop_links",
+    label: "Other shops",
+    description: "Link your shops on Etsy, Amazon, eBay and other marketplaces. Visitors see them as colour-coded tiles on the home page and in the footer.",
+    fields: [],
   },
   {
     id: "scripts",
@@ -381,7 +388,12 @@ function SettingsInner() {
       )}
       {group ? (
         <div className="max-w-4xl">
-          {data && group.id === "scripts" ? (
+          {data && group.id === "shop_links" ? (
+            <ShopLinksAdmin
+              initial={((data.settings.shop_links as unknown as { links?: ShopLinkRow[] })?.links ?? [])}
+              onSaved={(links) => setData({ ...data, settings: { ...data.settings, shop_links: { links } as unknown as Record<string, Value> } })}
+            />
+          ) : data && group.id === "scripts" ? (
             <TrackingCode
               initial={((data.settings.scripts as unknown as { snippets?: Snippet[] })?.snippets ?? [])}
               onSaved={(snippets) => setData({ ...data, settings: { ...data.settings, scripts: { snippets } as unknown as Record<string, Value> } })}
