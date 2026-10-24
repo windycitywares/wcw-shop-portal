@@ -18,9 +18,10 @@ from app.core import appmode
 from app.core.config import get_settings
 from app.core.exceptions import ValidationFailedError
 from app.domain.deploy_policy import Decision, decide
+from app.domain.releases import describe_commit
 from app.domain.timeutil import store_tz_name
 from app.models.user import User
-from app.schemas.deploy import DeployConfigIn, DeployStatusOut, Version
+from app.schemas.deploy import DeployConfigIn, DeployStatusOut, ReleaseOut, ReleasesOut, Version
 
 LOG_MAX_LINES = 400
 STUCK_AFTER = timedelta(minutes=30)  # a run that never reported back is treated as finished
@@ -39,6 +40,35 @@ def git_version(repo: str) -> Version:
         return Version(commit=commit, subject=subject[:200], date=date)
     except (OSError, subprocess.SubprocessError, ValueError):
         return Version(commit=None, subject=None, date=None)
+
+
+KEEP_RELEASES = 5
+
+
+def git_release(repo: str, rev: str = "HEAD") -> dict[str, Any] | None:
+    """The version at `rev` in the server's checkout, described from its pull request. None when git can't say."""
+    try:
+        out = subprocess.run(["git", "-C", repo, "log", "-1", "--format=%H%x1f%cI%x1f%s%x1f%b", rev], capture_output=True,
+                             text=True, timeout=5, check=True).stdout
+        sha, date, subject, body = out.rstrip("\n").split("\x1f", 3)
+        children: list[str] = []
+        if subject.startswith("Merge pull request #"):
+            kids = subprocess.run(["git", "-C", repo, "log", "--format=%s", f"{sha}^1..{sha}^2"], capture_output=True,
+                                  text=True, timeout=5, check=False).stdout
+            children = [k.strip() for k in kids.splitlines()]
+        pr, title, details = describe_commit(subject, body, children)
+        return {"commit": sha, "pr_number": pr, "title": title, "details": details, "committed_at": datetime.fromisoformat(date)}
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return None
+
+
+def recent_commits(repo: str, count: int) -> list[str]:
+    try:
+        out = subprocess.run(["git", "-C", repo, "log", "--first-parent", f"-{count}", "--format=%H"], capture_output=True,
+                             text=True, timeout=5, check=True).stdout
+        return out.split()
+    except (OSError, subprocess.SubprocessError):
+        return []
 
 
 def read_build(app_dir: str) -> str | None:
@@ -104,6 +134,53 @@ class DeployService:
             cron_seen=bool(row["last_seen_at"] and now - row["last_seen_at"] < CRON_FRESH), last_seen_at=row["last_seen_at"],
         )
 
+    async def record_release(self, reason: str | None = None) -> None:
+        """Note the version now running. A new API commit adds a row; a storefront or main-site build that arrives later
+        for the same commit is added to that row, so the list shows one entry per change."""
+        settings = get_settings()
+        cur = await asyncio.to_thread(git_release, settings.deploy_repo_dir)
+        if not cur:
+            return
+        store, site = read_build(settings.storefront_app_dir), read_build(settings.main_site_app_dir)
+        last = await self._rows("SELECT id, commit FROM deploy_releases ORDER BY deployed_at DESC, id DESC LIMIT 1")
+        if last and last[0]["commit"] == cur["commit"]:
+            await self._rows("UPDATE deploy_releases SET storefront_build = :s, main_site_build = :m WHERE id = :id",
+                             s=store, m=site, id=last[0]["id"])
+            return
+        await self._insert_release(cur, store, site, reason)
+
+    async def _insert_release(self, rel: dict[str, Any], store: str | None, site: str | None, reason: str | None,
+                              deployed_at: datetime | None = None) -> None:
+        await self._rows(
+            "INSERT INTO deploy_releases (commit, pr_number, title, details, committed_at, deployed_at, storefront_build, "
+            "main_site_build, reason) VALUES (:commit, :pr, :title, :details, :committed, :deployed, :s, :m, :reason)",
+            commit=rel["commit"], pr=rel["pr_number"], title=rel["title"], details=rel["details"], committed=rel["committed_at"],
+            deployed=deployed_at or _now(), s=store, m=site, reason=reason,
+        )
+
+    async def releases(self) -> ReleasesOut:
+        """The last five versions, newest first; the first is the one running. On a server that has never recorded one,
+        the list starts from the checkout's own history so the page isn't empty."""
+        settings = get_settings()
+        rows = await self._rows("SELECT * FROM deploy_releases ORDER BY deployed_at DESC, id DESC LIMIT :n", n=KEEP_RELEASES)
+        if not rows:
+            shas = await asyncio.to_thread(recent_commits, settings.deploy_repo_dir, KEEP_RELEASES)
+            base = _now()
+            for i, sha in reversed(list(enumerate(shas))):  # oldest first, so ids and order agree
+                rel = await asyncio.to_thread(git_release, settings.deploy_repo_dir, sha)
+                if rel:
+                    stamp = rel["committed_at"] or base - timedelta(minutes=i)
+                    current = i == 0
+                    await self._insert_release(rel, read_build(settings.storefront_app_dir) if current else None,
+                                               read_build(settings.main_site_app_dir) if current else None, "history", stamp)
+            rows = await self._rows("SELECT * FROM deploy_releases ORDER BY deployed_at DESC, id DESC LIMIT :n", n=KEEP_RELEASES)
+        return ReleasesOut(releases=[
+            ReleaseOut(id=r["id"], commit=r["commit"][:7], pr_number=r["pr_number"], title=r["title"], details=r["details"],
+                       committed_at=r["committed_at"], deployed_at=r["deployed_at"], storefront_build=r["storefront_build"],
+                       main_site_build=r["main_site_build"], current=i == 0)
+            for i, r in enumerate(rows)
+        ])
+
     async def configure(self, data: DeployConfigIn, user: User) -> None:
         if data.mode == "schedule" and not data.schedule_times:
             raise ValidationFailedError("Add at least one time for scheduled updates")
@@ -147,6 +224,11 @@ class DeployService:
     async def gate_end(self, ok: bool, summary: str) -> None:
         result = ("✓ " if ok else "✗ ") + (summary.strip() or ("no changes" if ok else "failed"))[:2000]
         await self._rows("UPDATE deploy_control SET finished_at = now(), last_result = :result WHERE id = 1", result=result)
+        try:  # the version history is a record, never a reason for the gate to fail
+            row = await self._row()
+            await self.record_release(row["last_reason"])
+        except Exception:  # noqa: BLE001
+            pass
 
 
 def describe(data: DeployConfigIn) -> str:

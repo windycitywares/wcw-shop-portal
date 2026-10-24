@@ -19,6 +19,18 @@ interface Version {
   subject: string | null;
   date: string | null;
 }
+interface Release {
+  id: number;
+  commit: string;
+  pr_number: number | null;
+  title: string;
+  details: string | null;
+  committed_at: string | null;
+  deployed_at: string;
+  storefront_build: string | null;
+  main_site_build: string | null;
+  current: boolean;
+}
 interface DeployStatus {
   mode: Mode;
   interval_minutes: number;
@@ -66,6 +78,7 @@ export default function AdminDeployments() {
   const { push } = useToast();
   const [status, setStatus] = useState<DeployStatus | null>(null);
   const [log, setLog] = useState("");
+  const [releases, setReleases] = useState<Release[]>([]);
   const [error, setError] = useState("");
   const [mode, setMode] = useState<Mode>("auto");
   const [interval, setIntervalMinutes] = useState(10);
@@ -77,9 +90,14 @@ export default function AdminDeployments() {
 
   const refresh = useCallback(async (withForm = false) => {
     try {
-      const [s, l] = await Promise.all([apiFetch<DeployStatus>("/admin/deploy"), apiFetch<{ log: string }>("/admin/deploy/log?lines=200")]);
+      const [s, l, r] = await Promise.all([
+        apiFetch<DeployStatus>("/admin/deploy"),
+        apiFetch<{ log: string }>("/admin/deploy/log?lines=200"),
+        apiFetch<{ releases: Release[] }>("/admin/deploy/releases"),
+      ]);
       setStatus(s);
       setLog(l.log);
+      setReleases(r.releases);
       setError("");
       if (withForm) {
         setMode(s.mode);
@@ -284,6 +302,33 @@ export default function AdminDeployments() {
           </PanelBody>
         </Panel>
       </div>
+
+      <Panel className="mt-6">
+        <PanelHeader title="Recent versions" description="The last five versions that went live, each described by the pull request behind it." />
+        <PanelBody>
+          {releases.length === 0 ? (
+            <p className="text-sm text-muted">No versions recorded yet.</p>
+          ) : (
+            <ol className="divide-y divide-line" aria-label="Recent versions">
+              {releases.map((r) => (
+                <li key={r.id} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                      {r.current ? <Pill tone="success">Latest · live now</Pill> : <Pill tone="neutral">Earlier</Pill>}
+                      <span className="min-w-0 break-words">{r.title}</span>
+                    </p>
+                    {r.details && <p className="mt-1 whitespace-pre-line break-words text-sm text-muted">{r.details}</p>}
+                    <p className="mt-1 text-xs text-muted">
+                      {r.pr_number ? `PR #${r.pr_number} · ` : ""}
+                      <span className="font-mono">{r.commit}</span> · live {dateTime(r.deployed_at)}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+        </PanelBody>
+      </Panel>
 
       <Panel className="mt-6">
         <PanelHeader

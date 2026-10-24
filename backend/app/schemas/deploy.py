@@ -27,6 +27,19 @@ class Version(BaseModel):
     date: str | None
 
 
+class ReleaseOut(BaseModel):
+    id: int
+    commit: str
+    pr_number: int | None
+    title: str  # the pull request's title
+    details: str | None  # what the change did, from its commits
+    committed_at: datetime | None
+    deployed_at: datetime
+    storefront_build: str | None
+    main_site_build: str | None
+    current: bool  # the version running now
+
+
 class DeployStatusOut(BaseModel):
     mode: str
     interval_minutes: int
@@ -51,3 +64,7 @@ class DeployStatusOut(BaseModel):
 
 class DeployLogOut(BaseModel):
     log: str
+
+
+class ReleasesOut(BaseModel):
+    releases: list[ReleaseOut]
