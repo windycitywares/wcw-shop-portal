@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/client-api";
 import { cn } from "@/lib/utils";
@@ -29,54 +29,120 @@ export interface RangeInfo {
   previous_end: string;
 }
 
-/** Every report, in sidebar order. `permission` is on top of reports:view. */
-export const REPORTS: { slug: string; label: string; permission?: string }[] = [
-  { slug: "", label: "Suggestions" },
-  { slug: "sales", label: "Sales" },
-  { slug: "products", label: "Products" },
-  { slug: "traffic", label: "Traffic" },
-  { slug: "funnel", label: "Funnel" },
-  { slug: "behavior", label: "Behavior" },
-  { slug: "performance", label: "Site speed" },
-  { slug: "customers", label: "Customers", permission: "customers:view" },
-  { slug: "promotions", label: "Promotions" },
-  { slug: "inventory", label: "Inventory" },
-  { slug: "catalog", label: "Catalog health" },
+/** The reports, grouped by the question each answers. `permission` is on top of reports:view. */
+export interface ReportDef {
+  slug: string;
+  label: string;
+  /** What the report needs before it has anything to show (order-based reports start empty on a new shop). */
+  needs?: string;
+  permission?: string;
+}
+export interface ReportGroup {
+  id: string;
+  label: string;
+  question: string;
+  reports: ReportDef[];
+}
+export const REPORT_GROUPS: ReportGroup[] = [
+  { id: "overview", label: "Overview", question: "What needs my attention?", reports: [{ slug: "", label: "Suggestions" }] },
+  {
+    id: "visitors",
+    label: "Visitors",
+    question: "Who comes, from where, and is the site fast?",
+    reports: [
+      { slug: "traffic", label: "Traffic" },
+      { slug: "behavior", label: "Behavior" },
+      { slug: "performance", label: "Site speed" },
+    ],
+  },
+  {
+    id: "sales",
+    label: "Sales",
+    question: "What sold, and where do buyers drop off?",
+    reports: [
+      { slug: "sales", label: "Sales", needs: "paid orders" },
+      { slug: "funnel", label: "Funnel", needs: "visits and orders" },
+      { slug: "promotions", label: "Promotions", needs: "orders that used a discount" },
+    ],
+  },
+  {
+    id: "products",
+    label: "Products",
+    question: "What is selling, running out or needs fixing?",
+    reports: [
+      { slug: "products", label: "Products" },
+      { slug: "inventory", label: "Inventory" },
+      { slug: "catalog", label: "Catalog health" },
+    ],
+  },
+  {
+    id: "customers",
+    label: "Customers",
+    question: "Who buys again?",
+    reports: [{ slug: "customers", label: "Customers", needs: "paid orders", permission: "customers:view" }],
+  },
 ];
+export const REPORTS: ReportDef[] = REPORT_GROUPS.flatMap((g) => g.reports);
 
-/** Links between the reports (a nav, not tabs: each report is its own page with its own address). */
-export function ReportNav() {
+export function groupFor(pathname: string): ReportGroup {
+  const slug = pathname.replace(/^\/admin\/analytics\/?/, "").split("/")[0];
+  return REPORT_GROUPS.find((g) => g.reports.some((r) => r.slug === slug)) ?? REPORT_GROUPS[0];
+}
+
+/** One date range for every report: change it once and it follows you from report to report. */
+export const RangeContext = createContext<[DateRange, (r: DateRange) => void] | null>(null);
+
+/** Sits above every report (from the analytics layout): this group's reports as links, and the one date picker. */
+export function ReportBar() {
   const pathname = usePathname();
   const { can } = useAuth();
+  const ctx = useContext(RangeContext);
+  const group = groupFor(pathname);
+  const reports = group.reports.filter((r) => !r.permission || can(r.permission));
+  const current = REPORTS.find((r) => (r.slug ? pathname === `/admin/analytics/${r.slug}` : pathname === "/admin/analytics"));
   return (
-    <nav aria-label="Reports" className="relative mb-6">
-      <ul className="flex gap-1 overflow-x-auto border-b border-line">
-        {REPORTS.filter((r) => !r.permission || can(r.permission)).map((r) => {
-          const href = r.slug ? `/admin/analytics/${r.slug}` : "/admin/analytics";
-          const current = pathname === href;
-          return (
-            <li key={r.slug} className="shrink-0">
-              <Link
-                href={href}
-                aria-current={current ? "page" : undefined}
-                className={cn(
-                  "-mb-px block whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors",
-                  current ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink",
-                )}
-              >
-                {r.label}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+    <div className="mb-6 space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">{group.label}</p>
+          <p className="text-sm text-muted">{group.question}</p>
+        </div>
+        {ctx && <DateRangePicker value={ctx[0]} onChange={ctx[1]} />}
+      </div>
+      {reports.length > 1 && (
+        <nav aria-label={`${group.label} reports`} className="relative">
+          <ul className="flex gap-1 overflow-x-auto border-b border-line">
+            {reports.map((r) => {
+              const href = r.slug ? `/admin/analytics/${r.slug}` : "/admin/analytics";
+              const here = pathname === href;
+              return (
+                <li key={r.slug} className="shrink-0">
+                  <Link
+                    href={href}
+                    aria-current={here ? "page" : undefined}
+                    className={cn(
+                      "-mb-px block whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors",
+                      here ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink",
+                    )}
+                  >
+                    {r.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      )}
+      {current?.needs && <p className="text-xs text-muted">This report fills in as {current.needs} arrive.</p>}
+    </div>
   );
 }
 
 /** Load `/admin/reports/<name>` for the selected range; reloads when the range changes. */
 export function useReport<T>(name: string, withRange = true) {
-  const [range, setRange] = useDateRange("30d");
+  const shared = useContext(RangeContext);
+  const own = useDateRange("30d");
+  const [range, setRange] = shared ?? own;
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -133,7 +199,6 @@ export function ReportHeader({
   title,
   description,
   range,
-  onRange,
   exportKind,
   error,
 }: {
@@ -151,12 +216,10 @@ export function ReportHeader({
         description={description}
         actions={
           <>
-            {range && onRange && <DateRangePicker value={range} onChange={onRange} />}
             {exportKind && <ExportButton kind={exportKind} range={range} />}
           </>
         }
       />
-      <ReportNav />
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}

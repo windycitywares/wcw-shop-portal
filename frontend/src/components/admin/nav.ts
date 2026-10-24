@@ -8,6 +8,8 @@ export interface NavItem {
   permission: string | null;
   /** Only shown in the settings page's left panel, not in the main sidebar. */
   hidden?: boolean;
+  /** Other path prefixes that also mean "this item" (a menu entry that covers several pages). */
+  also?: string[];
 }
 export interface NavGroup {
   label: string | null;
@@ -27,9 +29,18 @@ export const NAV: NavGroup[] = [
     label: "Sales",
     items: [
       { href: "/admin/orders", label: "All orders", icon: "orders", permission: "orders:manage" },
-      { href: "/admin/analytics/sales", label: "Sales report", icon: "chart", permission: "reports:view" },
       { href: "/admin/carts", label: "Abandoned carts", icon: "cart", permission: "customers:view" },
-      { href: "/admin/analytics", label: "All reports", icon: "chart", permission: "reports:view" },
+    ],
+  },
+  {
+    // Reports, grouped by the question each answers; the tabs inside the page list that group's reports.
+    label: "Analytics",
+    items: [
+      { href: "/admin/analytics", label: "Overview", icon: "bulb", permission: "reports:view" },
+      { href: "/admin/analytics/traffic", label: "Visitors", icon: "globe", permission: "reports:view", also: ["/admin/analytics/behavior", "/admin/analytics/performance"] },
+      { href: "/admin/analytics/sales", label: "Sales report", icon: "chart", permission: "reports:view", also: ["/admin/analytics/funnel", "/admin/analytics/promotions"] },
+      { href: "/admin/analytics/products", label: "Product reports", icon: "products", permission: "reports:view", also: ["/admin/analytics/inventory", "/admin/analytics/catalog"] },
+      { href: "/admin/analytics/customers", label: "Customer reports", icon: "customers", permission: "customers:view" },
     ],
   },
   {
@@ -86,10 +97,13 @@ function matches(pathname: string, href: string): boolean {
 /** The one menu link for this page: the longest href that matches, so /admin/analytics/sales marks
  *  "Sales report" and not "All reports" as well. */
 export function activeHref(pathname: string): string | undefined {
-  return NAV.flatMap((g) => g.items)
-    .map((i) => i.href)
-    .filter((h) => matches(pathname, h))
-    .sort((a, b) => b.length - a.length)[0];
+  let best: { href: string; len: number } | undefined;
+  for (const item of NAV.flatMap((g) => g.items)) {
+    for (const h of [item.href, ...(item.also ?? [])]) {
+      if (matches(pathname, h) && (!best || h.length > best.len)) best = { href: item.href, len: h.length };
+    }
+  }
+  return best?.href;
 }
 
 export function isActive(pathname: string, href: string): boolean {
@@ -172,7 +186,7 @@ export function crumbsFor(pathname: string, tab: string | null): Crumb[] {
     if (group?.label) crumbs.push({ label: group.label });
   }
   if (item) {
-    const deeper = pathname.length > item.href.length;
+    const deeper = pathname.startsWith(`${item.href}/`);
     crumbs.push(deeper ? { label: item.label, href: item.href } : { label: item.label });
     if (deeper) crumbs.push({ label: "Details" });
   }
