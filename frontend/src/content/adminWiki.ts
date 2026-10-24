@@ -104,7 +104,7 @@ export const ADMIN_WIKI: WikiArticle[] = [
     "summary": "Visit statistics.",
     "paragraphs": [
       "Visitors are counted only if they accept the cookie banner. Switch statistics off here if you do not want any.",
-      "Reports appear under Sales → All reports."
+      "Reports appear under Analytics in the main menu."
     ]
   },
   {
