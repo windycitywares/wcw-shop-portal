@@ -95,6 +95,7 @@ export interface ShopConfig {
   max_quantity_per_line: number;
   low_stock_threshold: number;
   analytics_enabled: boolean;
+  timezone?: string;
   social?: { id: string; platform: string; handle: string; url: string }[];
   shop_links?: { id: string; platform: string; name: string; url: string; blurb: string | null; image_url: string | null }[];
   snippets?: { id: string; placement: "head" | "body"; code: string; require_consent: boolean }[];

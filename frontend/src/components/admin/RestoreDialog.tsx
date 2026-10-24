@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/client-api";
+import { storeTimeZone } from "@/components/admin/charts/format";
 import { Modal } from "@/components/admin/ui/Modal";
 import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
@@ -20,7 +21,7 @@ export function backupDate(file: string): string {
   const m = /(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})/.exec(file);
   if (!m) return file;
   const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]));
-  return d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+  return d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: storeTimeZone() });
 }
 
 /**

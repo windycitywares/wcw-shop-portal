@@ -153,7 +153,8 @@ export const ADMIN_WIKI: WikiArticle[] = [
     "summary": "Store-wide switches.",
     "paragraphs": [
       "The announcement bar shows a short message at the top of every page, for example a sale or holiday delay.",
-      "Order alerts decide who is emailed when an order arrives. Checkout rules cover guest checkout and similar options."
+      "Order alerts decide who is emailed when an order arrives. Checkout rules cover guest checkout and similar options.",
+      "Store time zone is picked from a list. It decides what counts as “today” in reports, when the Monday email, nightly clean-up and backups run, the times in Admin → Deployments, and the clock times shown in the admin. Changing it takes effect straight away and does not alter past orders; reports simply group days by the new zone."
     ]
   },
   {

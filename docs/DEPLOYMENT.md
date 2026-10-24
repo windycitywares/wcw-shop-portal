@@ -121,7 +121,7 @@ Change it in cPanel → **Cron Jobs**.)
 Each run first asks **Admin → Deployments** whether to look for updates now:
 
 - **Automatic** — every N minutes (default 10).
-- **At set times** — e.g. `02:00` only (store time, America/Chicago); a time missed while the server was down is
+- **At set times** — e.g. `02:00` only (store time: America/Chicago unless changed in Admin → Settings → General); a time missed while the server was down is
   caught up on the next run.
 - **Paused** — never on its own.
 - **Deploy now** — on the next run (within a minute), whatever the mode. *Cancel* takes it back before it starts.

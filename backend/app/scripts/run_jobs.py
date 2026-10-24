@@ -107,6 +107,9 @@ JOBS: dict[str, Job] = {
 async def run(only: set[str] | None = None, args: argparse.Namespace | None = None) -> dict[str, Any]:
     from app.core.database import SessionFactory, engine
 
+    from app.services.settings import apply_store_timezone
+
+    await apply_store_timezone()  # hours such as the Monday digest follow the owner's time zone
     args = args or argparse.Namespace(force_digest=False)
     now = datetime.now(timezone.utc)
     results: dict[str, Any] = {}

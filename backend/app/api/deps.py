@@ -18,6 +18,19 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{get_settings().api_prefix}/auth
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
+async def store_time(session: SessionDep) -> None:
+    """Runs before every request: makes this worker use the store time zone the owner picked (settings are cached for seconds)."""
+    from app.services.settings import SettingsService
+
+    try:
+        await SettingsService(session).load()
+    except Exception:  # never fail a request over this: the previous or default zone stays in force
+        try:
+            await session.rollback()
+        except Exception:
+            pass
+
+
 async def get_optional_user(
     session: SessionDep, token: Annotated[str | None, Depends(oauth2_scheme)]
 ) -> User | None:

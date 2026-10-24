@@ -1,11 +1,24 @@
-"""Store-local time. Reports bucket by the store's calendar day (America/Chicago), not UTC."""
+"""Store-local time. Reports bucket by the store's calendar day, not UTC. The zone is the owner's choice
+(Admin → Settings → General); `set_store_tz` is called whenever settings are loaded."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone, tzinfo
 
-STORE_TZ_NAME = "America/Chicago"
+from app.domain.timezones import DEFAULT_TIMEZONE, TIMEZONE_IDS
+
+_name = DEFAULT_TIMEZONE
+
+
+def set_store_tz(name: str | None) -> None:
+    """Use this IANA zone from now on; anything not on the list falls back to the default."""
+    global _name
+    _name = name if name in TIMEZONE_IDS else DEFAULT_TIMEZONE
+
+
+def store_tz_name() -> str:
+    return _name
 
 
 class _UsCentral(tzinfo):
@@ -36,9 +49,9 @@ def store_tz() -> tzinfo:
     try:
         from zoneinfo import ZoneInfo
 
-        return ZoneInfo(STORE_TZ_NAME)
+        return ZoneInfo(_name)
     except Exception:  # missing tz database
-        return _UsCentral()
+        return _UsCentral() if _name == "America/Chicago" else timezone.utc
 
 
 def to_store_time(moment: datetime) -> datetime:
