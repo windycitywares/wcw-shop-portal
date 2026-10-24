@@ -15,14 +15,23 @@ test("the sales report loads and downloads as a spreadsheet", async ({ page }) =
   seen.expectClean();
 });
 
-test("the report links move between reports and mark the current one", async ({ page }) => {
-  await page.goto("/admin/analytics");
+test("the report links move between a group's reports and mark the current one", async ({ page }) => {
+  await page.goto("/admin/analytics/traffic");
   await adminReady(page);
   const reports = page.getByRole("navigation", { name: "Reports" });
-  await expect(reports.getByRole("link", { name: "Suggestions" })).toHaveAttribute("aria-current", "page");
-  await reports.getByRole("link", { name: "Products" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Product performance" })).toBeVisible();
-  await expect(reports.getByRole("link", { name: "Products" })).toHaveAttribute("aria-current", "page");
+  await expect(reports.getByRole("link", { name: "Traffic" })).toHaveAttribute("aria-current", "page");
+  await reports.getByRole("link", { name: "Behavior" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Visitor behavior" })).toBeVisible();
+  await expect(reports.getByRole("link", { name: "Behavior" })).toHaveAttribute("aria-current", "page");
+});
+
+test("the Analytics menu has starts with Overview and Visitors", async ({ page }) => {
+  await page.goto("/admin/analytics");
+  await adminReady(page);
+  const menu = page.getByRole("navigation", { name: "Admin" });
+  for (const name of ["Overview", "Visitors"]) {
+    await expect(menu.getByRole("link", { name, exact: true }).first()).toBeVisible();
+  }
 });
 
 test("inventory and catalog reports download without a date range", async ({ page }) => {
