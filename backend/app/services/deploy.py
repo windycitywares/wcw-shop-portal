@@ -173,32 +173,47 @@ class DeployService:
         )
 
     async def releases(self) -> ReleasesOut:
-        """The last five versions, newest first; the first is the one running. On a server that has never recorded one,
-        the list starts from the checkout's own history so the page isn't empty."""
+        """The last five versions, newest change first, each once. One is **live** (what the server runs) and the newest is
+        **latest** (what GitHub's main has); they are the same row unless an older version is being held. The latest is
+        listed even before it has been installed, so there is always a way back to it. On a server that has never recorded
+        a version, the list starts from the checkout's own history so the page isn't empty."""
         settings = get_settings()
-        rows = await self._rows("SELECT * FROM deploy_releases ORDER BY deployed_at DESC, id DESC LIMIT :n", n=KEEP_RELEASES)
+        repo_dir = settings.deploy_repo_dir
+        rows = await self._rows("SELECT * FROM deploy_releases ORDER BY id DESC LIMIT 50")
         if not rows:
-            shas = await asyncio.to_thread(recent_commits, settings.deploy_repo_dir, KEEP_RELEASES)
+            shas = await asyncio.to_thread(recent_commits, repo_dir, KEEP_RELEASES)
             base = _now()
             for i, sha in reversed(list(enumerate(shas))):  # oldest first, so ids and order agree
-                rel = await asyncio.to_thread(git_release, settings.deploy_repo_dir, sha)
+                rel = await asyncio.to_thread(git_release, repo_dir, sha)
                 if rel:
                     stamp = rel["committed_at"] or base - timedelta(minutes=i)
-                    current = i == 0
-                    await self._insert_release(rel, read_build(settings.storefront_app_dir) if current else None,
-                                               read_build(settings.main_site_app_dir) if current else None, "history", stamp)
-            rows = await self._rows("SELECT * FROM deploy_releases ORDER BY deployed_at DESC, id DESC LIMIT :n", n=KEEP_RELEASES)
-        fresh = {r["commit"]: await asyncio.to_thread(git_release, settings.deploy_repo_dir, r["commit"]) for r in rows}
-        repo = settings.deploy_github_repo
-        return ReleasesOut(releases=[
-            ReleaseOut(id=r["id"], commit=r["commit"][:7], pr_number=(fresh[r["commit"]] or r)["pr_number"],
-                       pr_url=(f"https://github.com/{repo}/pull/{(fresh[r['commit']] or r)['pr_number']}"
-                               if (fresh[r["commit"]] or r)["pr_number"] else None),
-                       title=(fresh[r["commit"]] or r)["title"], details=(fresh[r["commit"]] or r)["details"],
-                       committed_at=r["committed_at"], deployed_at=r["deployed_at"], storefront_build=r["storefront_build"],
-                       main_site_build=r["main_site_build"], current=i == 0, restorable=i > 0)
-            for i, r in enumerate(rows)
-        ])
+                    await self._insert_release(rel, read_build(settings.storefront_app_dir) if i == 0 else None,
+                                               read_build(settings.main_site_app_dir) if i == 0 else None, "history", stamp)
+            rows = await self._rows("SELECT * FROM deploy_releases ORDER BY id DESC LIMIT 50")
+
+        live = await asyncio.to_thread(git_release, repo_dir)
+        newest = await asyncio.to_thread(git_release, repo_dir, "origin/main")
+        by_commit: dict[str, dict[str, Any]] = {}
+        for r in rows:  # newest record first: a version listed twice keeps its latest record
+            by_commit.setdefault(r["commit"], dict(r))
+        if newest and newest["commit"] not in by_commit:  # on GitHub but not installed (e.g. an older version is held)
+            by_commit[newest["commit"]] = {"id": 0, "commit": newest["commit"], "committed_at": newest["committed_at"],
+                                           "deployed_at": None, "storefront_build": None, "main_site_build": None}
+        epoch = datetime.min.replace(tzinfo=timezone.utc)
+        ordered = sorted(by_commit.values(), key=lambda r: (r["committed_at"] or epoch, r["id"]), reverse=True)[:KEEP_RELEASES]
+        github = settings.deploy_github_repo
+        out: list[ReleaseOut] = []
+        for i, r in enumerate(ordered):
+            info = await asyncio.to_thread(git_release, repo_dir, r["commit"]) or r
+            is_live = bool(live and live["commit"] == r["commit"])
+            pr = info.get("pr_number")
+            out.append(ReleaseOut(
+                id=r["id"], commit=r["commit"][:7], pr_number=pr, pr_url=f"https://github.com/{github}/pull/{pr}" if pr else None,
+                title=info.get("title") or "Version " + r["commit"][:7], details=info.get("details"),
+                committed_at=r["committed_at"], deployed_at=r["deployed_at"], storefront_build=r["storefront_build"],
+                main_site_build=r["main_site_build"], current=is_live, latest=i == 0, restorable=not is_live and r["id"] > 0 and i > 0,
+            ))
+        return ReleasesOut(releases=out)
 
     async def restore(self, release_id: int, user: User) -> None:
         """Put an earlier version back: the server installs it on its next run and then holds it (pinned) until

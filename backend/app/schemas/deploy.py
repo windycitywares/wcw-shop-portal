@@ -35,10 +35,11 @@ class ReleaseOut(BaseModel):
     title: str  # the pull request's title
     details: str | None  # a short summary of what it did
     committed_at: datetime | None
-    deployed_at: datetime
+    deployed_at: datetime | None  # None: on GitHub but not installed yet
     storefront_build: str | None
     main_site_build: str | None
     current: bool  # the version running now
+    latest: bool  # the newest version on GitHub
     restorable: bool  # an earlier version that can be put back
 
 
