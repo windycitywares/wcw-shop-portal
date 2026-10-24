@@ -6,6 +6,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { getShopConfig } from "@/lib/api";
 import { platformOf } from "@/lib/shopPlatforms";
 import { site } from "@/lib/site";
+import { MarketplaceBand } from "@/components/catalog/ShopLinkTiles";
 import { Container } from "@/components/ui/misc";
 import { Logo } from "@/components/ui/Logo";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -50,7 +51,9 @@ export async function Footer({ locale }: { locale: Locale }) {
     },
   ];
   return (
-    <footer className="mt-28 bg-night text-night-muted [&_*:focus-visible]:outline-white">
+    <>
+    <MarketplaceBand links={shops} locale={locale} />
+    <footer className={`${shops.length > 0 ? "" : "mt-28"} bg-night text-night-muted [&_*:focus-visible]:outline-white`}>
       <Container className="grid gap-12 py-16 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
         <div className="max-w-sm">
           <Logo tone="reverse" title="WindyCityWares" className="mb-8 h-10 w-auto" />
@@ -107,5 +110,6 @@ export async function Footer({ locale }: { locale: Locale }) {
         </div>
       </Container>
     </footer>
+    </>
   );
 }

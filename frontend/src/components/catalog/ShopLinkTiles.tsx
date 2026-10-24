@@ -1,5 +1,6 @@
 import { fmt, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { Container } from "@/components/ui/misc";
 import { platformOf } from "@/lib/shopPlatforms";
 import type { ShopConfig } from "@/lib/types";
 
@@ -10,7 +11,7 @@ type Item = NonNullable<ShopConfig["shop_links"]>[number];
 export function ShopLinkTiles({ links, locale }: { links: Item[]; locale: Locale }) {
   const t = getDictionary(locale);
   return (
-    <ul className="flex flex-wrap gap-4">
+    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
       {links.map((l) => {
         const p = platformOf(l.platform);
         const tipId = `shop-tip-${l.id}`;
@@ -19,10 +20,10 @@ export function ShopLinkTiles({ links, locale }: { links: Item[]; locale: Locale
           return (
             <li key={l.id}>
               <div
-                className="flex min-w-60 items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-3 pr-5 opacity-80"
+                className="flex items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-3 opacity-80"
                 style={{ borderLeft: `6px solid ${p.bg}` }}
               >
-                <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-full text-xl font-bold" style={{ background: p.bg, color: p.fg }}>
+                <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full text-lg font-bold" style={{ background: p.bg, color: p.fg }}>
                   {(p.id === "other" ? l.name : p.label).charAt(0).toUpperCase()}
                 </span>
                 <span className="min-w-0">
@@ -40,17 +41,17 @@ export function ShopLinkTiles({ links, locale }: { links: Item[]; locale: Locale
               target="_blank"
               rel="noopener noreferrer"
               aria-describedby={l.blurb ? tipId : undefined}
-              className="flex min-w-60 items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-3 pr-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:-translate-y-0.5 focus-visible:shadow-lg motion-reduce:transition-none"
+              className="flex h-full items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:-translate-y-0.5 focus-visible:shadow-lg motion-reduce:transition-none"
               style={{ borderLeft: `6px solid ${p.bg}` }}
             >
               {l.image_url ? (
                 // The owner's official logo, shown unchanged: never recoloured, cropped or stretched.
-                <span aria-hidden="true" className="grid h-12 w-16 shrink-0 place-items-center rounded-[var(--radius-control)] bg-white p-1.5 ring-1 ring-line">
+                <span aria-hidden="true" className="grid h-11 w-14 shrink-0 place-items-center rounded-[var(--radius-control)] bg-white p-1.5 ring-1 ring-line">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={l.image_url} alt="" className="max-h-full max-w-full object-contain" loading="lazy" referrerPolicy="no-referrer" />
                 </span>
               ) : (
-                <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-full text-xl font-bold" style={{ background: p.bg, color: p.fg }}>
+                <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full text-lg font-bold" style={{ background: p.bg, color: p.fg }}>
                   {(p.id === "other" ? l.name : p.label).charAt(0).toUpperCase()}
                 </span>
               )}
@@ -59,7 +60,7 @@ export function ShopLinkTiles({ links, locale }: { links: Item[]; locale: Locale
                 <span className="block text-sm text-muted">{p.id === "other" ? t.home.shopOpens : fmt(t.home.shopOn, { platform: p.label })}</span>
                 {l.blurb && <span className="mt-1 line-clamp-2 block text-xs text-muted md:hidden">{l.blurb}</span>}
               </span>
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="ml-auto size-4 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="ml-auto hidden size-4 shrink-0 text-muted xl:block" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M7 17L17 7M8 7h9v9" />
               </svg>
               <span className="sr-only"> {t.footer.newTab}</span>
@@ -79,6 +80,26 @@ export function ShopLinkTiles({ links, locale }: { links: Item[]; locale: Locale
         );
       })}
     </ul>
+  );
+}
+
+/** The marketplace section shown above the footer on every page, when the owner has added shops. */
+export function MarketplaceBand({ links, locale }: { links: Item[]; locale: Locale }) {
+  const t = getDictionary(locale);
+  if (links.length === 0) return null;
+  return (
+    <section aria-labelledby="shops-heading" className="mt-20 border-t border-line bg-surface py-12">
+      <Container>
+        <h2 id="shops-heading" className="font-serif text-3xl">
+          {t.home.shopsTitle}
+        </h2>
+        <p className="mt-2 text-muted">{t.home.shopsText}</p>
+        <div className="mt-8">
+          <ShopLinkTiles links={links} locale={locale} />
+          <MarketplaceNotice locale={locale} />
+        </div>
+      </Container>
+    </section>
   );
 }
 
