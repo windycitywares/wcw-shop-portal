@@ -14,7 +14,7 @@ from app.domain import emailtext
 from app.domain.pricing import ShippingConfig, TaxConfig
 from app.models.commerce import StoreSetting
 from app.models.user import User
-from app.schemas.settings import GROUPS, AdminSettingsOut, PublicConfig, PublicShopLink, PublicSnippet, StoreSettings
+from app.schemas.settings import GROUPS, AdminSettingsOut, PublicConfig, PublicShopLink, PublicSnippet, PublicSocial, StoreSettings
 from app.services import audit
 from app.services.ttl import TtlCache
 
@@ -97,6 +97,7 @@ def public_config(s: StoreSettings, lang: str) -> PublicConfig:
             for x in s.shop_links.links
             if x.enabled
         ],
+        social=[PublicSocial(id=x.id, platform=x.platform, handle=x.handle, url=x.url) for x in s.social.accounts if x.enabled],
         snippets=[
             PublicSnippet(id=x.id, placement=x.placement, code=x.code.strip(), require_consent=x.require_consent)
             for x in s.scripts.snippets
@@ -199,6 +200,8 @@ class SettingsService:
                 return [f"{x['name']} ({x['placement']}{'' if x['enabled'] else ', off'})" for x in value[k]]
             if k == "links":
                 return [f"{x['name']} ({x['platform']}{'' if x['enabled'] else ', off'})" for x in value[k]]
+            if k == "accounts":
+                return [f"{x['platform']} {x['handle']}".strip() + ('' if x['enabled'] else ' (off)') for x in value[k]]
             return value[k]
 
         changed = {k: shown(k) for k in value if current.get(k) != value[k]}

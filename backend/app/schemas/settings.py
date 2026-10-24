@@ -233,6 +233,66 @@ class PublicShopLink(BaseModel):
     image_url: str | None = None
 
 
+SOCIAL_PLATFORMS = ("instagram", "facebook", "tiktok", "pinterest", "youtube", "x", "linkedin", "whatsapp")
+# The address pasted must belong to the network picked, so an Instagram icon cannot point somewhere else.
+_SOCIAL_HOSTS = {
+    "instagram": ("instagram.com",), "facebook": ("facebook.com", "fb.com", "fb.me"), "tiktok": ("tiktok.com",),
+    "pinterest": ("pinterest.com", "pin.it"), "youtube": ("youtube.com", "youtu.be"), "x": ("x.com", "twitter.com"),
+    "linkedin": ("linkedin.com",), "whatsapp": ("wa.me", "whatsapp.com"),
+}
+
+
+class SocialAccount(BaseModel):
+    """One of the owner's social media accounts, shown as an icon and a Follow us pill."""
+
+    id: str = Field(min_length=1, max_length=40, pattern=r"^[A-Za-z0-9_-]+$")
+    platform: Literal["instagram", "facebook", "tiktok", "pinterest", "youtube", "x", "linkedin", "whatsapp"]
+    handle: str = Field(default="", max_length=60, description="What visitors see, such as @windycityware")
+    url: str = Field(min_length=1, max_length=500)
+    enabled: bool = True
+
+    @field_validator("handle")
+    @classmethod
+    def _tidy(cls, v: str) -> str:
+        return " ".join((v or "").split())
+
+    @field_validator("url")
+    @classmethod
+    def _https(cls, v: str) -> str:
+        v = (v or "").strip()
+        parsed = urlsplit(v)
+        if parsed.scheme != "https" or not parsed.hostname or "." not in parsed.hostname or parsed.username or parsed.password:
+            raise ValueError("Use the full https:// address")
+        return v
+
+    @model_validator(mode="after")
+    def _belongs(self):
+        host = (urlsplit(self.url).hostname or "").lower()
+        if not any(host == h or host.endswith("." + h) for h in _SOCIAL_HOSTS[self.platform]):
+            raise ValueError(f"That address doesn't look like a {self.platform.title()} link")
+        return self
+
+
+class SocialSettings(_Group):
+    """Social media accounts shown in the header bar, the footer and as Follow us pills."""
+
+    accounts: list[SocialAccount] = Field(default_factory=list, max_length=12)
+
+    @model_validator(mode="after")
+    def _unique_ids(self):
+        ids = [x.id for x in self.accounts]
+        if len(ids) != len(set(ids)):
+            raise ValueError("Two accounts share an id")
+        return self
+
+
+class PublicSocial(BaseModel):
+    id: str
+    platform: str
+    handle: str
+    url: str
+
+
 class DigestSettings(_Group):
     enabled: bool = True
     recipients: list[str] = Field(default_factory=list, max_length=10)
@@ -335,6 +395,7 @@ GROUPS: dict[str, type[_Group]] = {
     "analytics": AnalyticsSettings,
     "scripts": ScriptSettings,
     "shop_links": ShopLinkSettings,
+    "social": SocialSettings,
     "digest": DigestSettings,
 }
 
@@ -350,6 +411,7 @@ class StoreSettings(BaseModel):
     analytics: AnalyticsSettings = Field(default_factory=AnalyticsSettings)
     scripts: ScriptSettings = Field(default_factory=ScriptSettings)
     shop_links: ShopLinkSettings = Field(default_factory=ShopLinkSettings)
+    social: SocialSettings = Field(default_factory=SocialSettings)
     digest: DigestSettings = Field(default_factory=DigestSettings)
     email: EmailSettings = Field(default_factory=EmailSettings)
     email_templates: EmailTemplateSettings = Field(default_factory=EmailTemplateSettings)
@@ -387,4 +449,5 @@ class PublicConfig(BaseModel):
     analytics_enabled: bool
     snippets: list[PublicSnippet] = Field(default_factory=list)
     shop_links: list[PublicShopLink] = Field(default_factory=list)
+    social: list[PublicSocial] = Field(default_factory=list)
     turnstile_site_key: str | None
