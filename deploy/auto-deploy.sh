@@ -47,9 +47,29 @@ esac
 ok=1
 summary=""
 add() { summary="${summary:+$summary; }$1"; }
+pin=$(gate pinned || true)   # "<commit> <storefront build|->" while an earlier version is held (Admin → Deployments)
+pin_commit="${pin%% *}"; pin_store="${pin##* }"
 if ! git fetch -q origin main; then
   echo "$(ts) git fetch failed"
   ok=0; add "git fetch failed"
+elif [ "$reason" = "restore" ] && [ -n "$pin_commit" ]; then
+  echo "$(ts) API: restoring ${pin_commit:0:7}"
+  git show origin/main:deploy/update-api.sh > "$HOME/.wcw-update-api.sh"
+  if WCW_RESTORE_COMMIT="$pin_commit" bash "$HOME/.wcw-update-api.sh" main; then
+    add "API restored to $(git log --oneline -1 "$pin_commit")"
+  else
+    echo "$(ts) API restore FAILED — see the ✗ line above"
+    ok=0; add "API restore failed — the previous version keeps running"
+  fi
+  if [ "$ok" = 1 ] && [ "$pin_store" != "-" ]; then
+    out=$(bash "$REPO/deploy/update-storefront.sh" --restore "$pin_store" 2>&1); rc=$?
+    [ -n "$out" ] && echo "$out"
+    if [ "$rc" -eq 0 ]; then add "storefront build ${pin_store:0:7} restored"
+    elif [ "$rc" -eq 3 ]; then add "no saved copy of the storefront build (storefront left as it is)"
+    else ok=0; add "storefront restore failed"; fi
+  fi
+elif [ -n "$pin_commit" ]; then
+  echo "$(ts) holding ${pin_commit:0:7}: newer API and storefront builds are not installed (Admin → Deployments → Return to latest)"
 elif [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
   target="$(git log --oneline -1 origin/main)"
   echo "$(ts) API: updating to $target ($reason)"
@@ -63,8 +83,10 @@ elif [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
   fi
 fi
 
-# Storefront and main site print a line only when they install a new build.
+# Storefront and main site print a line only when they install a new build. A held version keeps its storefront too.
 for part in storefront main-site; do
+  if [ -n "$pin_commit" ] && [ "$part" = storefront ]; then continue; fi
+  if [ "$reason" = "restore" ] && [ "$part" = main-site ]; then continue; fi
   out=$(bash "$REPO/deploy/update-$part.sh" --if-changed 2>&1); rc=$?
   [ -n "$out" ] && echo "$out"
   label=$([ "$part" = storefront ] && echo "storefront" || echo "main site")

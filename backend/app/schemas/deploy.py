@@ -38,6 +38,7 @@ class ReleaseOut(BaseModel):
     storefront_build: str | None
     main_site_build: str | None
     current: bool  # the version running now
+    restorable: bool  # an earlier version that can be put back
 
 
 class DeployStatusOut(BaseModel):
@@ -60,6 +61,14 @@ class DeployStatusOut(BaseModel):
     main_site_build: str | None  # BUILD_SHA of the installed windycitywares.com bundle
     cron_seen: bool  # the server's cron job has called in within the last few minutes
     last_seen_at: datetime | None
+    pinned_commit: str | None  # set while an earlier version is held; newer builds are not installed
+    pinned_by: str | None
+    pinned_at: datetime | None
+    restore_pending: bool  # a restore is waiting for the server's next cron run
+
+
+class RestoreIn(BaseModel):
+    release_id: int
 
 
 class DeployLogOut(BaseModel):

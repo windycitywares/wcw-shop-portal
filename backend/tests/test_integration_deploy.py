@@ -99,3 +99,19 @@ if __name__ == "__main__":
             self.assertTrue(rel[0]["current"])
             self.assertFalse(any(x["current"] for x in rel[1:]))
 
+    def test_restore_rejects_the_live_version_and_unknown_ids(self):
+        rel = self.w.get("/admin/deploy/releases", self.w.admin).json()["releases"]
+        self.assertEqual(self.w.post("/admin/deploy/restore", {"release_id": 999999}, self.w.admin).status_code, 404)
+        if rel:
+            self.assertFalse(rel[0]["restorable"])
+            self.assertEqual(self.w.post("/admin/deploy/restore", {"release_id": rel[0]["id"]}, self.w.admin).status_code, 422)
+
+    def test_return_to_latest_clears_the_hold_and_queues_a_deploy(self):
+        r = self.w.delete("/admin/deploy/restore", self.w.admin)
+        self.assertEqual(r.status_code, 200, r.text)
+        body = r.json()
+        self.assertIsNone(body["pinned_commit"])
+        self.assertFalse(body["restore_pending"])
+        self.assertIsNotNone(body["requested_at"])
+        self.w.delete("/admin/deploy/now", self.w.admin)
+

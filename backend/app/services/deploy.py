@@ -16,7 +16,7 @@ from sqlalchemy import text
 
 from app.core import appmode
 from app.core.config import get_settings
-from app.core.exceptions import ValidationFailedError
+from app.core.exceptions import NotFoundError, ValidationFailedError
 from app.domain.deploy_policy import Decision, decide
 from app.domain.releases import describe_commit
 from app.domain.timeutil import store_tz_name
@@ -60,6 +60,13 @@ def git_release(repo: str, rev: str = "HEAD") -> dict[str, Any] | None:
         return {"commit": sha, "pr_number": pr, "title": title, "details": details, "committed_at": datetime.fromisoformat(date)}
     except (OSError, subprocess.SubprocessError, ValueError):
         return None
+
+
+def commit_exists(repo: str, sha: str) -> bool:
+    try:
+        return subprocess.run(["git", "-C", repo, "cat-file", "-e", f"{sha}^{{commit}}"], capture_output=True, timeout=5).returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
 
 
 def recent_commits(repo: str, count: int) -> list[str]:
@@ -132,6 +139,8 @@ class DeployService:
             updated_by=row["updated_by_email"], api=api,
             storefront_build=read_build(settings.storefront_app_dir), main_site_build=read_build(settings.main_site_app_dir),
             cron_seen=bool(row["last_seen_at"] and now - row["last_seen_at"] < CRON_FRESH), last_seen_at=row["last_seen_at"],
+            pinned_commit=(row["pinned_commit"] or "")[:7] or None, pinned_by=row["pinned_by_email"], pinned_at=row["pinned_at"],
+            restore_pending=bool(row["restore_pending"]),
         )
 
     async def record_release(self, reason: str | None = None) -> None:
@@ -147,6 +156,8 @@ class DeployService:
             await self._rows("UPDATE deploy_releases SET storefront_build = :s, main_site_build = :m WHERE id = :id",
                              s=store, m=site, id=last[0]["id"])
             return
+        # A version put back (restore) is already in the list: move it to the top instead of listing it twice.
+        await self._rows("DELETE FROM deploy_releases WHERE commit = :c", c=cur["commit"])
         await self._insert_release(cur, store, site, reason)
 
     async def _insert_release(self, rel: dict[str, Any], store: str | None, site: str | None, reason: str | None,
@@ -177,9 +188,47 @@ class DeployService:
         return ReleasesOut(releases=[
             ReleaseOut(id=r["id"], commit=r["commit"][:7], pr_number=r["pr_number"], title=r["title"], details=r["details"],
                        committed_at=r["committed_at"], deployed_at=r["deployed_at"], storefront_build=r["storefront_build"],
-                       main_site_build=r["main_site_build"], current=i == 0)
+                       main_site_build=r["main_site_build"], current=i == 0, restorable=i > 0)
             for i, r in enumerate(rows)
         ])
+
+    async def restore(self, release_id: int, user: User) -> None:
+        """Put an earlier version back: the server installs it on its next run and then holds it (pinned) until
+        "Return to latest"."""
+        found = await self._rows("SELECT * FROM deploy_releases WHERE id = :id", id=release_id)
+        if not found:
+            raise NotFoundError("That version isn't in the list any more")
+        rel = found[0]
+        live = await asyncio.to_thread(git_release, get_settings().deploy_repo_dir)
+        if live and live["commit"] == rel["commit"]:
+            raise ValidationFailedError("That version is already live")
+        if not await asyncio.to_thread(commit_exists, get_settings().deploy_repo_dir, rel["commit"]):
+            raise ValidationFailedError("The server no longer has that version's code, so it can't be restored")
+        await self._row()
+        await self._rows(
+            "UPDATE deploy_control SET pinned_commit = :c, restore_pending = TRUE, pinned_by_email = :email, pinned_at = now(), "
+            "requested_at = now(), requested_by_email = :email WHERE id = 1",
+            c=rel["commit"], email=user.email,
+        )
+        await self._audit(user, "deploy.restore", f"Restore: {rel['title']} ({rel['commit'][:7]})",
+                          {"commit": rel["commit"], "pr_number": rel["pr_number"], "title": rel["title"]})
+
+    async def return_to_latest(self, user: User) -> None:
+        await self._row()
+        await self._rows(
+            "UPDATE deploy_control SET pinned_commit = NULL, restore_pending = FALSE, pinned_by_email = NULL, pinned_at = NULL, "
+            "requested_at = now(), requested_by_email = :email WHERE id = 1", email=user.email,
+        )
+        await self._audit(user, "deploy.unpin", "Returned to the latest version")
+
+    async def pinned_commit(self) -> str:
+        """For the cron script: "<commit> <storefront build, or - when unknown>", or nothing when following the latest."""
+        row = await self._row()
+        commit = row["pinned_commit"]
+        if not commit:
+            return ""
+        rel = await self._rows("SELECT storefront_build FROM deploy_releases WHERE commit = :c", c=commit)
+        return f"{commit} {(rel[0]['storefront_build'] if rel else None) or '-'}"
 
     async def configure(self, data: DeployConfigIn, user: User) -> None:
         if data.mode == "schedule" and not data.schedule_times:
@@ -208,6 +257,12 @@ class DeployService:
     async def gate_begin(self) -> Decision:
         row = await self._row()
         now = _now()
+        if row["restore_pending"] and row["pinned_commit"]:
+            await self._rows(
+                "UPDATE deploy_control SET last_seen_at = :now, last_check_at = :now, started_at = :now, last_reason = 'restore', "
+                "requested_at = NULL, requested_by_email = NULL WHERE id = 1", now=now,
+            )
+            return Decision(go=True, reason="restore")
         decision = decide(now=now, mode=row["mode"], interval_minutes=row["interval_minutes"],
                           schedule_times=list(row["schedule_times"] or []), tz=store_tz_name(),
                           requested=row["requested_at"] is not None, last_check=row["last_check_at"])
@@ -224,6 +279,11 @@ class DeployService:
     async def gate_end(self, ok: bool, summary: str) -> None:
         result = ("✓ " if ok else "✗ ") + (summary.strip() or ("no changes" if ok else "failed"))[:2000]
         await self._rows("UPDATE deploy_control SET finished_at = now(), last_result = :result WHERE id = 1", result=result)
+        # A restore that failed leaves the previous code running, so there is nothing to hold.
+        await self._rows("UPDATE deploy_control SET pinned_commit = CASE WHEN :ok THEN pinned_commit ELSE NULL END, "
+                         "pinned_by_email = CASE WHEN :ok THEN pinned_by_email ELSE NULL END, "
+                         "pinned_at = CASE WHEN :ok THEN pinned_at ELSE NULL END, restore_pending = FALSE "
+                         "WHERE id = 1 AND restore_pending", ok=ok)
         try:  # the version history is a record, never a reason for the gate to fail
             row = await self._row()
             await self.record_release(row["last_reason"])
