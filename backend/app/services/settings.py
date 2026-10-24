@@ -14,7 +14,7 @@ from app.domain import emailtext
 from app.domain.pricing import ShippingConfig, TaxConfig
 from app.models.commerce import StoreSetting
 from app.models.user import User
-from app.schemas.settings import GROUPS, AdminSettingsOut, PublicConfig, StoreSettings
+from app.schemas.settings import GROUPS, AdminSettingsOut, PublicConfig, PublicSnippet, StoreSettings
 from app.services import audit
 from app.services.ttl import TtlCache
 
@@ -92,9 +92,11 @@ def public_config(s: StoreSettings, lang: str) -> PublicConfig:
         max_quantity_per_line=s.general.max_quantity_per_line,
         low_stock_threshold=s.general.low_stock_threshold,
         analytics_enabled=s.analytics.enabled,
-        head_code=(s.scripts.head_code or "").strip() or None,
-        body_code=(s.scripts.body_code or "").strip() or None,
-        scripts_need_consent=s.scripts.require_consent,
+        snippets=[
+            PublicSnippet(id=x.id, placement=x.placement, code=x.code.strip(), require_consent=x.require_consent)
+            for x in s.scripts.snippets
+            if x.enabled and x.code.strip()
+        ],
         turnstile_site_key=captcha.public_site_key(app),
     )
 
@@ -185,7 +187,14 @@ class SettingsService:
         else:
             row.value = value
             row.updated_by_id = user.id
-        changed = {k: ("(changed)" if k == "smtp_password_enc" else value[k]) for k in value if current.get(k) != value[k]}
+        def shown(k: str):
+            if k == "smtp_password_enc":
+                return "(changed)"
+            if k == "snippets":  # names only: the code itself is long and does not belong in the log
+                return [f"{x['name']} ({x['placement']}{'' if x['enabled'] else ', off'})" for x in value[k]]
+            return value[k]
+
+        changed = {k: shown(k) for k in value if current.get(k) != value[k]}
         audit.record(self.session, user, "settings.update", "settings", group, f"Changed {group} settings", {"changed": changed})
         await self.session.commit()
         clear_cache()

@@ -8,7 +8,7 @@ import type { ShopConfig } from "@/lib/types";
 
 declare global {
   interface Window {
-    __wcwScripts?: boolean;
+    __wcwScripts?: Set<string>;
   }
 }
 
@@ -31,7 +31,7 @@ function mount(html: string, parent: HTMLElement) {
   });
 }
 
-/** Adds the snippets from Admin → Settings → Tracking code to the storefront (once per page load). */
+/** Adds the snippets from Admin → Settings → Tracking code to the storefront (each once per page load). */
 export function SiteScripts() {
   const pathname = usePathname();
   const [config, setConfig] = useState<ShopConfig | null>(null);
@@ -47,17 +47,17 @@ export function SiteScripts() {
   }, []);
 
   useEffect(() => {
-    if (!config || window.__wcwScripts || pathname.startsWith("/admin")) return;
-    const head = (config.head_code ?? "").trim();
-    const body = (config.body_code ?? "").trim();
-    if (!head && !body) return;
-    if ((config.scripts_need_consent ?? true) && consent !== "accepted") return;
-    window.__wcwScripts = true;
-    try {
-      if (head) mount(head, document.head);
-      if (body) mount(body, document.body);
-    } catch {
-      /* a broken snippet must never break the shop */
+    if (!config || pathname.startsWith("/admin")) return;
+    const done = (window.__wcwScripts ??= new Set<string>());
+    for (const sn of config.snippets ?? []) {
+      if (done.has(sn.id)) continue;
+      if (sn.require_consent && consent !== "accepted") continue;
+      done.add(sn.id);
+      try {
+        mount(sn.code, sn.placement === "head" ? document.head : document.body);
+      } catch {
+        /* a broken snippet must never break the shop */
+      }
     }
   }, [config, consent, pathname]);
 
