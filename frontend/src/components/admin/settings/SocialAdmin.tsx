@@ -135,7 +135,7 @@ export function SocialAdmin({ initial, onSaved }: { initial: SocialRow[]; onSave
       <Panel>
         <PanelHeader
           title="Your social media accounts"
-          description="Shown in this order as icons in the bar above the header, and as Follow us buttons with your handle in the footer and on the home page. The same list appears on windycitywares.com."
+          description="Shown in this order as icons in the bar above the header, and as a Follow us section of colour-coded tiles above the footer on every page. The same list appears on windycitywares.com."
           actions={
             <Button size="sm" onClick={() => open("add", blank())}>
               <Icon name="plus" className="size-4" />
@@ -182,11 +182,14 @@ export function SocialAdmin({ initial, onSaved }: { initial: SocialRow[]; onSave
         {d && (
           <div className="space-y-4">
             {problem && <Alert tone="danger">{problem}</Alert>}
-            <div className="flex items-center gap-3 rounded-[var(--radius-card)] bg-canvas p-3" aria-label="How the button will look">
-              <span className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm font-medium text-ink">
-                <SocialGlyph platform={d.platform} className="size-[1.125rem]" />
-                {d.handle || socialOf(d.platform).label}
+            <div className="flex items-center gap-3 rounded-[var(--radius-card)] bg-canvas p-3" aria-label="How the tile will look">
+              <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full text-white" style={{ background: socialOf(d.platform).hover }}>
+                <SocialGlyph platform={d.platform} className="size-6" />
               </span>
+              <div className="min-w-0 text-sm">
+                <p className="truncate font-semibold text-ink">{d.handle || socialOf(d.platform).label}</p>
+                <p className="text-muted">{d.url.trim() === "#" ? "Coming soon" : `on ${socialOf(d.platform).label}`}</p>
+              </div>
             </div>
             <Field label="Network">
               {(p) => (

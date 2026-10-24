@@ -9,7 +9,6 @@ import { site } from "@/lib/site";
 import type { Product } from "@/lib/types";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container, EmptyState, Price } from "@/components/ui/misc";
-import { FollowPills } from "@/components/ui/SocialLinks";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { ProductGrid } from "@/components/catalog/ProductCard";
 
@@ -73,7 +72,6 @@ export default async function HomePage({ params }: Props) {
     getShopConfig(locale),
   ]);
   const shops = config?.shop_links ?? [];
-  const social = config?.social ?? [];
   // With a single top-level category (e.g. "Home Decor"), feature its themes instead.
   const themes = tree.length === 1 ? tree[0].children : tree;
   const previews = await Promise.all(themes.map((c) => getCategoryPreview(c.slug)));
@@ -240,18 +238,6 @@ export default async function HomePage({ params }: Props) {
           </div>
         </Container>
       </section>
-      )}
-
-      {/* Follow us: Admin → Settings → Social media */}
-      {social.length > 0 && (
-        <section aria-labelledby="follow-heading" className="pt-16">
-          <Container className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <h2 id="follow-heading" className="text-2xl">
-              {t.footer.followUs}
-            </h2>
-            <FollowPills accounts={social} locale={locale} />
-          </Container>
-        </section>
       )}
     </>
   );

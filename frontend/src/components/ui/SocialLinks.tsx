@@ -1,5 +1,6 @@
 import { fmt, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { Container } from "@/components/ui/misc";
 import { socialOf } from "@/lib/socialPlatforms";
 import type { ShopConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -61,44 +62,64 @@ export function SocialIcons({ accounts, locale, className }: { accounts: Account
   );
 }
 
-/** "Follow us" pills with the handle, so visitors know what to search for. */
-export function FollowPills({ accounts, locale, onDark = false }: { accounts: Account[]; locale: Locale; onDark?: boolean }) {
+/** The Follow us section shown above the footer on every page, in the same tile pattern as the marketplaces: a badge in the
+ *  network's own colour, the handle, and where it is. A # address is shown greyed out as Coming soon. */
+export function FollowBand({ accounts, locale, stacked = false }: { accounts: Account[]; locale: Locale; stacked?: boolean }) {
   if (accounts.length === 0) return null;
   const t = getDictionary(locale);
   return (
-    <ul className="flex flex-wrap gap-3" aria-label={t.footer.followUs}>
-      {accounts.map((a) => {
-        const p = socialOf(a.platform);
-        if (a.url === "#") {
-          return (
-            <li key={a.id}>
-              <span
-                title={t.home.shopSoon}
-                className={cn("inline-flex min-h-11 cursor-default items-center gap-2 rounded-full border px-4 text-sm font-medium opacity-60", onDark ? "border-white/25 text-white" : "border-line bg-surface text-ink")}
-              >
-                <SocialGlyph platform={a.platform} className="size-[1.125rem]" />
-                {a.handle || p.label}
-                <span className="text-xs font-normal">· {t.home.shopSoon}</span>
-              </span>
-            </li>
-          );
-        }
-        return (
-          <li key={a.id}>
-            <a
-              href={a.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={fmt(t.footer.followOn, { platform: p.label })}
-              style={{ "--social-hover": p.hover } as React.CSSProperties}
-              className={cn("inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors hover:border-(--social-hover) hover:text-(--social-hover) focus-visible:border-(--social-hover)", onDark ? "border-white/25 text-white hover:bg-white" : "border-line bg-surface text-ink")}
-            >
-              <SocialGlyph platform={a.platform} className="size-[1.125rem]" />
-              {a.handle || p.label}
-            </a>
-          </li>
-        );
-      })}
-    </ul>
+    <section aria-labelledby="follow-heading" className={cn("border-t border-line bg-canvas py-12", !stacked && "mt-20")}>
+      <Container>
+        <h2 id="follow-heading" className="font-serif text-3xl">
+          {t.footer.followUs}
+        </h2>
+        <p className="mt-2 text-muted">{t.footer.followText}</p>
+        <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {accounts.map((a) => {
+            const p = socialOf(a.platform);
+            const soon = a.url === "#";
+            const body = (
+              <>
+                <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full text-white" style={{ background: p.hover }}>
+                  <SocialGlyph platform={a.platform} className="size-6" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold text-ink">{a.handle || p.label}</span>
+                  <span className="block text-sm text-muted">{soon ? t.home.shopSoon : fmt(t.home.shopOn, { platform: p.label })}</span>
+                </span>
+                {!soon && (
+                  <span aria-hidden="true" className="ml-auto hidden shrink-0 rounded-full px-3 py-1 text-xs font-semibold text-white xl:block" style={{ background: p.hover }}>
+                    {t.footer.followCta}
+                  </span>
+                )}
+              </>
+            );
+            return (
+              <li key={a.id}>
+                {soon ? (
+                  <div
+                    className="flex h-full items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-3 opacity-80"
+                    style={{ borderLeft: `6px solid ${p.hover}` }}
+                  >
+                    {body}
+                  </div>
+                ) : (
+                  <a
+                    href={a.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={fmt(t.footer.followOn, { platform: p.label })}
+                    className="flex h-full items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:-translate-y-0.5 focus-visible:shadow-lg motion-reduce:transition-none"
+                    style={{ borderLeft: `6px solid ${p.hover}` }}
+                  >
+                    {body}
+                  </a>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </Container>
+    </section>
   );
 }

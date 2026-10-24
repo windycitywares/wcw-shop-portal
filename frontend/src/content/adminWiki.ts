@@ -123,7 +123,7 @@ export const ADMIN_WIKI: WikiArticle[] = [
     "summary": "Your Instagram, Facebook, TikTok and other accounts.",
     "paragraphs": [
       "Press Add account, pick the network, type your handle (for example @windycityware) and paste the address of your profile. The address must belong to the network you picked, so a wrong paste is caught. Type just # as the address if the account is not open yet: visitors see it greyed out with “Coming soon” instead of a link that goes nowhere.",
-      "Visitors see small icons in the bar above the header (they take on the network’s colour when hovered) and Follow us buttons showing your handle in the footer and on the home page. The same list appears on windycitywares.com within a few minutes.",
+      "Visitors see small icons in the bar above the header (they take on the network’s colour when hovered) and a Follow us section above the footer on every page: one colour-coded tile per account with your handle, in the same style as the marketplace tiles. The same list appears on windycitywares.com within a few minutes.",
       "Use the arrows to change the order, the pause icon to hide an account without deleting it, and the eye, pencil and bin to view, edit or delete. Until you add one, nothing is shown."
     ]
   },
