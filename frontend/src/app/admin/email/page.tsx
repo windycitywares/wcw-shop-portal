@@ -72,7 +72,7 @@ export default function AdminEmailSending() {
   if (!form) {
     return (
       <div>
-        <PageHeader title="Email sending" description="Loading…" />
+        <PageHeader title="Email config" description="Loading…" />
         {error && <Alert tone="danger">{error}</Alert>}
       </div>
     );
@@ -125,7 +125,7 @@ export default function AdminEmailSending() {
   return (
     <div>
       <PageHeader
-        title="Email sending"
+        title="Email config"
         description="Who the shop's emails come from and which mail server sends them: welcome, password-reset, order and newsletter emails. Leave a box empty to use the server's own setup."
         actions={
           <div className="flex items-center gap-4">
