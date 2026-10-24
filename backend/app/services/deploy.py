@@ -51,11 +51,14 @@ def git_release(repo: str, rev: str = "HEAD") -> dict[str, Any] | None:
         out = subprocess.run(["git", "-C", repo, "log", "-1", "--format=%H%x1f%cI%x1f%s%x1f%b", rev], capture_output=True,
                              text=True, timeout=5, check=True).stdout
         sha, date, subject, body = out.rstrip("\n").split("\x1f", 3)
-        children: list[str] = []
+        children: list[tuple[str, str]] = []
         if subject.startswith("Merge pull request #"):
-            kids = subprocess.run(["git", "-C", repo, "log", "--format=%s", f"{sha}^1..{sha}^2"], capture_output=True,
-                                  text=True, timeout=5, check=False).stdout
-            children = [k.strip() for k in kids.splitlines()]
+            kids = subprocess.run(["git", "-C", repo, "log", "--reverse", "--format=%s%x1f%b%x1e", f"{sha}^1..{sha}^2"],
+                                  capture_output=True, text=True, timeout=5, check=False).stdout
+            for chunk in kids.split("\x1e"):
+                if chunk.strip():
+                    subj, _, kid_body = chunk.strip("\n").partition("\x1f")
+                    children.append((subj.strip(), kid_body))
         pr, title, details = describe_commit(subject, body, children)
         return {"commit": sha, "pr_number": pr, "title": title, "details": details, "committed_at": datetime.fromisoformat(date)}
     except (OSError, subprocess.SubprocessError, ValueError):
@@ -185,8 +188,13 @@ class DeployService:
                     await self._insert_release(rel, read_build(settings.storefront_app_dir) if current else None,
                                                read_build(settings.main_site_app_dir) if current else None, "history", stamp)
             rows = await self._rows("SELECT * FROM deploy_releases ORDER BY deployed_at DESC, id DESC LIMIT :n", n=KEEP_RELEASES)
+        fresh = {r["commit"]: await asyncio.to_thread(git_release, settings.deploy_repo_dir, r["commit"]) for r in rows}
+        repo = settings.deploy_github_repo
         return ReleasesOut(releases=[
-            ReleaseOut(id=r["id"], commit=r["commit"][:7], pr_number=r["pr_number"], title=r["title"], details=r["details"],
+            ReleaseOut(id=r["id"], commit=r["commit"][:7], pr_number=(fresh[r["commit"]] or r)["pr_number"],
+                       pr_url=(f"https://github.com/{repo}/pull/{(fresh[r['commit']] or r)['pr_number']}"
+                               if (fresh[r["commit"]] or r)["pr_number"] else None),
+                       title=(fresh[r["commit"]] or r)["title"], details=(fresh[r["commit"]] or r)["details"],
                        committed_at=r["committed_at"], deployed_at=r["deployed_at"], storefront_build=r["storefront_build"],
                        main_site_build=r["main_site_build"], current=i == 0, restorable=i > 0)
             for i, r in enumerate(rows)

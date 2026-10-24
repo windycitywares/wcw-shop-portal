@@ -23,6 +23,7 @@ interface Release {
   id: number;
   commit: string;
   pr_number: number | null;
+  pr_url: string | null;
   title: string;
   details: string | null;
   committed_at: string | null;
@@ -350,9 +351,17 @@ export default function AdminDeployments() {
                       )}
                       <span className="min-w-0 break-words">{r.title}</span>
                     </p>
-                    {r.details && <p className="mt-1 whitespace-pre-line break-words text-sm text-muted">{r.details}</p>}
+                    {r.details && <p className="mt-1 break-words text-sm text-muted">{r.details}</p>}
                     <p className="mt-1 text-xs text-muted">
-                      {r.pr_number ? `PR #${r.pr_number} · ` : ""}
+                      {r.pr_number && r.pr_url ? (
+                        <>
+                          <a href={r.pr_url} target="_blank" rel="noopener noreferrer" className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-2">
+                            PR #{r.pr_number}
+                            <span className="sr-only"> on GitHub (opens in a new tab)</span>
+                          </a>
+                          {" · "}
+                        </>
+                      ) : null}
                       <span className="font-mono">{r.commit}</span> · live {dateTime(r.deployed_at)}
                     </p>
                   </div>

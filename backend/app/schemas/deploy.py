@@ -31,8 +31,9 @@ class ReleaseOut(BaseModel):
     id: int
     commit: str
     pr_number: int | None
+    pr_url: str | None  # the pull request on GitHub
     title: str  # the pull request's title
-    details: str | None  # what the change did, from its commits
+    details: str | None  # a short summary of what it did
     committed_at: datetime | None
     deployed_at: datetime
     storefront_build: str | None
