@@ -112,9 +112,10 @@ export const ADMIN_WIKI: WikiArticle[] = [
     "title": "Settings → Tracking code",
     "summary": "Google Analytics, Tag Manager and other snippets.",
     "paragraphs": [
-      "Paste the snippet exactly as the service gives it. Put it in Header code if they say “in the head”, and in Footer code if they say “before the closing body tag”.",
+      "Snippets are listed in two tables: Header snippets (added to the top of every shop page) and Footer snippets (added at the end). Press Add header snippet or Add footer snippet, give it a name such as Google Analytics, and paste the code exactly as the service gives it.",
+      "Click a snippet’s name, or its eye icon, to see it. The pencil edits it and the bin deletes it. Turn a snippet off in its edit box to pause it without losing the code.",
       "Leave “Wait for the visitor to accept the cookie banner” on unless you are sure the snippet is not tracking people. Visitors who decline are then never tracked by it.",
-      "Only paste code from services you trust: it runs on every page. It is never added to this admin. To remove a snippet, clear its box and save.",
+      "Only paste code from services you trust: it runs on every shop page. It is never added to this admin.",
       "Search engines that read page source (for example for a Search Console verification tag) may not see tags added this way; use the service’s other verification method if it fails."
     ]
   },

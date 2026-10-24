@@ -95,9 +95,7 @@ export interface ShopConfig {
   max_quantity_per_line: number;
   low_stock_threshold: number;
   analytics_enabled: boolean;
-  head_code?: string | null;
-  body_code?: string | null;
-  scripts_need_consent?: boolean;
+  snippets?: { id: string; placement: "head" | "body"; code: string; require_consent: boolean }[];
   turnstile_site_key: string | null;
 }
 

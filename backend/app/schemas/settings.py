@@ -4,7 +4,7 @@ import re
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.schemas.common import Money
 
@@ -104,12 +104,56 @@ class AnalyticsSettings(_Group):
     retention_days: int = Field(default=400, ge=30, le=1100)
 
 
-class ScriptSettings(_Group):
-    """Tracking or widget code (Google Analytics, Tag Manager, a pixel, a chat box) added to every storefront page."""
+class Snippet(BaseModel):
+    """One piece of tracking or widget code (Google Analytics, a pixel, a chat box) the owner added."""
 
-    head_code: str | None = Field(default=None, max_length=20000, description="Added to the top of every page (the <head>)")
-    body_code: str | None = Field(default=None, max_length=20000, description="Added at the end of every page (before </body>)")
+    id: str = Field(min_length=1, max_length=40, pattern=r"^[A-Za-z0-9_-]+$")
+    name: str = Field(min_length=1, max_length=80)
+    placement: Literal["head", "body"] = "head"  # head = top of every page, body = end of every page
+    code: str = Field(min_length=1, max_length=20000)
+    enabled: bool = True
     require_consent: bool = True  # wait for the visitor to accept the cookie banner
+
+    @field_validator("name")
+    @classmethod
+    def _name(cls, v: str) -> str:
+        v = " ".join(v.split())
+        if not v:
+            raise ValueError("Give the snippet a name")
+        return v
+
+
+class ScriptSettings(_Group):
+    """Snippets added to every storefront page, each with a name, a place (header or footer) and its code."""
+
+    snippets: list[Snippet] = Field(default_factory=list, max_length=30)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _from_the_two_boxes(cls, data):
+        """Settings saved while this was two plain boxes (head_code / body_code) become two named snippets."""
+        if isinstance(data, dict) and "snippets" not in data and (data.get("head_code") or data.get("body_code")):
+            old = []
+            for key, name, place in (("head_code", "Header code", "head"), ("body_code", "Footer code", "body")):
+                if (data.get(key) or "").strip():
+                    old.append({"id": place + "-1", "name": name, "placement": place, "code": data[key].strip(),
+                                "require_consent": data.get("require_consent", True)})
+            return {"snippets": old}
+        return data
+
+    @model_validator(mode="after")
+    def _unique_ids(self):
+        ids = [x.id for x in self.snippets]
+        if len(ids) != len(set(ids)):
+            raise ValueError("Two snippets share an id")
+        return self
+
+
+class PublicSnippet(BaseModel):
+    id: str
+    placement: Literal["head", "body"]
+    code: str
+    require_consent: bool
 
 
 class DigestSettings(_Group):
@@ -262,7 +306,5 @@ class PublicConfig(BaseModel):
     max_quantity_per_line: int
     low_stock_threshold: int
     analytics_enabled: bool
-    head_code: str | None = None
-    body_code: str | None = None
-    scripts_need_consent: bool = True
+    snippets: list[PublicSnippet] = Field(default_factory=list)
     turnstile_site_key: str | None

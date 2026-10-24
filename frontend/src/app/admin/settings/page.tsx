@@ -14,6 +14,7 @@ import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
+import { TrackingCode, type Snippet } from "@/components/admin/settings/TrackingCode";
 
 type Value = string | number | boolean | null | string[] | Record<string, string>;
 type Settings = Record<string, Record<string, Value>>;
@@ -24,7 +25,6 @@ type Def =
   | { key: string; label: string; hint?: string; type: "text" | "email" }
   | { key: string; label: string; hint?: string; type: "select"; options: readonly (readonly [string, string])[] }
   | { key: string; label: string; hint?: string; type: "secret" }
-  | { key: string; label: string; hint?: string; type: "code" }
   | { key: string; label: string; hint?: string; type: "list"; upper?: boolean }
   | { key: string; label: string; hint?: string; type: "langs"; long?: boolean };
 
@@ -121,12 +121,8 @@ const GROUPS: Group[] = [
   {
     id: "scripts",
     label: "Tracking code",
-    description: "Paste a snippet from Google Analytics, Tag Manager, a Facebook pixel or similar. It is added to every shop page (never the admin).",
-    fields: [
-      { key: "head_code", label: "Header code", hint: "Goes in the <head> of every page. Google asks for most snippets here.", type: "code" },
-      { key: "body_code", label: "Footer code", hint: "Goes at the end of every page, just before </body>.", type: "code" },
-      { key: "require_consent", label: "Wait for the visitor to accept the cookie banner", type: "bool" },
-    ],
+    description: "Add Google Analytics, Tag Manager, a pixel or a chat box to every shop page. Each snippet has a name, a place (header or footer) and its code.",
+    fields: [],
   },
   {
     id: "digest",
@@ -258,24 +254,6 @@ function GroupForm({ group, initial, onSaved, status }: { group: Group; initial:
               </fieldset>
             );
           }
-          if (f.type === "code") {
-            return (
-              <Field key={f.key} label={f.label} hint={f.hint}>
-                {(p) => (
-                  <Textarea
-                    {...p}
-                    value={(v as string) ?? ""}
-                    onChange={(e) => set(f.key, e.target.value || null)}
-                    maxLength={20000}
-                    spellCheck={false}
-                    autoCapitalize="off"
-                    placeholder="<script>…</script>"
-                    className="min-h-40 font-mono text-xs"
-                  />
-                )}
-              </Field>
-            );
-          }
           if (f.type === "list") {
             return (
               <Field key={f.key} label={f.label} hint={f.hint}>
@@ -403,7 +381,12 @@ function SettingsInner() {
       )}
       {group ? (
         <div className="max-w-4xl">
-          {data ? (
+          {data && group.id === "scripts" ? (
+            <TrackingCode
+              initial={((data.settings.scripts as unknown as { snippets?: Snippet[] })?.snippets ?? [])}
+              onSaved={(snippets) => setData({ ...data, settings: { ...data.settings, scripts: { snippets } as unknown as Record<string, Value> } })}
+            />
+          ) : data ? (
             <GroupForm key={group.id} group={group} initial={data.settings[group.id] ?? {}} status={data.status} onSaved={(settings, status) => setData({ settings, status: status ?? data.status })} />
           ) : (
             <div className="skeleton h-64" />
