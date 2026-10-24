@@ -202,7 +202,7 @@ export function SocialAdmin({ initial, onSaved }: { initial: SocialRow[]; onSave
             <Field label="Handle" hint="What visitors see on the button, such as @windycityware. Leave empty to show the network's name.">
               {(p) => <Input {...p} value={d.handle} onChange={(e) => set({ handle: e.target.value })} maxLength={60} readOnly={readOnly} placeholder="@windycityware" />}
             </Field>
-            <Field label="Web address" hint="The full https:// address of your profile. It must belong to the network you picked.">
+            <Field label="Web address" hint="The full https:// address of your profile (parts with ? or # are fine). It must belong to the network you picked. Type just # if the account is not open yet: visitors then see it greyed out as “Coming soon”.">
               {(p) => <Input {...p} inputMode="url" value={d.url} onChange={(e) => set({ url: e.target.value })} maxLength={500} readOnly={readOnly} placeholder="https://www.instagram.com/windycityware/" />}
             </Field>
             <label className="flex items-start gap-3 text-sm">

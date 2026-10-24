@@ -257,7 +257,7 @@ class SocialAccount(BaseModel):
     id: str = Field(min_length=1, max_length=40, pattern=r"^[A-Za-z0-9_-]+$")
     platform: Literal["instagram", "facebook", "tiktok", "pinterest", "youtube", "x", "linkedin", "whatsapp"]
     handle: str = Field(default="", max_length=60, description="What visitors see, such as @windycityware")
-    url: str = Field(min_length=1, max_length=500)
+    url: str = Field(min_length=1, max_length=500, description="https:// address, or # while the account is not ready (shown as Coming soon)")
     enabled: bool = True
 
     @field_validator("handle")
@@ -269,6 +269,8 @@ class SocialAccount(BaseModel):
     @classmethod
     def _https(cls, v: str) -> str:
         v = (v or "").strip()
+        if v == "#":  # an account that is not open yet
+            return v
         parsed = urlsplit(v)
         if parsed.scheme != "https" or not parsed.hostname or "." not in parsed.hostname or parsed.username or parsed.password:
             raise ValueError("Use the full https:// address")
@@ -276,6 +278,8 @@ class SocialAccount(BaseModel):
 
     @model_validator(mode="after")
     def _belongs(self):
+        if self.url == "#":
+            return self
         host = (urlsplit(self.url).hostname or "").lower()
         if not any(host == h or host.endswith("." + h) for h in _SOCIAL_HOSTS[self.platform]):
             raise ValueError(f"That address doesn't look like a {self.platform.title()} link")
