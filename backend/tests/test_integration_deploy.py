@@ -94,7 +94,7 @@ if __name__ == "__main__":
         r = self.w.get("/admin/deploy/releases", self.w.admin)
         self.assertEqual(r.status_code, 200, r.text)
         rel = r.json()["releases"]
-        self.assertLessEqual(len(rel), 5)
+        self.assertLessEqual(len(rel), 4)
         self.assertEqual(len({x["commit"] for x in rel}), len(rel))
         if rel:
             self.assertTrue(rel[0]["latest"])

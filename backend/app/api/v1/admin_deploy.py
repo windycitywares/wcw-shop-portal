@@ -52,7 +52,7 @@ async def deploy_log(response: Response, _: Admin, lines: Annotated[int, Query(g
 
 @router.get("/releases", response_model=ReleasesOut)
 async def deploy_releases(response: Response, _: Admin) -> ReleasesOut:
-    """The last five versions the server has run, newest (the live one) first."""
+    """The latest version and the three before it, newest first."""
     response.headers["Cache-Control"] = "no-store"
     return await DeployService(engine).releases()
 

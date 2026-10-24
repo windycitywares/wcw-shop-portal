@@ -335,40 +335,30 @@ export default function AdminDeployments() {
       </div>
 
       <Panel className="mt-6">
-        <PanelHeader title="Recent versions" description="The last five versions that went live, each described by the pull request behind it." />
+        <PanelHeader title="Recent versions" description="The latest version and the three before it, each with its pull request, time and a short description." />
         <PanelBody>
           {releases.length === 0 ? (
             <p className="text-sm text-muted">No versions recorded yet.</p>
           ) : (
             <ol className="divide-y divide-line" aria-label="Recent versions">
-              {releases.map((r) => (
-                <li key={r.id} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 py-3">
+              {releases.map((r, i) => (
+                <li key={r.id || r.commit} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
-                      {r.latest && r.current ? (
-                        <Pill tone="success">Latest · live now</Pill>
-                      ) : (
-                        <>
-                          {r.latest && <Pill tone="accent">Latest</Pill>}
-                          {r.current && <Pill tone="success">Live now{status.pinned_commit ? " · held" : ""}</Pill>}
-                          {!r.latest && !r.current && <Pill tone="neutral">Earlier</Pill>}
-                        </>
-                      )}
-                      <span className="min-w-0 break-words">{r.title}</span>
-                    </p>
-                    {r.details && <p className="mt-1 break-words text-sm text-muted">{r.details}</p>}
-                    <p className="mt-1 text-xs text-muted">
+                    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+                      {r.latest ? <Pill tone="accent">Latest</Pill> : <Pill tone="neutral">{`V${i}`}</Pill>}
+                      {r.current && <Pill tone="success">Live now{status.pinned_commit ? " · held" : ""}</Pill>}
                       {r.pr_number && r.pr_url ? (
-                        <>
-                          <a href={r.pr_url} target="_blank" rel="noopener noreferrer" className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-2">
-                            PR #{r.pr_number}
-                            <span className="sr-only"> on GitHub (opens in a new tab)</span>
-                          </a>
-                          {" · "}
-                        </>
-                      ) : null}
-                      <span className="font-mono">{r.commit}</span> · {r.deployed_at ? `went live ${dateTime(r.deployed_at)}` : "not installed yet"}
+                        <a href={r.pr_url} target="_blank" rel="noopener noreferrer" className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-2">
+                          PR #{r.pr_number}
+                          <span className="sr-only"> on GitHub (opens in a new tab)</span>
+                        </a>
+                      ) : (
+                        <span className="font-mono">{r.commit}</span>
+                      )}
+                      <span>· {r.deployed_at ? `live ${dateTime(r.deployed_at)}` : r.committed_at ? `merged ${dateTime(r.committed_at)}` : "not installed yet"}</span>
                     </p>
+                    <p className="mt-1.5 break-words text-sm font-medium">{r.title}</p>
+                    {r.details && <p className="mt-0.5 break-words text-sm text-muted">{r.details}</p>}
                   </div>
                   {r.latest && !r.current && (
                     <Button size="sm" disabled={busy || status.running || (status.restore_pending && !status.pinned_commit)} onClick={() => void returnToLatest()}>

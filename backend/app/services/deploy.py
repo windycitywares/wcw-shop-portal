@@ -42,7 +42,7 @@ def git_version(repo: str) -> Version:
         return Version(commit=None, subject=None, date=None)
 
 
-KEEP_RELEASES = 5
+KEEP_RELEASES = 4  # Latest + V1..V3
 
 
 def git_release(repo: str, rev: str = "HEAD") -> dict[str, Any] | None:
@@ -173,7 +173,7 @@ class DeployService:
         )
 
     async def releases(self) -> ReleasesOut:
-        """The last five versions, newest change first, each once. One is **live** (what the server runs) and the newest is
+        """The latest version and the three before it, newest change first, each once. One is **live** (what the server runs) and the newest is
         **latest** (what GitHub's main has); they are the same row unless an older version is being held. The latest is
         listed even before it has been installed, so there is always a way back to it. On a server that has never recorded
         a version, the list starts from the checkout's own history so the page isn't empty."""
