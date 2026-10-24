@@ -4,7 +4,7 @@ import { HELP_NAV } from "@/content/help";
 import { fmt, localePath, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getShopConfig } from "@/lib/api";
-import { FollowPills } from "@/components/ui/SocialLinks";
+import { FollowBand } from "@/components/ui/SocialLinks";
 import { MarketplaceBand } from "@/components/catalog/ShopLinkTiles";
 import { Container } from "@/components/ui/misc";
 import { Logo } from "@/components/ui/Logo";
@@ -54,19 +54,14 @@ export async function Footer({ locale }: { locale: Locale }) {
   return (
     <>
     <MarketplaceBand links={shops} locale={locale} />
-    <footer className={`${shops.length > 0 ? "" : "mt-28"} bg-night text-night-muted [&_*:focus-visible]:outline-white`}>
+    <FollowBand accounts={social} locale={locale} stacked={shops.length > 0} />
+    <footer className={`${shops.length > 0 || social.length > 0 ? "" : "mt-28"} bg-night text-night-muted [&_*:focus-visible]:outline-white`}>
       <Container className="grid gap-12 py-16 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
         <div className="max-w-sm">
           <Logo tone="reverse" title="WindyCityWares" className="mb-8 h-10 w-auto" />
           <p className="font-serif text-3xl font-light text-white">{t.footer.newsletterTitle}</p>
           <p className="mt-3 text-sm">{t.footer.newsletterText}</p>
           <NewsletterForm />
-          {social.length > 0 && (
-            <div className="mt-8">
-              <p className="mb-3 text-sm font-semibold text-white">{t.footer.followUs}</p>
-              <FollowPills accounts={social} locale={locale} onDark />
-            </div>
-          )}
         </div>
         {columns.map((col) => (
           <nav key={col.title} aria-label={col.title}>
