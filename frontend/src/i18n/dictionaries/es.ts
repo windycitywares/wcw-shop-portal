@@ -71,6 +71,7 @@ const es: Dictionary = {
     shopsNotice: "Los nombres y logotipos de los mercados pertenecen a sus propietarios. Vendemos en ellos de forma independiente y no contamos con su respaldo.",
     shopOn: "en {platform}",
     shopOpens: "Se abre en una pestaña nueva",
+    shopSoon: "Próximamente",
     emptyTitle: "Pronto habrá nuevos artículos",
     emptyText: "Vuelve a visitarnos pronto.",
   },

@@ -212,8 +212,8 @@ export function ShopLinksAdmin({ initial, onSaved }: { initial: ShopLinkRow[]; o
             <Field label="Name" hint="What visitors see, such as Windy City Wares on Etsy.">
               {(p) => <Input {...p} value={d.name} onChange={(e) => set({ name: e.target.value })} maxLength={60} readOnly={readOnly} />}
             </Field>
-            <Field label="Web address" hint="The full https:// address of your shop page. It must belong to the marketplace you picked.">
-              {(p) => <Input {...p} type="url" inputMode="url" value={d.url} onChange={(e) => set({ url: e.target.value })} maxLength={500} readOnly={readOnly} placeholder="https://www.etsy.com/shop/YourShop" />}
+            <Field label="Web address" hint="The full https:// address of your shop page (parts with ? or # are fine). It must belong to the marketplace you picked. Type just # if the shop is not open yet: visitors then see “Coming soon”.">
+              {(p) => <Input {...p} inputMode="url" value={d.url} onChange={(e) => set({ url: e.target.value })} maxLength={500} readOnly={readOnly} placeholder="https://www.etsy.com/shop/YourShop" />}
             </Field>
             <Field label="Short description" hint={`Shown when a visitor hovers the tile. ${(d.blurb ?? "").length}/160`}>
               {(p) => <Textarea {...p} value={d.blurb ?? ""} onChange={(e) => set({ blurb: e.target.value || null })} maxLength={160} readOnly={readOnly} className="min-h-20" />}

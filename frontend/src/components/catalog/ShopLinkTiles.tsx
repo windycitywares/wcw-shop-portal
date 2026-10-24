@@ -14,6 +14,25 @@ export function ShopLinkTiles({ links, locale }: { links: Item[]; locale: Locale
       {links.map((l) => {
         const p = platformOf(l.platform);
         const tipId = `shop-tip-${l.id}`;
+        if (l.url === "#") {
+          // Not open yet: a plain card, not a link that goes nowhere.
+          return (
+            <li key={l.id}>
+              <div
+                className="flex min-w-60 items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-3 pr-5 opacity-80"
+                style={{ borderLeft: `6px solid ${p.bg}` }}
+              >
+                <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-full text-xl font-bold" style={{ background: p.bg, color: p.fg }}>
+                  {(p.id === "other" ? l.name : p.label).charAt(0).toUpperCase()}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold text-ink">{l.name}</span>
+                  <span className="block text-sm text-muted">{t.home.shopSoon}</span>
+                </span>
+              </div>
+            </li>
+          );
+        }
         return (
           <li key={l.id} className="group relative">
             <a
