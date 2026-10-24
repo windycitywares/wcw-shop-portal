@@ -11,7 +11,6 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Container, EmptyState, Price } from "@/components/ui/misc";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { ProductGrid } from "@/components/catalog/ProductCard";
-import { MarketplaceNotice, ShopLinkTiles } from "@/components/catalog/ShopLinkTiles";
 
 export const revalidate = 300;
 
@@ -217,20 +216,7 @@ export default async function HomePage({ params }: Props) {
       </section>
 
       {/* Other marketplaces: the owner's list (Admin → Settings → Marketplaces), or the Etsy shop until one is added */}
-      {shops.length > 0 ? (
-        <section aria-labelledby="shops-heading">
-          <Container>
-            <h2 id="shops-heading" className="text-3xl sm:text-4xl">
-              {t.home.shopsTitle}
-            </h2>
-            <p className="mt-2 text-muted">{t.home.shopsText}</p>
-            <div className="mt-8">
-              <ShopLinkTiles links={shops} locale={locale} />
-              <MarketplaceNotice locale={locale} />
-            </div>
-          </Container>
-        </section>
-      ) : (
+      {shops.length === 0 && (
       <section aria-labelledby="etsy-heading">
         <Container>
           <div className="flex flex-col items-start justify-between gap-6 rounded-[var(--radius-card)] border border-line bg-surface px-6 py-10 sm:flex-row sm:items-center sm:px-10">
