@@ -340,9 +340,13 @@ export default function AdminDeployments() {
           {releases.length === 0 ? (
             <p className="text-sm text-muted">No versions recorded yet.</p>
           ) : (
-            <ol className="divide-y divide-line" aria-label="Recent versions">
+            <ol className="grid gap-2" aria-label="Recent versions">
               {releases.map((r, i) => (
-                <li key={r.id || r.commit} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 py-3">
+                <li
+                  key={r.id || r.commit}
+                  aria-current={r.current ? "true" : undefined}
+                  className={`flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-3 py-3 ${r.current ? "rounded-lg border border-success/40 bg-success/10" : ""}`}
+                >
                   <div className="min-w-0 flex-1">
                     <p className="flex flex-wrap items-center gap-2">
                       {r.latest ? <Pill tone="accent">Latest</Pill> : <Pill tone="neutral">{`V${i}`}</Pill>}
