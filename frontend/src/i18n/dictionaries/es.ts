@@ -408,7 +408,6 @@ const es: Dictionary = {
     findUsOn: "Encuéntranos en",
     followUs: "Síguenos",
     followText: "Descubre antes los nuevos diseños, el detrás de cámaras y las ofertas.",
-    followCta: "Seguir",
     followOn: "Síguenos en {platform} (se abre en una pestaña nueva)",
     newTab: "(se abre en una pestaña nueva)",
     help: "Ayuda",

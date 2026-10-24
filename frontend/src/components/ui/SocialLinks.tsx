@@ -62,45 +62,38 @@ export function SocialIcons({ accounts, locale, className }: { accounts: Account
   );
 }
 
-/** The Follow us section shown above the footer on every page, in the same tile pattern as the marketplaces: a badge in the
- *  network's own colour, the handle, and where it is. A # address is shown greyed out as Coming soon. */
-export function FollowBand({ accounts, locale, stacked = false }: { accounts: Account[]; locale: Locale; stacked?: boolean }) {
+/** The Follow us row inside the dark footer, in the same tile pattern as the marketplaces: a badge in the network's own
+ *  colour, the handle, and where it is. Five to a row on wide screens. A # address is shown greyed out as Coming soon. */
+export function FollowBand({ accounts, locale }: { accounts: Account[]; locale: Locale }) {
   if (accounts.length === 0) return null;
   const t = getDictionary(locale);
   return (
-    <section aria-labelledby="follow-heading" className={cn("border-t border-line bg-canvas py-12", !stacked && "mt-20")}>
-      <Container>
-        <h2 id="follow-heading" className="font-serif text-3xl">
+    <section aria-labelledby="follow-heading" className="border-t border-white/10">
+      <Container className="py-10">
+        <h2 id="follow-heading" className="font-sans text-sm font-semibold text-white">
           {t.footer.followUs}
         </h2>
-        <p className="mt-2 text-muted">{t.footer.followText}</p>
-        <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <p className="mt-1 text-sm">{t.footer.followText}</p>
+        <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {accounts.map((a) => {
             const p = socialOf(a.platform);
             const soon = a.url === "#";
             const body = (
               <>
-                <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full text-white" style={{ background: p.hover }}>
-                  <SocialGlyph platform={a.platform} className="size-6" />
+                <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full text-white ring-1 ring-white/30" style={{ background: p.hover }}>
+                  <SocialGlyph platform={a.platform} className="size-5" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate font-semibold text-ink">{a.handle || p.label}</span>
-                  <span className="block text-sm text-muted">{soon ? t.home.shopSoon : fmt(t.home.shopOn, { platform: p.label })}</span>
+                  <span className="block truncate text-sm font-semibold text-white">{a.handle || p.label}</span>
+                  <span className="block text-xs">{soon ? t.home.shopSoon : fmt(t.home.shopOn, { platform: p.label })}</span>
                 </span>
-                {!soon && (
-                  <span aria-hidden="true" className="ml-auto hidden shrink-0 rounded-full px-3 py-1 text-xs font-semibold text-white xl:block" style={{ background: p.hover }}>
-                    {t.footer.followCta}
-                  </span>
-                )}
               </>
             );
+            const tile = "flex h-full items-center gap-3 rounded-[var(--radius-card)] border border-white/15 bg-white/5 p-3";
             return (
               <li key={a.id}>
                 {soon ? (
-                  <div
-                    className="flex h-full items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-3 opacity-80"
-                    style={{ borderLeft: `6px solid ${p.hover}` }}
-                  >
+                  <div className={cn(tile, "opacity-70")} style={{ borderLeft: `6px solid ${p.hover}` }}>
                     {body}
                   </div>
                 ) : (
@@ -109,7 +102,7 @@ export function FollowBand({ accounts, locale, stacked = false }: { accounts: Ac
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={fmt(t.footer.followOn, { platform: p.label })}
-                    className="flex h-full items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:-translate-y-0.5 focus-visible:shadow-lg motion-reduce:transition-none"
+                    className={cn(tile, "transition duration-200 hover:-translate-y-0.5 hover:bg-white/10 focus-visible:-translate-y-0.5 focus-visible:bg-white/10 motion-reduce:transition-none")}
                     style={{ borderLeft: `6px solid ${p.hover}` }}
                   >
                     {body}

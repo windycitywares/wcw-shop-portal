@@ -404,7 +404,6 @@ const en = {
     findUsOn: "Find us on",
     followUs: "Follow us",
     followText: "See new designs, behind-the-scenes and offers first.",
-    followCta: "Follow",
     followOn: "Follow us on {platform} (opens in a new tab)",
     newTab: "(opens in a new tab)",
     help: "Help",
