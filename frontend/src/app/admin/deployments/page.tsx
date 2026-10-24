@@ -344,9 +344,14 @@ export default function AdminDeployments() {
               {releases.map((r, i) => (
                 <li key={r.id || r.commit} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+                    <p className="flex flex-wrap items-center gap-2">
                       {r.latest ? <Pill tone="accent">Latest</Pill> : <Pill tone="neutral">{`V${i}`}</Pill>}
                       {r.current && <Pill tone="success">Live now{status.pinned_commit ? " · held" : ""}</Pill>}
+                    </p>
+                    <p className="mt-1.5 break-words text-sm">
+                      <span className="font-medium">Changes:</span> {r.details ?? r.title}
+                    </p>
+                    <p className="mt-1 text-xs text-muted">
                       {r.pr_number && r.pr_url ? (
                         <a href={r.pr_url} target="_blank" rel="noopener noreferrer" className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-2">
                           PR #{r.pr_number}
@@ -354,11 +359,9 @@ export default function AdminDeployments() {
                         </a>
                       ) : (
                         <span className="font-mono">{r.commit}</span>
-                      )}
-                      <span>· {r.deployed_at ? `live ${dateTime(r.deployed_at)}` : r.committed_at ? `merged ${dateTime(r.committed_at)}` : "not installed yet"}</span>
+                      )}{" "}
+                      · {r.deployed_at ? `live ${dateTime(r.deployed_at)}` : r.committed_at ? `merged ${dateTime(r.committed_at)}` : "not installed yet"}
                     </p>
-                    <p className="mt-1.5 break-words text-sm font-medium">{r.title}</p>
-                    {r.details && <p className="mt-0.5 break-words text-sm text-muted">{r.details}</p>}
                   </div>
                   {r.latest && !r.current && (
                     <Button size="sm" disabled={busy || status.running || (status.restore_pending && !status.pinned_commit)} onClick={() => void returnToLatest()}>
