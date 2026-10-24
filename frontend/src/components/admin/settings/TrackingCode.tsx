@@ -103,6 +103,12 @@ export function TrackingCode({ initial, onSaved }: { initial: Snippet[]; onSaved
       align: "right",
       cell: (r) => (
         <RowActions>
+          <IconButton
+            icon={r.enabled ? "pause" : "play"}
+            label={r.enabled ? `Turn off ${r.name}` : `Turn on ${r.name}`}
+            disabled={busy}
+            onClick={() => persist(items.map((x) => (x.id === r.id ? { ...x, enabled: !x.enabled } : x)), r.enabled ? "Snippet turned off" : "Snippet turned on", r.name)}
+          />
           <IconButton icon="eye" label={`View ${r.name}`} onClick={() => open("view", r)} />
           <IconButton icon="edit" label={`Edit ${r.name}`} onClick={() => open("edit", r)} />
           <IconButton icon="trash" tone="danger" label={`Delete ${r.name}`} onClick={() => setDeleting(r)} />
