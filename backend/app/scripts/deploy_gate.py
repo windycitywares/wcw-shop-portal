@@ -1,6 +1,7 @@
 """Asked by deploy/auto-deploy.sh on every cron run: should the server look for updates now?
 
     python -m app.scripts.deploy_gate begin            # prints "go <reason>" or "skip <reason>"
+    python -m app.scripts.deploy_gate pinned           # prints the held commit (empty = follow the latest)
     python -m app.scripts.deploy_gate end ok|failed SUMMARY
 
 `begin` always exits 0 (the script reads the first word); if it prints nothing usable, the script looks for updates
@@ -25,6 +26,8 @@ async def _main(argv: list[str]) -> str:
         if argv[:1] == ["begin"]:
             d = await service.gate_begin()
             return f"{'go' if d.go else 'skip'} {d.reason}"
+        if argv[:1] == ["pinned"]:
+            return await service.pinned_commit()
         if argv[:1] == ["end"] and len(argv) >= 2:
             await service.gate_end(argv[1] == "ok", " ".join(argv[2:]))
             return "recorded"

@@ -15,6 +15,38 @@ CACHE="$HOME/repos/wcw-storefront-build"
 REPO="git@github-wcw:windycitywares/wcw-shop-portal.git"
 SITE="https://shop.windycitywares.com"
 
+ARCHIVE="$HOME/apps/wcw-storefront-releases"   # the last few installed builds, for Admin → Deployments → Restore
+KEEP=5
+
+restart_and_check() {
+  # Cron runs with a minimal PATH (no /usr/sbin): find the selector explicitly, else use Passenger's restart.txt.
+  SELECTOR=$(command -v cloudlinux-selector || ls /usr/sbin/cloudlinux-selector /usr/bin/cloudlinux-selector 2>/dev/null | head -1 || true)
+  if [ -z "$SELECTOR" ] || ! "$SELECTOR" restart --json --interpreter=nodejs --app-root="$APP_ROOT" >/dev/null; then
+    mkdir -p "$DEST/tmp" && touch "$DEST/tmp/restart.txt"
+  fi
+  sleep 3
+  code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' "$SITE/")
+  if [ "$code" = "200" ]; then
+    echo "✓ storefront is up ($SITE → 200)"
+  else
+    echo "✗ storefront returned $code — check $DEST/stderr.log"
+    exit 1
+  fi
+}
+
+# --restore BUILD: put back a build kept in $ARCHIVE (the page's Restore button, via auto-deploy.sh).
+if [ "${1:-}" = "--restore" ]; then
+  BUILD="${2:?usage: update-storefront.sh --restore BUILD_SHA}"
+  FILE=$(ls "$ARCHIVE/$BUILD"*.tgz 2>/dev/null | head -1)   # the database keeps the first 12 characters
+  if [ -z "$FILE" ] || [ ! -f "$FILE" ]; then echo "storefront: no saved copy of build ${BUILD:0:7} — left as it is"; exit 3; fi
+  echo "$(date '+%F %T') restoring storefront build ${BUILD:0:7}"
+  find "$DEST" -mindepth 1 -maxdepth 1 ! -name tmp ! -name .deployed_build -exec rm -rf {} +
+  tar -C "$DEST" -xzf "$FILE"
+  echo "restored-$BUILD" > "$DEST/.deployed_build"   # differs from any published build, so "Return to latest" reinstalls
+  restart_and_check
+  exit 0
+fi
+
 if [ ! -d "$CACHE/.git" ]; then
   git clone -q --depth 1 --branch storefront-build "$REPO" "$CACHE"
 fi
@@ -41,16 +73,12 @@ find "$DEST" -mindepth 1 -maxdepth 1 ! -name tmp ! -name .deployed_build -exec r
 tar -C "$CACHE" --exclude=./.git --exclude=./node_modules -cf - . | tar -C "$DEST" -xf -
 echo "$NEW" > "$DEST/.deployed_build"
 
-# Cron runs with a minimal PATH (no /usr/sbin): find the selector explicitly, else use Passenger's restart.txt.
-SELECTOR=$(command -v cloudlinux-selector || ls /usr/sbin/cloudlinux-selector /usr/bin/cloudlinux-selector 2>/dev/null | head -1 || true)
-if [ -z "$SELECTOR" ] || ! "$SELECTOR" restart --json --interpreter=nodejs --app-root="$APP_ROOT" >/dev/null; then
-  mkdir -p "$DEST/tmp" && touch "$DEST/tmp/restart.txt"
+# Keep a copy of this build so it can be restored later (only the app files: dependencies are shared).
+if [ -f "$DEST/BUILD_SHA" ]; then
+  mkdir -p "$ARCHIVE"
+  tar -C "$DEST" --exclude=./tmp --exclude=./.deployed_build -czf "$ARCHIVE/$(cat "$DEST/BUILD_SHA").tgz" . || echo "storefront: could not save a copy for restore"
+  # shellcheck disable=SC2012
+  ls -1t "$ARCHIVE"/*.tgz 2>/dev/null | tail -n +$((KEEP + 1)) | while read -r old; do rm -f "$old"; done
 fi
-sleep 3
-code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' "$SITE/")
-if [ "$code" = "200" ]; then
-  echo "✓ storefront is up ($SITE → 200)"
-else
-  echo "✗ storefront returned $code — check $DEST/stderr.log"
-  exit 1
-fi
+
+restart_and_check

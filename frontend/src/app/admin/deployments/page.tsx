@@ -30,6 +30,7 @@ interface Release {
   storefront_build: string | null;
   main_site_build: string | null;
   current: boolean;
+  restorable: boolean;
 }
 interface DeployStatus {
   mode: Mode;
@@ -51,6 +52,10 @@ interface DeployStatus {
   main_site_build: string | null;
   cron_seen: boolean;
   last_seen_at: string | null;
+  pinned_commit: string | null;
+  pinned_by: string | null;
+  pinned_at: string | null;
+  restore_pending: boolean;
 }
 
 const MODE_LABEL: Record<Mode, string> = { auto: "Automatic", schedule: "At set times", paused: "Paused" };
@@ -86,6 +91,7 @@ export default function AdminDeployments() {
   const [newTime, setNewTime] = useState("02:00");
   const [busy, setBusy] = useState(false);
   const [confirmPause, setConfirmPause] = useState(false);
+  const [toRestore, setToRestore] = useState<Release | null>(null);
   const logRef = useRef<HTMLPreElement>(null);
 
   const refresh = useCallback(async (withForm = false) => {
@@ -139,6 +145,16 @@ export default function AdminDeployments() {
 
   const deployNow = () =>
     act(() => apiFetch<DeployStatus>("/admin/deploy/now", { method: "POST" }), "Deploy queued", "It starts within a minute; the log below follows it.");
+  const restore = (r: Release) =>
+    act(
+      () => apiFetch<DeployStatus>("/admin/deploy/restore", { method: "POST", body: JSON.stringify({ release_id: r.id }) }),
+      "Restore queued",
+      `${r.title} goes back on within a minute and is held until you return to latest.`,
+    ).then(() => refresh());
+  const returnToLatest = () =>
+    act(() => apiFetch<DeployStatus>("/admin/deploy/restore", { method: "DELETE" }), "Return to latest queued", "The newest version installs within a minute.").then(() =>
+      refresh(),
+    );
   const cancel = () => act(() => apiFetch<DeployStatus>("/admin/deploy/now", { method: "DELETE" }), "Deploy cancelled");
   const save = () =>
     act(
@@ -192,6 +208,19 @@ export default function AdminDeployments() {
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}
+        </Alert>
+      )}
+      {status.pinned_commit && (
+        <Alert tone="info" className="mb-4">
+          <span className="flex flex-wrap items-center justify-between gap-3">
+            <span>
+              {status.restore_pending ? "Restoring" : "Holding"} an earlier version (<span className="font-mono">{status.pinned_commit}</span>
+              {status.pinned_by ? `, by ${status.pinned_by}` : ""}). Newer changes are not installed until you return to latest.
+            </span>
+            <Button size="sm" variant="secondary" disabled={busy || status.running} onClick={() => void returnToLatest()}>
+              Return to latest
+            </Button>
+          </span>
         </Alert>
       )}
       {!status.cron_seen && (
@@ -314,7 +343,11 @@ export default function AdminDeployments() {
                 <li key={r.id} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 py-3">
                   <div className="min-w-0 flex-1">
                     <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
-                      {r.current ? <Pill tone="success">Latest · live now</Pill> : <Pill tone="neutral">Earlier</Pill>}
+                      {r.current ? (
+                        <Pill tone="success">{status.pinned_commit ? "Live now · held" : "Latest · live now"}</Pill>
+                      ) : (
+                        <Pill tone="neutral">Earlier</Pill>
+                      )}
                       <span className="min-w-0 break-words">{r.title}</span>
                     </p>
                     {r.details && <p className="mt-1 whitespace-pre-line break-words text-sm text-muted">{r.details}</p>}
@@ -323,6 +356,11 @@ export default function AdminDeployments() {
                       <span className="font-mono">{r.commit}</span> · live {dateTime(r.deployed_at)}
                     </p>
                   </div>
+                  {r.restorable && (
+                    <Button size="sm" variant="secondary" disabled={busy || status.running || status.restore_pending} onClick={() => setToRestore(r)}>
+                      Restore this version
+                    </Button>
+                  )}
                 </li>
               ))}
             </ol>
@@ -349,6 +387,21 @@ export default function AdminDeployments() {
           {log || "No log yet."}
         </pre>
       </Panel>
+
+      <ConfirmDialog
+        open={!!toRestore}
+        title="Restore this version?"
+        tone="primary"
+        confirmLabel="Restore version"
+        busy={busy}
+        onCancel={() => setToRestore(null)}
+        onConfirm={() => {
+          const r = toRestore;
+          setToRestore(null);
+          if (r) void restore(r);
+        }}
+        message={`“${toRestore?.title ?? ""}” (${toRestore?.commit ?? ""}) goes back on the live shop within a minute, and newer changes are held until you press Return to latest. The database is not rolled back; changes that only add to it are safe, but check with the developer after a big one. The storefront is restored from the copy saved when it was installed, if there is one.`}
+      />
 
       <ConfirmDialog
         open={confirmPause}

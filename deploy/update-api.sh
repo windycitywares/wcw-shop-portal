@@ -16,6 +16,8 @@ fi
 APP_ROOT="${REPO_DIR#"$HOME"/}/backend"   # cPanel Setup Python App → application root
 VENV="$HOME/virtualenv/$APP_ROOT/3.11/bin/activate"
 RESTARTED=0
+# Restoring an earlier version: auto-deploy.sh sets WCW_RESTORE_COMMIT to the commit to put back.
+TARGET="${WCW_RESTORE_COMMIT:-}"
 
 cd "$REPO_DIR"
 PREV=$(git rev-parse HEAD)
@@ -27,9 +29,14 @@ rollback() {
 }
 trap rollback ERR
 
-echo "→ Fetching $BRANCH"
-git fetch -q origin "$BRANCH"
-git checkout -q -B "$BRANCH" "origin/$BRANCH"
+if [ -n "$TARGET" ]; then
+  echo "→ Restoring ${TARGET:0:7}"
+  git checkout -q -B "$BRANCH" "$TARGET"
+else
+  echo "→ Fetching $BRANCH"
+  git fetch -q origin "$BRANCH"
+  git checkout -q -B "$BRANCH" "origin/$BRANCH"
+fi
 git log --oneline -1
 
 cd backend
@@ -39,10 +46,15 @@ echo "→ Installing packages"
 pip install -q -r requirements.txt
 echo "→ Running tests"
 python -m unittest discover -q tests
-echo "→ Database migrations"
-alembic upgrade head
-echo "→ Test mode: refresh the test data if the migration changed the tables"
-python -m app.scripts.test_env sync-if-active || echo "✗ could not refresh the test data (Admin → Test mode → Copy live data again)"
+if [ -n "$TARGET" ]; then
+  # Older code does not know the newer migrations; the database keeps its tables (they only ever add to it).
+  echo "→ Database left as it is (restoring an earlier version)"
+else
+  echo "→ Database migrations"
+  alembic upgrade head
+  echo "→ Test mode: refresh the test data if the migration changed the tables"
+  python -m app.scripts.test_env sync-if-active || echo "✗ could not refresh the test data (Admin → Test mode → Copy live data again)"
+fi
 echo "→ Restarting the app"
 RESTARTED=1
 # Cron runs with a minimal PATH (no /usr/sbin), so find the selector explicitly; Passenger's

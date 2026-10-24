@@ -9,7 +9,7 @@ from app.core.config import get_settings
 from app.core.database import engine
 from app.core.permissions import Permission
 from app.models.user import User
-from app.schemas.deploy import DeployConfigIn, DeployLogOut, DeployStatusOut, ReleasesOut
+from app.schemas.deploy import DeployConfigIn, DeployLogOut, DeployStatusOut, ReleasesOut, RestoreIn
 from app.services.deploy import DeployService, log_tail
 
 router = APIRouter(prefix="/admin/deploy", tags=["admin: deploy"])
@@ -55,3 +55,18 @@ async def deploy_releases(response: Response, _: Admin) -> ReleasesOut:
     """The last five versions the server has run, newest (the live one) first."""
     response.headers["Cache-Control"] = "no-store"
     return await DeployService(engine).releases()
+
+
+@router.post("/restore", response_model=DeployStatusOut, status_code=status.HTTP_202_ACCEPTED)
+async def deploy_restore(user: Admin, data: RestoreIn) -> DeployStatusOut:
+    """Put an earlier version back on the server's next run and hold it there until "Return to latest"."""
+    service = DeployService(engine)
+    await service.restore(data.release_id, user)
+    return await service.status()
+
+
+@router.delete("/restore", response_model=DeployStatusOut)
+async def deploy_return_to_latest(user: Admin) -> DeployStatusOut:
+    service = DeployService(engine)
+    await service.return_to_latest(user)
+    return await service.status()
