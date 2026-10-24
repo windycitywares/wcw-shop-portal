@@ -89,3 +89,13 @@ class DeployTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_releases_lists_at_most_five_with_the_live_one_first(self):
+        r = self.w.get("/admin/deploy/releases", self.w.admin)
+        self.assertEqual(r.status_code, 200, r.text)
+        rel = r.json()["releases"]
+        self.assertLessEqual(len(rel), 5)
+        if rel:
+            self.assertTrue(rel[0]["current"])
+            self.assertFalse(any(x["current"] for x in rel[1:]))
+

@@ -9,7 +9,7 @@ from app.core.config import get_settings
 from app.core.database import engine
 from app.core.permissions import Permission
 from app.models.user import User
-from app.schemas.deploy import DeployConfigIn, DeployLogOut, DeployStatusOut
+from app.schemas.deploy import DeployConfigIn, DeployLogOut, DeployStatusOut, ReleasesOut
 from app.services.deploy import DeployService, log_tail
 
 router = APIRouter(prefix="/admin/deploy", tags=["admin: deploy"])
@@ -48,3 +48,10 @@ async def cancel_deploy_now(user: Admin) -> DeployStatusOut:
 async def deploy_log(response: Response, _: Admin, lines: Annotated[int, Query(ge=10, le=400)] = 200) -> DeployLogOut:
     response.headers["Cache-Control"] = "no-store"
     return DeployLogOut(log=log_tail(get_settings().deploy_log, lines))
+
+
+@router.get("/releases", response_model=ReleasesOut)
+async def deploy_releases(response: Response, _: Admin) -> ReleasesOut:
+    """The last five versions the server has run, newest (the live one) first."""
+    response.headers["Cache-Control"] = "no-store"
+    return await DeployService(engine).releases()
