@@ -1,0 +1,34 @@
+3:"$Sreact.fragment"
+4:"/_next/static/chunks/0umf92h1sb77c.js"
+5:I[39756,["$4"],"default"]
+6:I[37457,["$4"],"default"]
+b:"/_next/static/chunks/1ubo_8x5c33h_.js"
+c:"/_next/static/chunks/3soc0bjtzuhb5.js"
+d:"/_next/static/chunks/0q90mzply98ba.js"
+e:"/_next/static/chunks/2l3u-y34d35q-.js"
+f:"/_next/static/chunks/0hlcyxe69aoqp.js"
+10:"/_next/static/chunks/1d3g2wa_lqut_.js"
+11:"/_next/static/chunks/0jcr0zhg2d9vj.js"
+12:I[36757,["$b","$c","$d","$e","$f","$10","$11"],"CheckoutForm"]
+13:I[97367,["$4"],"OutletBoundary"]
+14:"$Sreact.suspense"
+17:"ViewportBoundary"
+18:I[97367,["$4"],"$17"]
+19:"MetadataBoundary"
+1a:I[97367,["$4"],"$19"]
+1b:I[27201,["$4"],"IconMark"]
+8:X
+8:C
+9:X
+a:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$3","c",{"children":[["$","div",null,{"className":"mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16","children":[["$","p",null,{"className":"text-sm uppercase tracking-[0.14em] text-muted","children":"Secure checkout"}],["$","h1",null,{"className":"mt-2 text-5xl sm:text-6xl","children":"Checkout"}],["$","div",null,{"className":"mt-10","children":["$","$L12",null,{}]}]]}],[["$","script","script-0",{"src":"/_next/static/chunks/0jcr0zhg2d9vj.js","async":true}]],["$","$L13",null,{"children":["$","$14",null,{"name":"Next.MetadataOutlet","children":"$@15"}]}]]}],"p":"$@16","v":null,"s":"$9"}}]]
+2:[["children",{"s":"checkout","h":64,"d":{"r":["$","$3","c",{"children":[null,["$","$L5",null,{"parallelRouterKey":"children","template":["$","$L6",null,{}]}]]}],"p":"$@7","v":"$8","s":"$9"},"c":"$Qa"}]]
+1:[["children",{"s":{"n":"locale","t":"d","k":"en","s":["admin","embed"]},"h":48,"c":"$Q2"}]]
+0:{"t":{"t":{"s":"","h":80,"c":"$Q1"},"h":{"r":["$","$3","h",{"children":[null,["$","$L18",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","2",{"name":"theme-color","content":"#f2f3ef"}]]}],["$","$L1a",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$14",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Checkout | Windy City Wares"}],["$","meta","1",{"name":"description","content":"Handcrafts, antiques, gifts and home décor, hand-picked and shipped with care."}],["$","meta","2",{"name":"application-name","content":"Windy City Wares"}],["$","link","3",{"rel":"manifest","href":"/manifest.webmanifest"}],["$","meta","4",{"name":"robots","content":"noindex, nofollow"}],["$","meta","5",{"property":"og:title","content":"Checkout | Windy City Wares"}],["$","meta","6",{"property":"og:description","content":"Handcrafts, antiques, gifts and home décor, hand-picked and shipped with care."}],["$","meta","7",{"property":"og:url","content":"https://shop.windycitywares.com"}],["$","meta","8",{"property":"og:site_name","content":"Windy City Wares"}],["$","meta","9",{"property":"og:locale","content":"en_US"}],["$","meta","10",{"property":"og:image","content":"https://shop.windycitywares.com/-/opengraph-image.png?opengraph-image.3lyj_catykyyh.png"}],["$","meta","11",{"property":"og:image:type","content":"image/png"}],["$","meta","12",{"property":"og:image:width","content":"1200"}],["$","meta","13",{"property":"og:image:height","content":"630"}],["$","meta","14",{"property":"og:type","content":"website"}],["$","meta","15",{"name":"twitter:card","content":"summary_large_image"}],["$","meta","16",{"name":"twitter:title","content":"Checkout | Windy City Wares"}],["$","meta","17",{"name":"twitter:description","content":"Handcrafts, antiques, gifts and home décor, hand-picked and shipped with care."}],["$","meta","18",{"name":"twitter:image","content":"https://shop.windycitywares.com/-/opengraph-image.png?opengraph-image.3lyj_catykyyh.png"}],["$","meta","19",{"name":"twitter:image:type","content":"image/png"}],["$","meta","20",{"name":"twitter:image:width","content":"1200"}],["$","meta","21",{"name":"twitter:image:height","content":"630"}],["$","link","22",{"rel":"icon","href":"/favicon.ico?favicon.02nzuyazb7yof.ico","sizes":"48x48","type":"image/x-icon"}],["$","link","23",{"rel":"apple-touch-icon","href":"/apple-icon.png?apple-icon.3mrylfnvohbq_.png","sizes":"180x180","type":"image/png"}],["$","$L1b","24",{}]]}]}],null]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"p":"$@1c","v":null,"s":"$9"}},"a":"$@1d","u":"$@1e","b":"zh_tE7zS2r_heGERTvskI"}
+15:null
+1e:true
+9:300
+9:C
+1d:0
+7:"$undefined"
+1c:"$undefined"
+16:"$undefined"

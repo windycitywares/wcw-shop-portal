@@ -1,0 +1,3 @@
+module.exports=[18300,a=>{"use strict";var b=a.i(88780);async function c(a,c){let d=b.d.get(),e=await fetch(`${b.L}${a}`,{headers:d?{Authorization:`Bearer ${d}`}:{}});if(!e.ok)throw Error(`Download failed (${e.status})`);let f=URL.createObjectURL(await e.blob()),g=document.createElement("a");g.href=f,g.download=c,document.body.appendChild(g),g.click(),g.remove(),setTimeout(()=>URL.revokeObjectURL(f),1e3)}a.s(["f",0,c])}];
+
+//# sourceMappingURL=src_components_admin_download_ts_01xg1yrubuxi3._.js.map

@@ -1,0 +1,35 @@
+3:"$Sreact.fragment"
+4:"/_next/static/chunks/0umf92h1sb77c.js"
+5:I[39756,["$4"],"default"]
+6:I[37457,["$4"],"default"]
+b:"/_next/static/chunks/1ubo_8x5c33h_.js"
+c:"/_next/static/chunks/3soc0bjtzuhb5.js"
+d:"/_next/static/chunks/0q90mzply98ba.js"
+e:"/_next/static/chunks/2l3u-y34d35q-.js"
+f:"/_next/static/chunks/0hlcyxe69aoqp.js"
+10:"/_next/static/chunks/1d3g2wa_lqut_.js"
+11:"/_next/static/chunks/1wvjejtk-2bea.js"
+12:I[22016,["$b","$c","$d","$e","$f","$10","$11"],""]
+13:I[26868,["$b","$c","$d","$e","$f","$10","$11"],"ContactForm"]
+14:I[97367,["$4"],"OutletBoundary"]
+15:"$Sreact.suspense"
+18:"ViewportBoundary"
+19:I[97367,["$4"],"$18"]
+1a:"MetadataBoundary"
+1b:I[97367,["$4"],"$1a"]
+1c:I[27201,["$4"],"IconMark"]
+8:X
+8:C
+9:X
+a:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$3","c",{"children":[["$","div",null,{"className":"mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16","children":[["$","nav",null,{"aria-label":"Breadcrumb","className":"text-sm text-muted","children":["$","ol",null,{"className":"flex flex-wrap items-center gap-1.5","children":[["$","li","Inicio-0",{"className":"flex items-center gap-1.5","children":[["$","$L12",null,{"href":"/es","className":"hover:text-ink hover:underline","children":"Inicio"}],["$","span",null,{"aria-hidden":"true","children":"/"}]]}],["$","li","Contáctanos-1",{"className":"flex items-center gap-1.5","children":[["$","span",null,{"aria-current":"page","className":"text-ink","children":"Contáctanos"}],false]}]]}]}],["$","div",null,{"className":"mt-6 grid gap-12 lg:grid-cols-[22rem_1fr]","children":[["$","div",null,{"children":[["$","h1",null,{"className":"text-5xl sm:text-6xl","children":"Contáctanos"}],["$","p",null,{"className":"mt-5 text-lg text-muted","children":"¿Preguntas sobre un artículo, tamaños, envíos o un pedido? Envíanos un mensaje y te responderemos por correo, normalmente en un día hábil."}],["$","p",null,{"className":"mt-6 text-sm text-muted","children":["$","a",null,{"href":"https://www.etsy.com/shop/WindyCityWaresUS","className":"text-accent underline underline-offset-2","target":"_blank","rel":"noopener noreferrer","children":"También puedes escribirnos en Etsy."}]}]]}],["$","div",null,{"className":"rounded-[var(--radius-card)] border border-line bg-surface p-6 sm:p-8","children":["$","$L13",null,{}]}]]}]]}],[["$","script","script-0",{"src":"/_next/static/chunks/1wvjejtk-2bea.js","async":true}]],["$","$L14",null,{"children":["$","$15",null,{"name":"Next.MetadataOutlet","children":"$@16"}]}]]}],"p":"$@17","v":null,"s":"$9"}}]]
+2:[["children",{"s":"contact","h":64,"d":{"r":["$","$3","c",{"children":[null,["$","$L5",null,{"parallelRouterKey":"children","template":["$","$L6",null,{}]}]]}],"p":"$@7","v":"$8","s":"$9"},"c":"$Qa"}]]
+1:[["children",{"s":{"n":"locale","t":"d","k":"es","s":["admin","embed"]},"h":48,"c":"$Q2"}]]
+0:{"t":{"t":{"s":"","h":80,"c":"$Q1"},"h":{"r":["$","$3","h",{"children":[null,["$","$L19",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","2",{"name":"theme-color","content":"#f2f3ef"}]]}],["$","$L1b",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$15",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Contáctanos | Windy City Wares"}],["$","meta","1",{"name":"description","content":"¿Preguntas sobre un producto, envíos o un pedido? Envía un mensaje a WindyCityWares."}],["$","meta","2",{"name":"application-name","content":"Windy City Wares"}],["$","link","3",{"rel":"manifest","href":"/manifest.webmanifest"}],["$","meta","4",{"name":"robots","content":"noindex, nofollow"}],["$","link","5",{"rel":"canonical","href":"https://shop.windycitywares.com/es/contact"}],["$","link","6",{"rel":"alternate","hrefLang":"en","href":"https://shop.windycitywares.com/contact"}],["$","link","7",{"rel":"alternate","hrefLang":"es","href":"https://shop.windycitywares.com/es/contact"}],["$","link","8",{"rel":"alternate","hrefLang":"nl","href":"https://shop.windycitywares.com/nl/contact"}],["$","link","9",{"rel":"alternate","hrefLang":"x-default","href":"https://shop.windycitywares.com/contact"}],["$","meta","10",{"property":"og:title","content":"Contáctanos | Windy City Wares"}],["$","meta","11",{"property":"og:description","content":"¿Preguntas sobre un producto, envíos o un pedido? Envía un mensaje a WindyCityWares."}],["$","meta","12",{"property":"og:url","content":"https://shop.windycitywares.com"}],["$","meta","13",{"property":"og:site_name","content":"Windy City Wares"}],["$","meta","14",{"property":"og:locale","content":"es_ES"}],["$","meta","15",{"property":"og:image","content":"https://shop.windycitywares.com/-/opengraph-image.png?opengraph-image.3lyj_catykyyh.png"}],["$","meta","16",{"property":"og:image:type","content":"image/png"}],["$","meta","17",{"property":"og:image:width","content":"1200"}],["$","meta","18",{"property":"og:image:height","content":"630"}],["$","meta","19",{"property":"og:type","content":"website"}],["$","meta","20",{"name":"twitter:card","content":"summary_large_image"}],["$","meta","21",{"name":"twitter:title","content":"Contáctanos | Windy City Wares"}],["$","meta","22",{"name":"twitter:description","content":"¿Preguntas sobre un producto, envíos o un pedido? Envía un mensaje a WindyCityWares."}],["$","meta","23",{"name":"twitter:image","content":"https://shop.windycitywares.com/-/opengraph-image.png?opengraph-image.3lyj_catykyyh.png"}],["$","meta","24",{"name":"twitter:image:type","content":"image/png"}],["$","meta","25",{"name":"twitter:image:width","content":"1200"}],["$","meta","26",{"name":"twitter:image:height","content":"630"}],["$","link","27",{"rel":"icon","href":"/favicon.ico?favicon.02nzuyazb7yof.ico","sizes":"48x48","type":"image/x-icon"}],["$","link","28",{"rel":"apple-touch-icon","href":"/apple-icon.png?apple-icon.3mrylfnvohbq_.png","sizes":"180x180","type":"image/png"}],["$","$L1c","29",{}]]}]}],null]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"p":"$@1d","v":null,"s":"$9"}},"a":"$@1e","u":"$@1f","b":"zh_tE7zS2r_heGERTvskI"}
+16:null
+1f:true
+9:300
+9:C
+1e:0
+7:"$undefined"
+1d:"$undefined"
+17:"$undefined"

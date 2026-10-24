@@ -1,0 +1,39 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/audit/layout,_N_T_/admin/audit/page,_N_T_/admin/audit"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/audit/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 160,
+                "slots": null
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/5613707a57d444f36846a83b93548973ec4d481189f9b4366e9a97fbfe5e42ae/$/admin/audit",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin/audit/page"
+    },
+    "isFallback": false
+  }
+}
