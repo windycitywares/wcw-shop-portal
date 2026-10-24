@@ -82,7 +82,7 @@ export async function Footer({ locale }: { locale: Locale }) {
           <LanguageSwitcher variant="inline" />
           {shops.length > 0 ? (
             <ul className="flex flex-wrap gap-x-4 gap-y-2" aria-label={t.footer.findUsOn}>
-              {shops.map((s) => (
+              {shops.filter((s) => s.url !== "#").map((s) => (
                 <li key={s.id}>
                   <a href={s.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-white">
                     <span aria-hidden="true" className="size-2.5 rounded-full" style={{ background: platformOf(s.platform).bg }} />

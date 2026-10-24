@@ -73,6 +73,7 @@ const en = {
     shopsNotice: "Marketplace names and logos belong to their owners. We sell on these marketplaces independently and are not endorsed by them.",
     shopOn: "on {platform}",
     shopOpens: "Opens in a new tab",
+    shopSoon: "Coming soon",
     emptyTitle: "New items are on their way",
     emptyText: "Check back soon.",
   },

@@ -71,6 +71,7 @@ const nl: Dictionary = {
     shopsNotice: "De namen en logo's van de marktplaatsen zijn eigendom van hun eigenaren. Wij verkopen er zelfstandig en worden er niet door onderschreven.",
     shopOn: "op {platform}",
     shopOpens: "Opent in een nieuw tabblad",
+    shopSoon: "Binnenkort",
     emptyTitle: "Er komen binnenkort nieuwe artikelen",
     emptyText: "Kom snel nog eens kijken.",
   },

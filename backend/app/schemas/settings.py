@@ -172,7 +172,7 @@ class ShopLink(BaseModel):
     id: str = Field(min_length=1, max_length=40, pattern=r"^[A-Za-z0-9_-]+$")
     platform: Literal["etsy", "amazon", "ebay", "walmart", "shopify", "facebook", "instagram", "tiktok", "other"] = "other"
     name: str = Field(min_length=1, max_length=60)
-    url: str = Field(min_length=8, max_length=500)
+    url: str = Field(min_length=1, max_length=500, description="https:// address, or # while the shop is not ready (shown as Coming soon)")
     blurb: str | None = Field(default=None, max_length=160, description="Shown when a visitor hovers the tile")
     image_url: str | None = Field(default=None, max_length=500, description="Optional logo or shop picture (https)")
     enabled: bool = True
@@ -185,10 +185,12 @@ class ShopLink(BaseModel):
 
     @field_validator("url", "image_url")
     @classmethod
-    def _https(cls, v: str | None) -> str | None:
+    def _https(cls, v: str | None, info) -> str | None:
         v = (v or "").strip() or None
         if v is None:
             return None
+        if v == "#" and info.field_name == "url":  # a shop that is not open yet
+            return v
         parsed = urlsplit(v)
         if parsed.scheme != "https" or not parsed.hostname or "." not in parsed.hostname or parsed.username or parsed.password:
             raise ValueError("Use the full https:// address")
@@ -198,6 +200,8 @@ class ShopLink(BaseModel):
     def _belongs(self):
         if not self.name:
             raise ValueError("Give the shop a name")
+        if self.url == "#":
+            return self
         hosts = _PLATFORM_HOSTS.get(self.platform)
         host = (urlsplit(self.url).hostname or "").lower()
         if hosts and not any(

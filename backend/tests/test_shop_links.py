@@ -25,12 +25,15 @@ class ShopLinkTests(unittest.TestCase):
         link(platform="amazon", url="https://amazon.co.uk/stores/x")
         link(platform="ebay", url="https://www.ebay.com/str/shop")
         link(platform="other", url="https://example.org/shop")
+        self.assertEqual(link(platform="amazon", url=" # ").url, "#")  # a shop that is not open yet
         link(url="https://www.etsy.com/shop/WindyCityWaresUS?ref=hdr&section_id=1#reviews")  # ? and # parts are fine
 
     def test_bad_links_are_refused(self):
         for bad in (
             {"url": "http://www.etsy.com/shop/x"},  # not https
             {"url": "javascript:alert(1)"},
+            {"url": "#reviews"},  # only a lone # is a placeholder
+            {"image_url": "#"},
             {"url": "https://user:pw@www.etsy.com/shop/x"},
             {"url": "https://etsy.com.evil.example/shop"},  # looks like Etsy, is not
             {"platform": "amazon", "url": "https://evil-amazon.com/x"},
