@@ -92,6 +92,9 @@ def public_config(s: StoreSettings, lang: str) -> PublicConfig:
         max_quantity_per_line=s.general.max_quantity_per_line,
         low_stock_threshold=s.general.low_stock_threshold,
         analytics_enabled=s.analytics.enabled,
+        head_code=(s.scripts.head_code or "").strip() or None,
+        body_code=(s.scripts.body_code or "").strip() or None,
+        scripts_need_consent=s.scripts.require_consent,
         turnstile_site_key=captcha.public_site_key(app),
     )
 

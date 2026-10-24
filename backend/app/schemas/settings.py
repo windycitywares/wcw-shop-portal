@@ -104,6 +104,14 @@ class AnalyticsSettings(_Group):
     retention_days: int = Field(default=400, ge=30, le=1100)
 
 
+class ScriptSettings(_Group):
+    """Tracking or widget code (Google Analytics, Tag Manager, a pixel, a chat box) added to every storefront page."""
+
+    head_code: str | None = Field(default=None, max_length=20000, description="Added to the top of every page (the <head>)")
+    body_code: str | None = Field(default=None, max_length=20000, description="Added at the end of every page (before </body>)")
+    require_consent: bool = True  # wait for the visitor to accept the cookie banner
+
+
 class DigestSettings(_Group):
     enabled: bool = True
     recipients: list[str] = Field(default_factory=list, max_length=10)
@@ -204,6 +212,7 @@ GROUPS: dict[str, type[_Group]] = {
     "cart_recovery": CartRecoverySettings,
     "reviews": ReviewSettings,
     "analytics": AnalyticsSettings,
+    "scripts": ScriptSettings,
     "digest": DigestSettings,
 }
 
@@ -217,6 +226,7 @@ class StoreSettings(BaseModel):
     cart_recovery: CartRecoverySettings = Field(default_factory=CartRecoverySettings)
     reviews: ReviewSettings = Field(default_factory=ReviewSettings)
     analytics: AnalyticsSettings = Field(default_factory=AnalyticsSettings)
+    scripts: ScriptSettings = Field(default_factory=ScriptSettings)
     digest: DigestSettings = Field(default_factory=DigestSettings)
     email: EmailSettings = Field(default_factory=EmailSettings)
     email_templates: EmailTemplateSettings = Field(default_factory=EmailTemplateSettings)
@@ -252,4 +262,7 @@ class PublicConfig(BaseModel):
     max_quantity_per_line: int
     low_stock_threshold: int
     analytics_enabled: bool
+    head_code: str | None = None
+    body_code: str | None = None
+    scripts_need_consent: bool = True
     turnstile_site_key: str | None

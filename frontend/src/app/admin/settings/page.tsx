@@ -24,6 +24,7 @@ type Def =
   | { key: string; label: string; hint?: string; type: "text" | "email" }
   | { key: string; label: string; hint?: string; type: "select"; options: readonly (readonly [string, string])[] }
   | { key: string; label: string; hint?: string; type: "secret" }
+  | { key: string; label: string; hint?: string; type: "code" }
   | { key: string; label: string; hint?: string; type: "list"; upper?: boolean }
   | { key: string; label: string; hint?: string; type: "langs"; long?: boolean };
 
@@ -115,6 +116,16 @@ const GROUPS: Group[] = [
     fields: [
       { key: "enabled", label: "Collect visit statistics", type: "bool" },
       { key: "retention_days", label: "Keep statistics for (days)", type: "number", min: 30, max: 1100 },
+    ],
+  },
+  {
+    id: "scripts",
+    label: "Tracking code",
+    description: "Paste a snippet from Google Analytics, Tag Manager, a Facebook pixel or similar. It is added to every shop page (never the admin).",
+    fields: [
+      { key: "head_code", label: "Header code", hint: "Goes in the <head> of every page. Google asks for most snippets here.", type: "code" },
+      { key: "body_code", label: "Footer code", hint: "Goes at the end of every page, just before </body>.", type: "code" },
+      { key: "require_consent", label: "Wait for the visitor to accept the cookie banner", type: "bool" },
     ],
   },
   {
@@ -245,6 +256,24 @@ function GroupForm({ group, initial, onSaved, status }: { group: Group; initial:
                   </Field>
                 ))}
               </fieldset>
+            );
+          }
+          if (f.type === "code") {
+            return (
+              <Field key={f.key} label={f.label} hint={f.hint}>
+                {(p) => (
+                  <Textarea
+                    {...p}
+                    value={(v as string) ?? ""}
+                    onChange={(e) => set(f.key, e.target.value || null)}
+                    maxLength={20000}
+                    spellCheck={false}
+                    autoCapitalize="off"
+                    placeholder="<script>…</script>"
+                    className="min-h-40 font-mono text-xs"
+                  />
+                )}
+              </Field>
             );
           }
           if (f.type === "list") {

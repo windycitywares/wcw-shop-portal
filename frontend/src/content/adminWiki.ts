@@ -108,6 +108,17 @@ export const ADMIN_WIKI: WikiArticle[] = [
     ]
   },
   {
+    "id": "set-scripts",
+    "title": "Settings → Tracking code",
+    "summary": "Google Analytics, Tag Manager and other snippets.",
+    "paragraphs": [
+      "Paste the snippet exactly as the service gives it. Put it in Header code if they say “in the head”, and in Footer code if they say “before the closing body tag”.",
+      "Leave “Wait for the visitor to accept the cookie banner” on unless you are sure the snippet is not tracking people. Visitors who decline are then never tracked by it.",
+      "Only paste code from services you trust: it runs on every page. It is never added to this admin. To remove a snippet, clear its box and save.",
+      "Search engines that read page source (for example for a Search Console verification tag) may not see tags added this way; use the service’s other verification method if it fails."
+    ]
+  },
+  {
     "id": "set-digest",
     "title": "Settings → Weekly email",
     "summary": "Monday summary.",
