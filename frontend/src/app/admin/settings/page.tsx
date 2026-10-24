@@ -14,6 +14,7 @@ import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
+import { SocialAdmin, type SocialRow } from "@/components/admin/settings/SocialAdmin";
 import { ShopLinksAdmin, type ShopLinkRow } from "@/components/admin/settings/ShopLinksAdmin";
 import { TrackingCode, type Snippet } from "@/components/admin/settings/TrackingCode";
 
@@ -123,6 +124,12 @@ const GROUPS: Group[] = [
     id: "shop_links",
     label: "Marketplaces",
     description: "Link your shops on Etsy, Amazon, eBay and other marketplaces. Visitors see them as colour-coded tiles on the home page and in the footer.",
+    fields: [],
+  },
+  {
+    id: "social",
+    label: "Social media",
+    description: "Link your Instagram, Facebook, TikTok and other accounts. They appear as icons above the header and as Follow us buttons, on this shop and on windycitywares.com.",
     fields: [],
   },
   {
@@ -392,6 +399,11 @@ function SettingsInner() {
             <ShopLinksAdmin
               initial={((data.settings.shop_links as unknown as { links?: ShopLinkRow[] })?.links ?? [])}
               onSaved={(links) => setData({ ...data, settings: { ...data.settings, shop_links: { links } as unknown as Record<string, Value> } })}
+            />
+          ) : data && group.id === "social" ? (
+            <SocialAdmin
+              initial={((data.settings.social as unknown as { accounts?: SocialRow[] })?.accounts ?? [])}
+              onSaved={(accounts) => setData({ ...data, settings: { ...data.settings, social: { accounts } as unknown as Record<string, Value> } })}
             />
           ) : data && group.id === "scripts" ? (
             <TrackingCode

@@ -126,6 +126,7 @@ export const SETTINGS_TABS: { id: string; label: string; about: string }[] = [
   { id: "reviews", label: "Reviews", about: "How reviews are collected and published." },
   { id: "analytics", label: "Analytics", about: "Visit statistics, for visitors who agree to them." },
   { id: "shop_links", label: "Marketplaces", about: "Links to your Etsy, Amazon and other marketplace shops, shown as tiles on the home page and in the footer." },
+  { id: "social", label: "Social media", about: "Your Instagram, Facebook, TikTok and other accounts, shown as icons and Follow us buttons on both sites." },
   { id: "scripts", label: "Tracking code", about: "Add Google Analytics, Tag Manager or other snippets to every shop page." },
   { id: "digest", label: "Weekly email", about: "The Monday summary email of last week’s numbers." },
   { id: "general", label: "General", about: "Announcement bar, order alerts and checkout rules." },

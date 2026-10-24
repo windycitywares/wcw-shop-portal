@@ -402,6 +402,8 @@ const en = {
     rights: "© {year} Windy City Wares. All rights reserved.",
     social: "Social media",
     findUsOn: "Find us on",
+    followUs: "Follow us",
+    followOn: "Follow us on {platform} (opens in a new tab)",
     newTab: "(opens in a new tab)",
     help: "Help",
     contact: "Contact us",

@@ -4,6 +4,7 @@ import { HELP_NAV } from "@/content/help";
 import { fmt, localePath, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getShopConfig } from "@/lib/api";
+import { FollowPills } from "@/components/ui/SocialLinks";
 import { MarketplaceBand } from "@/components/catalog/ShopLinkTiles";
 import { Container } from "@/components/ui/misc";
 import { Logo } from "@/components/ui/Logo";
@@ -12,7 +13,9 @@ import { NewsletterForm } from "./NewsletterForm";
 
 export async function Footer({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
-  const shops = (await getShopConfig(locale))?.shop_links ?? [];
+  const config = await getShopConfig(locale);
+  const shops = config?.shop_links ?? [];
+  const social = config?.social ?? [];
   const l = (p: string) => localePath(locale, p);
   const year = new Date().getFullYear();
   const columns = [
@@ -58,6 +61,12 @@ export async function Footer({ locale }: { locale: Locale }) {
           <p className="font-serif text-3xl font-light text-white">{t.footer.newsletterTitle}</p>
           <p className="mt-3 text-sm">{t.footer.newsletterText}</p>
           <NewsletterForm />
+          {social.length > 0 && (
+            <div className="mt-8">
+              <p className="mb-3 text-sm font-semibold text-white">{t.footer.followUs}</p>
+              <FollowPills accounts={social} locale={locale} onDark />
+            </div>
+          )}
         </div>
         {columns.map((col) => (
           <nav key={col.title} aria-label={col.title}>

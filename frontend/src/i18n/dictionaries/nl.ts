@@ -400,6 +400,8 @@ const nl: Dictionary = {
     rights: "© {year} Windy City Wares. Alle rechten voorbehouden.",
     social: "Sociale media",
     findUsOn: "Vind ons op",
+    followUs: "Volg ons",
+    followOn: "Volg ons op {platform} (opent in een nieuw tabblad)",
     newTab: "(opent in een nieuw tabblad)",
     help: "Hulp",
     contact: "Contact",

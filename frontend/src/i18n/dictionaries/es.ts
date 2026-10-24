@@ -406,6 +406,8 @@ const es: Dictionary = {
     rights: "© {year} Windy City Wares. Todos los derechos reservados.",
     social: "Redes sociales",
     findUsOn: "Encuéntranos en",
+    followUs: "Síguenos",
+    followOn: "Síguenos en {platform} (se abre en una pestaña nueva)",
     newTab: "(se abre en una pestaña nueva)",
     help: "Ayuda",
     contact: "Contáctanos",
