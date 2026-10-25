@@ -130,3 +130,17 @@ if __name__ == "__main__":
         after = w.get("/admin/notifications/pulse", w.admin).json()
         self.assertGreaterEqual(after["unread"], 1)
         self.assertNotEqual(before, after)
+
+    def test_shopper_pulse_follows_their_orders(self):
+        w = self.w
+        email, shopper = w.register("pulse-shopper")
+        self.assertEqual(w.get("/account/notifications/pulse").status_code, 401)
+        empty = w.get("/account/notifications/pulse", shopper).json()
+        self.assertEqual(empty, {"unread": 0, "latest": None})
+        w.place(email, [item(w.product("9.00"))], shopper)
+        after = w.get("/account/notifications/pulse", shopper).json()
+        self.assertEqual(after["unread"], 1)
+        self.assertIsNotNone(after["latest"])
+        w.post("/account/notifications/seen", None, shopper)
+        self.assertEqual(w.get("/account/notifications/pulse", shopper).json()["unread"], 0)
+
