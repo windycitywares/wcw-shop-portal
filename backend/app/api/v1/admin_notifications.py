@@ -31,10 +31,3 @@ async def notifications(
 async def mark_seen(session: SessionDep, user: Staff):
     """Everything up to now counts as read (called when the bell is opened)."""
     await NotificationService(session).mark_seen(user)
-
-
-@router.get("/pulse")
-async def pulse(response: Response, session: SessionDep, user: Staff) -> dict[str, Any]:
-    """Unread count + newest activity time. Cheap: the storefront's live stream (/api/admin-live) and the bell's fallback both ask it every few seconds."""
-    response.headers["Cache-Control"] = "no-store"
-    return await NotificationService(session).pulse(user)

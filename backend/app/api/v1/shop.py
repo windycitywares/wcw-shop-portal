@@ -162,13 +162,6 @@ async def my_notifications(response: Response, session: SessionDep, user: Curren
     return await AccountNotificationService(session).feed(user, limit)
 
 
-@router.get("/account/notifications/pulse")
-async def my_notifications_pulse(response: Response, session: SessionDep, user: CurrentUser) -> dict:
-    """Unread count + newest milestone time; the storefront's live stream asks this every few seconds."""
-    no_store(response)
-    return await AccountNotificationService(session).pulse(user)
-
-
 @router.post("/account/notifications/seen", status_code=status.HTTP_204_NO_CONTENT)
 async def my_notifications_seen(session: SessionDep, user: CurrentUser):
     await AccountNotificationService(session).mark_seen(user)

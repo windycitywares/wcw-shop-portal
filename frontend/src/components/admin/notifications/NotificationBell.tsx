@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/client-api";
-import { useLiveSignal } from "@/lib/useLiveSignal";
 import { Icon } from "../ui/Icon";
 import { Popover } from "@/components/ui/Popover";
 import { ActivityRow, type Feed } from "./shared";
 
-const SAFETY_MS = 60_000; // reload now and then whatever else happens
+const POLL_MS = 60_000;
 
 /** Bell in the admin header: a count of new activity, the latest items, and a link to everything. */
 export function NotificationBell() {
@@ -20,10 +19,9 @@ export function NotificationBell() {
 
   useEffect(() => {
     load();
-    const safety = window.setInterval(() => document.visibilityState === "visible" && load(), SAFETY_MS);
-    return () => window.clearInterval(safety);
+    const timer = window.setInterval(() => document.visibilityState === "visible" && load(), POLL_MS);
+    return () => window.clearInterval(timer);
   }, [load]);
-  const live = useLiveSignal("admin", "/admin/notifications/pulse", true, load);
 
   async function opened(open: boolean) {
     if (!open) return;
@@ -76,9 +74,6 @@ export function NotificationBell() {
               ))}
             </ul>
           )}
-          <p className="border-t border-line px-4 py-2 text-xs text-muted" data-testid="bell-live-status" data-mode={live}>
-            {live === "stream" ? "Live: new activity appears within about two seconds" : live === "polling" ? "Checking for new activity every 10 seconds" : "Connecting…"}
-          </p>
         </div>
       )}
     </Popover>

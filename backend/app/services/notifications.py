@@ -129,19 +129,6 @@ class NotificationService:
         ]
         return {"items": items, "unread": min(int(unread), MAX_UNREAD), "seen_at": seen, "kinds": allowed_sources(user)}
 
-    async def pulse(self, user: User) -> dict[str, Any]:
-        """The cheapest "has anything changed?" answer: the unread count and the time of the newest activity.
-        Used by the bell's live updates; when either differs from last time, the bell reloads its feed."""
-        union = self._union(user, None)
-        if union is None:
-            return {"unread": 0, "latest": None}
-        since = datetime.now(timezone.utc) - timedelta(days=WINDOW_DAYS)
-        row = (await self.session.execute(
-            text(f"SELECT count(*) FILTER (WHERE at > :seen) AS unread, max(at) AS latest FROM ({union}) AS feed"),
-            {"since": since, "service_only": list(SERVICE_ONLY_SOURCES), "seen": user.notifications_seen_at or since},
-        )).mappings().one()
-        return {"unread": min(int(row["unread"] or 0), MAX_UNREAD), "latest": row["latest"].isoformat() if row["latest"] else None}
-
     async def mark_seen(self, user: User) -> None:
         await self.session.execute(text("UPDATE users SET notifications_seen_at = now() WHERE id = :id"), {"id": user.id})
         await self.session.commit()
