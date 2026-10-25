@@ -119,28 +119,3 @@ class ShopperBellTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-    def test_pulse_changes_when_something_new_happens(self):
-        w = self.w
-        w.post("/admin/notifications/seen", None, w.admin)
-        before = w.get("/admin/notifications/pulse", w.admin).json()
-        self.assertEqual(before["unread"], 0)
-        self.assertEqual(w.get("/admin/notifications/pulse").status_code, 401)  # staff only
-        w.place(w.email("pulse"), [item(w.product("12.00"))])
-        after = w.get("/admin/notifications/pulse", w.admin).json()
-        self.assertGreaterEqual(after["unread"], 1)
-        self.assertNotEqual(before, after)
-
-    def test_shopper_pulse_follows_their_orders(self):
-        w = self.w
-        email, shopper = w.register("pulse-shopper")
-        self.assertEqual(w.get("/account/notifications/pulse").status_code, 401)
-        empty = w.get("/account/notifications/pulse", shopper).json()
-        self.assertEqual(empty, {"unread": 0, "latest": None})
-        w.place(email, [item(w.product("9.00"))], shopper)
-        after = w.get("/account/notifications/pulse", shopper).json()
-        self.assertEqual(after["unread"], 1)
-        self.assertIsNotNone(after["latest"])
-        w.post("/account/notifications/seen", None, shopper)
-        self.assertEqual(w.get("/account/notifications/pulse", shopper).json()["unread"], 0)
-

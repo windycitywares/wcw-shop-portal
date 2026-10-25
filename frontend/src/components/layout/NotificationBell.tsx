@@ -7,7 +7,6 @@ import { fmt, intlLocale } from "@/i18n/config";
 import { useI18n } from "@/i18n/client";
 import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/client-api";
-import { useLiveSignal } from "@/lib/useLiveSignal";
 import { formatPrice } from "@/lib/utils";
 import { Popover } from "@/components/ui/Popover";
 
@@ -57,8 +56,6 @@ export function NotificationBell() {
     if (user) void load();
     else setFeed({ items: [], unread: 0 });
   }, [user, load]);
-  // A shipped or delivered order shows on the badge within seconds, without a reload.
-  const live = useLiveSignal("account", "/account/notifications/pulse", !!user, () => void load());
 
   if (!user) return null;
 
@@ -102,7 +99,6 @@ export function NotificationBell() {
       trigger={
         <>
           <Bell01 aria-hidden="true" className="size-5" strokeWidth={1.6} />
-          <span hidden data-testid="account-bell-live" data-mode={live} />
           {feed.unread > 0 && (
             <span className="absolute right-1.5 top-1.5 grid min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-semibold leading-4 text-white">
               {feed.unread > 9 ? "9+" : feed.unread}

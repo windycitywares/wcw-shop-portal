@@ -107,17 +107,6 @@ One-time server setup (already done):
 
 Check: `https://shop.windycitywares.com/robots.txt` says `Disallow: /` while building.
 
-## Live notifications (the admin bell)
-
-The API host (Passenger/LiteSpeed, WSGI only) cannot hold a WebSocket or stream a response. The storefront's Node server can, so the
-bell opens a stream to `https://shop.windycitywares.com/api/live/admin` (Server-Sent Events; `/api/admin-live` is the older address of the same stream). That route asks
-`/api/v1/admin/notifications/pulse` every two seconds for the signed-in person and writes a line to the open response when the unread count
-or newest activity changes: new orders and messages show in about two seconds. If the host holds the stream back (nothing arrives within
-five seconds) the bell asks `/pulse` every 10 seconds instead and tries the stream again every two minutes. The bell's footer says which
-mode it is in ("Live…" or "Checking … every 10 seconds").
-The shopper's order bell uses the same stream as `/api/live/account` (watching `/account/notifications/pulse`): a shipped or delivered order
-shows on a signed-in shopper's badge within seconds.
-
 ## Updating (automatic) — Admin → Deployments
 
 **Recent versions and Restore.** The page lists the latest version and the three before it (V1–V3), each described by its pull request, with the
