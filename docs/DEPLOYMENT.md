@@ -107,6 +107,13 @@ One-time server setup (already done):
 
 Check: `https://shop.windycitywares.com/robots.txt` says `Disallow: /` while building.
 
+## Live notifications (the admin bell)
+
+The bell hears about new activity two ways. With a WebSocket (`/api/v1/admin/notifications/live`) it updates within about two seconds.
+Passenger/LiteSpeed only speak WSGI (see `backend/wsgi.py`), so on this shared host the socket cannot open: the bell then asks
+`/admin/notifications/pulse` every 10 seconds (a cheap count) and retries the socket every two minutes. The bell's footer says which
+mode it is in. To see the instant mode, run the API with `uvicorn app.main:app` (dev, or a host that can hold WebSockets).
+
 ## Updating (automatic) — Admin → Deployments
 
 **Recent versions and Restore.** The page lists the latest version and the three before it (V1–V3), each described by its pull request, with the
