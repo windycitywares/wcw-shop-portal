@@ -81,6 +81,17 @@ class AccountNotificationService:
         ]
         return {"items": items, "unread": min(sum(1 for item in items if item["unread"]), MAX_UNREAD)}
 
+    async def pulse(self, user: User) -> dict[str, Any]:
+        """The cheapest "anything new?" answer for the live bell: unread count and the newest milestone's time."""
+        since = datetime.now(timezone.utc) - timedelta(days=WINDOW_DAYS)
+        rows = (await self.session.execute(
+            FEED, {"uid": user.id, "since": since, "n": MAX_ITEMS}
+        )).mappings().all()
+        seen = user.notifications_seen_at
+        unread = sum(1 for r in rows if seen is None or r["at"] > seen)
+        latest = rows[0]["at"] if rows else None
+        return {"unread": min(unread, MAX_UNREAD), "latest": latest.isoformat() if latest else None}
+
     async def mark_seen(self, user: User) -> None:
         await self.session.execute(
             text("UPDATE users SET notifications_seen_at = now() WHERE id = :id"), {"id": user.id}
