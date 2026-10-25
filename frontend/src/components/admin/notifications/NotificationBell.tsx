@@ -2,16 +2,29 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { apiFetch } from "@/lib/client-api";
+import { API_URL, apiFetch, tokenStore } from "@/lib/client-api";
 import { Icon } from "../ui/Icon";
 import { Popover } from "@/components/ui/Popover";
 import { ActivityRow, type Feed } from "./shared";
 
-const POLL_MS = 60_000;
+const SAFETY_MS = 60_000; // reload now and then whatever else happens
+const PULSE_MS = 10_000; // without a WebSocket: ask "anything new?" this often
+const HEARTBEAT_MS = 25_000;
+const RETRY_AFTER_OPEN_MS = 5_000; // a socket that worked and dropped: try again soon
+const RETRY_AFTER_FAIL_MS = 120_000; // a socket that never opened (the host can't do it): don't keep knocking
+const OPEN_TIMEOUT_MS = 5_000;
+
+type Pulse = { unread: number; latest: string | null };
+/** How the bell hears about new activity: instantly over a WebSocket, or by asking every few seconds. */
+type Live = "connecting" | "websocket" | "polling";
+
+const socketUrl = () => `${API_URL.replace(/^http/, "ws")}/admin/notifications/live`;
+const signature = (p: Pulse) => `${p.unread}|${p.latest ?? ""}`;
 
 /** Bell in the admin header: a count of new activity, the latest items, and a link to everything. */
 export function NotificationBell() {
   const [feed, setFeed] = useState<Feed | null>(null);
+  const [live, setLive] = useState<Live>("connecting");
 
   const load = useCallback(() => {
     apiFetch<Feed>("/admin/notifications?limit=12").then(setFeed, () => undefined);
@@ -19,8 +32,86 @@ export function NotificationBell() {
 
   useEffect(() => {
     load();
-    const timer = window.setInterval(() => document.visibilityState === "visible" && load(), POLL_MS);
-    return () => window.clearInterval(timer);
+    let stopped = false;
+    let last = "";
+    let socket: WebSocket | null = null;
+    let pollTimer: number | undefined;
+    let retryTimer: number | undefined;
+    let beatTimer: number | undefined;
+    const safety = window.setInterval(() => document.visibilityState === "visible" && load(), SAFETY_MS);
+
+    // Something changed (a new order, a message read in another tab…): reload the feed once per change.
+    const changed = (p: Pulse) => {
+      const now = signature(p);
+      if (now !== last) {
+        last = now;
+        load();
+      }
+    };
+    const poll = () => {
+      if (document.visibilityState !== "visible") return;
+      apiFetch<Pulse>("/admin/notifications/pulse").then(changed, () => undefined);
+    };
+    const startPolling = () => {
+      setLive("polling");
+      if (pollTimer === undefined) {
+        poll();
+        pollTimer = window.setInterval(poll, PULSE_MS);
+      }
+    };
+    const stopPolling = () => {
+      window.clearInterval(pollTimer);
+      pollTimer = undefined;
+    };
+
+    const connect = () => {
+      const token = tokenStore.get();
+      if (stopped || !token || typeof WebSocket === "undefined") return startPolling();
+      let opened = false;
+      let ws: WebSocket;
+      try {
+        ws = new WebSocket(socketUrl());
+      } catch {
+        return startPolling();
+      }
+      socket = ws;
+      const giveUp = window.setTimeout(() => !opened && ws.close(), OPEN_TIMEOUT_MS);
+      ws.onopen = () => ws.send(JSON.stringify({ token }));
+      ws.onmessage = (e) => {
+        let m: { type?: string } & Partial<Pulse>;
+        try {
+          m = JSON.parse(String(e.data));
+        } catch {
+          return;
+        }
+        if (m.type === "hello") {
+          opened = true;
+          stopPolling();
+          setLive("websocket");
+          beatTimer = window.setInterval(() => ws.readyState === WebSocket.OPEN && ws.send("ping"), HEARTBEAT_MS);
+        } else if (m.type === "pulse") {
+          changed({ unread: m.unread ?? 0, latest: m.latest ?? null });
+        }
+      };
+      ws.onclose = () => {
+        window.clearTimeout(giveUp);
+        window.clearInterval(beatTimer);
+        socket = null;
+        if (stopped) return;
+        startPolling(); // never without news: ask every few seconds until the socket is back
+        retryTimer = window.setTimeout(connect, opened ? RETRY_AFTER_OPEN_MS : RETRY_AFTER_FAIL_MS);
+      };
+    };
+    connect();
+
+    return () => {
+      stopped = true;
+      window.clearInterval(safety);
+      window.clearInterval(beatTimer);
+      window.clearTimeout(retryTimer);
+      stopPolling();
+      socket?.close();
+    };
   }, [load]);
 
   async function opened(open: boolean) {
@@ -74,6 +165,9 @@ export function NotificationBell() {
               ))}
             </ul>
           )}
+          <p className="border-t border-line px-4 py-2 text-xs text-muted" data-testid="bell-live-status" data-mode={live}>
+            {live === "websocket" ? "Live: new activity appears instantly" : live === "polling" ? "Checking for new activity every 10 seconds" : "Connecting…"}
+          </p>
         </div>
       )}
     </Popover>

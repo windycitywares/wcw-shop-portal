@@ -119,3 +119,32 @@ class ShopperBellTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_pulse_changes_when_something_new_happens(self):
+        w = self.w
+        w.post("/admin/notifications/seen", None, w.admin)
+        before = w.get("/admin/notifications/pulse", w.admin).json()
+        self.assertEqual(before["unread"], 0)
+        self.assertEqual(w.get("/admin/notifications/pulse").status_code, 401)  # staff only
+        w.place(w.email("pulse"), [item(w.product("12.00"))])
+        after = w.get("/admin/notifications/pulse", w.admin).json()
+        self.assertGreaterEqual(after["unread"], 1)
+        self.assertNotEqual(before, after)
+
+    def test_live_socket_needs_a_staff_token_and_sends_a_pulse(self):
+        from starlette.websockets import WebSocketDisconnect
+
+        w = self.w
+        url = "/api/v1/admin/notifications/live"
+        token = w.admin["Authorization"].split(" ", 1)[1]
+        with w.client.websocket_connect(url) as ws:
+            ws.send_json({"token": token})
+            self.assertEqual(ws.receive_json()["type"], "hello")
+            first = ws.receive_json()
+            self.assertEqual(first["type"], "pulse")
+            self.assertIn("unread", first)
+        with self.assertRaises(WebSocketDisconnect):
+            with w.client.websocket_connect(url) as ws:
+                ws.send_json({"token": "not-a-token"})
+                ws.receive_json()
+
