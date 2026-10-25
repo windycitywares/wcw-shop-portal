@@ -2,23 +2,21 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { API_URL, apiFetch, tokenStore } from "@/lib/client-api";
+import { apiFetch, tokenStore } from "@/lib/client-api";
 import { Icon } from "../ui/Icon";
 import { Popover } from "@/components/ui/Popover";
 import { ActivityRow, type Feed } from "./shared";
 
 const SAFETY_MS = 60_000; // reload now and then whatever else happens
-const PULSE_MS = 10_000; // without a WebSocket: ask "anything new?" this often
-const HEARTBEAT_MS = 25_000;
-const RETRY_AFTER_OPEN_MS = 5_000; // a socket that worked and dropped: try again soon
-const RETRY_AFTER_FAIL_MS = 120_000; // a socket that never opened (the host can't do it): don't keep knocking
-const OPEN_TIMEOUT_MS = 5_000;
+const PULSE_MS = 10_000; // without a live stream: ask "anything new?" this often
+const FIRST_BYTES_MS = 5_000; // a stream that says nothing by now is being held back by the host
+const RETRY_AFTER_LIVE_MS = 5_000; // a stream that worked and ended: reconnect soon
+const RETRY_AFTER_FAIL_MS = 120_000; // a stream that never arrived live: don't keep knocking
 
 type Pulse = { unread: number; latest: string | null };
-/** How the bell hears about new activity: instantly over a WebSocket, or by asking every few seconds. */
-type Live = "connecting" | "websocket" | "polling";
+/** How the bell hears about new activity: a live stream from the storefront server, or by asking every few seconds. */
+type Live = "connecting" | "stream" | "polling";
 
-const socketUrl = () => `${API_URL.replace(/^http/, "ws")}/admin/notifications/live`;
 const signature = (p: Pulse) => `${p.unread}|${p.latest ?? ""}`;
 
 /** Bell in the admin header: a count of new activity, the latest items, and a link to everything. */
@@ -34,10 +32,9 @@ export function NotificationBell() {
     load();
     let stopped = false;
     let last = "";
-    let socket: WebSocket | null = null;
+    let abort: AbortController | null = null;
     let pollTimer: number | undefined;
     let retryTimer: number | undefined;
-    let beatTimer: number | undefined;
     const safety = window.setInterval(() => document.visibilityState === "visible" && load(), SAFETY_MS);
 
     // Something changed (a new order, a message read in another tab…): reload the feed once per change.
@@ -64,53 +61,58 @@ export function NotificationBell() {
       pollTimer = undefined;
     };
 
-    const connect = () => {
+    // The stream is read with fetch (not EventSource) so the token can travel in a header, not in the address.
+    const connect = async () => {
       const token = tokenStore.get();
-      if (stopped || !token || typeof WebSocket === "undefined") return startPolling();
-      let opened = false;
-      let ws: WebSocket;
+      if (stopped || !token) return startPolling();
+      const ctl = new AbortController();
+      abort = ctl;
+      let arrived = false;
+      const giveUp = window.setTimeout(() => !arrived && ctl.abort(), FIRST_BYTES_MS);
       try {
-        ws = new WebSocket(socketUrl());
+        const res = await fetch("/api/admin-live", { headers: { Authorization: `Bearer ${token}` }, signal: ctl.signal, cache: "no-store" });
+        if (!res.ok || !res.body) throw new Error(`stream ${res.status}`);
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let end: number;
+          while ((end = buffer.indexOf("\n\n")) >= 0) {
+            const block = buffer.slice(0, end);
+            buffer = buffer.slice(end + 2);
+            const event = /^event: (.+)$/m.exec(block)?.[1];
+            const data = /^data: (.+)$/m.exec(block)?.[1];
+            if (event === "hello") {
+              arrived = true;
+              window.clearTimeout(giveUp);
+              stopPolling();
+              setLive("stream");
+            } else if (event === "pulse" && data) {
+              changed(JSON.parse(data) as Pulse);
+            } else if (event === "signedout") {
+              return startPolling(); // the normal requests will take the person to sign in
+            }
+          }
+        }
       } catch {
-        return startPolling();
+        /* aborted, offline or not supported: handled below */
       }
-      socket = ws;
-      const giveUp = window.setTimeout(() => !opened && ws.close(), OPEN_TIMEOUT_MS);
-      ws.onopen = () => ws.send(JSON.stringify({ token }));
-      ws.onmessage = (e) => {
-        let m: { type?: string } & Partial<Pulse>;
-        try {
-          m = JSON.parse(String(e.data));
-        } catch {
-          return;
-        }
-        if (m.type === "hello") {
-          opened = true;
-          stopPolling();
-          setLive("websocket");
-          beatTimer = window.setInterval(() => ws.readyState === WebSocket.OPEN && ws.send("ping"), HEARTBEAT_MS);
-        } else if (m.type === "pulse") {
-          changed({ unread: m.unread ?? 0, latest: m.latest ?? null });
-        }
-      };
-      ws.onclose = () => {
-        window.clearTimeout(giveUp);
-        window.clearInterval(beatTimer);
-        socket = null;
-        if (stopped) return;
-        startPolling(); // never without news: ask every few seconds until the socket is back
-        retryTimer = window.setTimeout(connect, opened ? RETRY_AFTER_OPEN_MS : RETRY_AFTER_FAIL_MS);
-      };
+      window.clearTimeout(giveUp);
+      if (stopped) return;
+      startPolling(); // never without news: ask every few seconds until the stream is back
+      retryTimer = window.setTimeout(() => void connect(), arrived ? RETRY_AFTER_LIVE_MS : RETRY_AFTER_FAIL_MS);
     };
-    connect();
+    void connect();
 
     return () => {
       stopped = true;
       window.clearInterval(safety);
-      window.clearInterval(beatTimer);
       window.clearTimeout(retryTimer);
       stopPolling();
-      socket?.close();
+      abort?.abort();
     };
   }, [load]);
 
@@ -166,7 +168,7 @@ export function NotificationBell() {
             </ul>
           )}
           <p className="border-t border-line px-4 py-2 text-xs text-muted" data-testid="bell-live-status" data-mode={live}>
-            {live === "websocket" ? "Live: new activity appears instantly" : live === "polling" ? "Checking for new activity every 10 seconds" : "Connecting…"}
+            {live === "stream" ? "Live: new activity appears within about two seconds" : live === "polling" ? "Checking for new activity every 10 seconds" : "Connecting…"}
           </p>
         </div>
       )}
