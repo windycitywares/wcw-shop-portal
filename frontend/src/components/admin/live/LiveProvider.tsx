@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "@/lib/auth";
 import { apiFetch, tokenStore } from "@/lib/client-api";
 import { useToast } from "../ui/Toast";
 
@@ -20,6 +21,8 @@ export interface LiveEvent {
   title: string;
   detail: string | null;
   href: string | null;
+  actor_id: number | null; // the signed-in person who made the change (none: a shopper, a job, a payment)
+  actor_name: string | null;
   at: string;
 }
 type Batch = { events: LiveEvent[]; last_id: number };
@@ -70,6 +73,9 @@ function chime() {
 
 export function LiveProvider({ children }: { children: React.ReactNode }) {
   const { push } = useToast();
+  const { user } = useAuth();
+  const meRef = useRef<number | null>(null);
+  meRef.current = user?.id ?? null;
   const [mode, setMode] = useState<LiveMode>("connecting");
   const [muted, setMutedState] = useState(false);
   const listeners = useRef(new Set<Listener>());
@@ -109,7 +115,9 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     const channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel(CHANNEL) : null;
 
     // Every tab: hand the events to the pages that care, and pop up the important ones.
-    const deliver = (events: LiveEvent[], leader: boolean) => {
+    const deliver = (all: LiveEvent[], leader: boolean) => {
+      // What this person did themselves (in this tab or another) isn't news to them.
+      const events = all.filter((e) => e.actor_id === null || e.actor_id !== meRef.current);
       if (!events.length) return;
       for (const l of listeners.current) {
         const mine = events.filter((e) => l.prefixes.some((p) => e.kind.startsWith(p)));
