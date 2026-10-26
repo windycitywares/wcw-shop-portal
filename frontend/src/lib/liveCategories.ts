@@ -56,7 +56,7 @@ export const DEFAULT_PREFS: NotificationPrefs = {
 };
 
 /** What to do with a batch of events: who pops up, whether to play a sound, which desktop alerts to show. */
-export function plan(events: { kind: string }[], prefs: NotificationPrefs) {
+export function plan<E extends { kind: string }>(events: E[], prefs: NotificationPrefs) {
   const on = (kind: string, ch: keyof Channels) => {
     const c = categoryOf(kind);
     return !!c && !!prefs.categories[c]?.[ch];
