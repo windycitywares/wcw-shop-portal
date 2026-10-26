@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/client-api";
+import { useLive, useLiveStatus } from "../live/LiveProvider";
 import { Icon } from "../ui/Icon";
 import { Popover } from "@/components/ui/Popover";
 import { ActivityRow, type Feed } from "./shared";
@@ -12,6 +13,7 @@ const POLL_MS = 60_000;
 /** Bell in the admin header: a count of new activity, the latest items, and a link to everything. */
 export function NotificationBell() {
   const [feed, setFeed] = useState<Feed | null>(null);
+  const live = useLiveStatus();
 
   const load = useCallback(() => {
     apiFetch<Feed>("/admin/notifications?limit=12").then(setFeed, () => undefined);
@@ -22,6 +24,9 @@ export function NotificationBell() {
     const timer = window.setInterval(() => document.visibilityState === "visible" && load(), POLL_MS);
     return () => window.clearInterval(timer);
   }, [load]);
+
+  // Anything new (an order, a message, a sign-up…): the badge and the list follow within seconds.
+  useLive([""], () => load());
 
   async function opened(open: boolean) {
     if (!open) return;
@@ -74,6 +79,14 @@ export function NotificationBell() {
               ))}
             </ul>
           )}
+          <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-2 text-xs text-muted">
+            <span data-testid="live-status" data-mode={live.mode}>
+              {live.mode === "stream" ? "Live updates on" : live.mode === "polling" ? "Checking for updates every 10 seconds" : "Connecting…"}
+            </span>
+            <button type="button" onClick={() => live.setMuted(!live.muted)} className="rounded font-medium text-accent underline-offset-4 hover:underline focus-visible:outline-2">
+              {live.muted ? "Turn on order sound" : "Mute order sound"}
+            </button>
+          </div>
         </div>
       )}
     </Popover>

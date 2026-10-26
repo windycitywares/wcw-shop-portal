@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { BackToTop } from "@/components/ui/BackToTop";
 import { ToastProvider } from "./ui/Toast";
+import { LiveProvider } from "./live/LiveProvider";
 
 const linkClass = (active: boolean, collapsed: boolean) =>
   cn(
@@ -229,6 +230,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastProvider>
+      <LiveProvider>
       <a href="#admin-main" className="skip-link">
         Skip to content
       </a>
@@ -362,6 +364,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <BackToTop />
         </div>
       </div>
+      </LiveProvider>
     </ToastProvider>
   );
 }
