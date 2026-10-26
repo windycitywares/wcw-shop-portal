@@ -163,6 +163,7 @@ export default function NotificationSettings() {
                 Play test sound
               </Button>
             </div>
+            <p className="text-xs text-muted">Browsers only allow sound after you have clicked somewhere in the admin since opening it.</p>
             <Field label={`Volume (${prefs.volume}%)`} hint="0 turns sounds off.">
               {(p) => (
                 <input
