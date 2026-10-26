@@ -9,6 +9,7 @@ import { attributeList, displayPrice } from "@/lib/utils";
 import { ProductGrid } from "@/components/catalog/ProductCard";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { PurchasePanel } from "@/components/catalog/PurchasePanel";
+import { ProductViewProvider } from "@/components/catalog/ProductView";
 import { JsonLd, breadcrumbLd, productLd } from "@/components/seo/JsonLd";
 import { TrackOnView } from "@/components/analytics/TrackOnView";
 import { MiniCards } from "@/components/product/MiniCards";
@@ -69,8 +70,9 @@ export default async function ProductPage({ params }: Props) {
   return (
     <Container className="py-8 sm:py-12">
       <Breadcrumbs items={crumbs} />
+      <ProductViewProvider product={product}>
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16 xl:gap-24">
-        <ProductGallery images={product.images} title={product.title} />
+        <ProductGallery images={product.images} variants={product.variants} title={product.title} />
         <div>
           {product.category && <p className="text-sm text-muted">{product.category.name}</p>}
           <h1 className="mt-2 text-4xl sm:text-5xl">{product.title}</h1>
@@ -119,6 +121,7 @@ export default async function ProductPage({ params }: Props) {
           )}
         </div>
       </div>
+      </ProductViewProvider>
 
       {related.length > 0 && (
         <section aria-labelledby="related-heading" className="mt-28 border-t border-line pt-16">

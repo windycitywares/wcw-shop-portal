@@ -127,6 +127,10 @@ const nl: Dictionary = {
     related: "Meer in dit thema",
     images: "Productafbeeldingen",
     showImage: "Afbeelding {index} van {total} tonen",
+    zoomImage: "Afbeelding vergroten",
+    closeZoom: "Vergroting sluiten",
+    prevImage: "Vorige afbeelding",
+    nextImage: "Volgende afbeelding",
     notFound: "Product niet gevonden",
     stock: {
       in_stock: "Op voorraad",

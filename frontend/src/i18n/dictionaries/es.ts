@@ -132,6 +132,10 @@ const es: Dictionary = {
     related: "Más de este tema",
     images: "Imágenes del producto",
     showImage: "Mostrar imagen {index} de {total}",
+    zoomImage: "Ampliar imagen",
+    closeZoom: "Cerrar ampliación",
+    prevImage: "Imagen anterior",
+    nextImage: "Imagen siguiente",
     notFound: "Producto no encontrado",
     stock: {
       in_stock: "Disponible",
