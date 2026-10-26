@@ -1,6 +1,8 @@
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import BigInteger, DateTime, String, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.enums import UserRole
@@ -23,6 +25,8 @@ class User(TimestampMixin, Base):
     # Tokens issued before this moment are rejected (set when the password changes).
     password_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     notifications_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))  # admin bell: read up to here
+    # How live updates reach this person (0022): only what they changed; app/domain/live_prefs.py adds the defaults.
+    notification_prefs: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default=text("'{}'::jsonb"))
 
 
 class NewsletterSubscriber(TimestampMixin, Base):

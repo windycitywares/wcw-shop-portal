@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "../ui/Icon";
-import { useLive, type LiveEvent } from "./LiveProvider";
+import { useLive, useLiveStatus, type LiveEvent } from "./LiveProvider";
 
 /**
  * "2 new orders · Refresh" above a list (or "Changed by Sara just now · Reload" on a record) when something it shows
@@ -23,11 +23,12 @@ export function LiveUpdatesBar({
   onRefresh: () => void;
 }) {
   const [pending, setPending] = useState<LiveEvent[]>([]);
+  const { prefs } = useLiveStatus();
   useLive(prefixes, (events) => {
     const mine = refId === undefined ? events : events.filter((e) => e.ref_id === refId);
     if (mine.length) setPending((p) => [...p, ...mine]);
   });
-  if (!pending.length) return null;
+  if (!pending.length || !prefs.refresh_bars) return null;
   return (
     <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-accent/30 bg-accent/10 px-4 py-2.5 text-sm">
       <span className="flex items-center gap-2 font-medium">

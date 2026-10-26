@@ -70,3 +70,30 @@ class LiveEventTests(unittest.TestCase):
         self.assertEqual(w.get("/admin/live/events").status_code, 401)
         _, customer = w.register("live-customer")
         self.assertEqual(w.get("/admin/live/events", customer).status_code, 403)
+
+
+@skip_unless_db
+class PreferenceTests(unittest.TestCase):
+    def setUp(self):
+        reset_limits()
+        self.w = world()
+
+    def test_each_person_keeps_their_own_settings(self):
+        w = self.w
+        first = w.get("/admin/live/preferences", w.publisher).json()
+        self.assertIn("orders_new", first["categories"])
+        self.assertTrue(first["prefs"]["categories"]["orders_new"]["popup"])
+
+        prefs = first["prefs"]
+        prefs["categories"]["newsletter"] = {"popup": True, "sound": True, "desktop": False}
+        prefs["sound"], prefs["volume"] = "bell", 40
+        saved = w.put("/admin/live/preferences", prefs, w.publisher)
+        self.assertEqual(saved.status_code, 200, saved.text)
+        again = w.get("/admin/live/preferences", w.publisher).json()["prefs"]
+        self.assertTrue(again["categories"]["newsletter"]["sound"])
+        self.assertEqual((again["sound"], again["volume"]), ("bell", 40))
+
+        # Someone else's settings are untouched.
+        other = w.get("/admin/live/preferences", w.admin).json()["prefs"]
+        self.assertFalse(other["categories"]["newsletter"]["sound"])
+        self.assertEqual(w.put("/admin/live/preferences", {**prefs, "volume": 900}, w.publisher).status_code, 422)

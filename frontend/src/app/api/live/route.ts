@@ -55,7 +55,8 @@ export async function GET(request: Request) {
             const batch = (await res.json()) as Batch;
             if (!greeted) {
               greeted = true;
-              send(`event: hello\ndata: ${JSON.stringify({ last_id: after ?? batch.last_id })}\n\n`);
+              const version = process.env.NEXT_PUBLIC_BUILD_SHA || "";
+              send(`event: hello\ndata: ${JSON.stringify({ last_id: after ?? batch.last_id, version })}\n\n`);
             }
             if (batch.events.length) send(`event: events\ndata: ${JSON.stringify(batch)}\n\n`);
             after = batch.last_id;

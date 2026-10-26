@@ -3,7 +3,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { apiFetch, tokenStore } from "@/lib/client-api";
+import { DEFAULT_PREFS, plan, type NotificationPrefs } from "@/lib/liveCategories";
 import { useToast } from "../ui/Toast";
+import { playSound } from "./sounds";
 
 /**
  * Live updates in the admin: new orders, payments, messages, sign-ups… as they happen (GET /admin/live/events).
@@ -35,39 +37,29 @@ const PULSE_MS = 10_000;
 const FIRST_BYTES_MS = 5_000;
 const RETRY_AFTER_LIVE_MS = 3_000;
 const RETRY_AFTER_FAIL_MS = 120_000;
-const MUTE_KEY = "wcw-live-muted";
-/** These pop up in the corner; everything else updates the bell and the pages quietly. */
-const TOAST_KINDS = new Set(["order.new", "message.new", "backup.failed"]);
-const SOUND_KINDS = new Set(["order.new"]);
+/** This build's version (baked in by the storefront workflow); the stream says which one the server now runs. */
+const MY_VERSION = process.env.NEXT_PUBLIC_BUILD_SHA || "";
+const VERSION_CHECK_MS = 60_000;
 
 const Ctx = createContext<{
   mode: LiveMode;
-  muted: boolean;
-  setMuted: (m: boolean) => void;
+  prefs: NotificationPrefs;
+  setPrefs: (p: NotificationPrefs) => void;
+  newVersion: boolean;
   subscribe: (l: Listener) => () => void;
 } | null>(null);
 
-function chime() {
+function desktopAlert(e: LiveEvent) {
   try {
-    const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AC) return;
-    const ctx = new AC();
-    [880, 1320].forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.value = freq;
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      const t = ctx.currentTime + i * 0.16;
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.15, t + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
-      osc.start(t);
-      osc.stop(t + 0.3);
-    });
-    window.setTimeout(() => void ctx.close(), 1000);
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    const n = new Notification(e.title, { body: e.detail ?? undefined, tag: `wcw-live-${e.id}`, icon: "/apple-icon.png" });
+    n.onclick = () => {
+      window.focus();
+      if (e.href) window.location.assign(e.href);
+      n.close();
+    };
   } catch {
-    /* no sound is fine */
+    /* not available here */
   }
 }
 
@@ -77,30 +69,21 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
   const meRef = useRef<number | null>(null);
   meRef.current = user?.id ?? null;
   const [mode, setMode] = useState<LiveMode>("connecting");
-  const [muted, setMutedState] = useState(false);
+  const [prefs, setPrefsState] = useState<NotificationPrefs>(DEFAULT_PREFS);
+  const [newVersion, setNewVersion] = useState(false);
   const listeners = useRef(new Set<Listener>());
-  const mutedRef = useRef(false);
+  const prefsRef = useRef<NotificationPrefs>(DEFAULT_PREFS);
   const pushRef = useRef(push);
   pushRef.current = push;
 
+  // Each person's own choices (Admin → Notification settings); the defaults until they arrive.
+  const setPrefs = useCallback((p: NotificationPrefs) => {
+    prefsRef.current = p;
+    setPrefsState(p);
+  }, []);
   useEffect(() => {
-    try {
-      const m = localStorage.getItem(MUTE_KEY) === "1";
-      mutedRef.current = m;
-      setMutedState(m);
-    } catch {
-      /* storage unavailable */
-    }
-  }, []);
-  const setMuted = useCallback((m: boolean) => {
-    mutedRef.current = m;
-    setMutedState(m);
-    try {
-      localStorage.setItem(MUTE_KEY, m ? "1" : "0");
-    } catch {
-      /* storage unavailable */
-    }
-  }, []);
+    apiFetch<{ prefs: NotificationPrefs }>("/admin/live/preferences").then((r) => setPrefs(r.prefs), () => undefined);
+  }, [setPrefs]);
 
   const subscribe = useCallback((l: Listener) => {
     listeners.current.add(l);
@@ -123,7 +106,8 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
         const mine = events.filter((e) => l.prefixes.some((p) => e.kind.startsWith(p)));
         if (mine.length) l.fn(mine);
       }
-      const loud = events.filter((e) => TOAST_KINDS.has(e.kind));
+      const todo = plan(events, prefsRef.current);
+      const loud = todo.popups;
       if (loud.length > 2) {
         pushRef.current({ tone: "info", title: `${loud.length} new updates`, description: loud.map((e) => e.title).slice(0, 3).join(" · "), href: "/admin/notifications", action: "See all" });
       } else {
@@ -131,9 +115,21 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
           pushRef.current({ tone: e.kind === "backup.failed" ? "danger" : "info", title: e.title, description: e.detail ?? undefined, href: e.href ?? undefined, action: "View" });
         }
       }
-      // One sound per browser: only the leader plays it, even when its tab is in the background.
-      if (leader && !mutedRef.current && events.some((e) => SOUND_KINDS.has(e.kind))) chime();
+      // One sound and one desktop alert per browser: only the leader gives them, even when its tab is in the background.
+      if (leader && todo.sound) playSound(prefsRef.current.sound, prefsRef.current.volume);
+      if (leader && document.visibilityState !== "visible") todo.desktop.slice(0, 3).forEach(desktopAlert);
     };
+    // "A new version is out": the server's build differs from the one this page was loaded with.
+    const sawVersion = (version: string, share: boolean) => {
+      if (!version || !MY_VERSION || version === MY_VERSION) return;
+      setNewVersion(true);
+      if (share) channel?.postMessage({ type: "version", version });
+    };
+    const checkVersion = () =>
+      fetch("/api/version", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((v: { version?: string } | null) => v?.version && sawVersion(v.version, true))
+        .catch(() => undefined);
     const announce = (batch: Batch) => {
       lastId = batch.last_id;
       deliver(batch.events, true);
@@ -146,12 +142,13 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     };
     if (channel) {
       channel.onmessage = (msg: MessageEvent) => {
-        const data = msg.data as { type: string; batch?: Batch; mode?: LiveMode };
+        const data = msg.data as { type: string; batch?: Batch; mode?: LiveMode; version?: string };
         if (data.type === "batch" && data.batch) {
           lastId = data.batch.last_id;
           deliver(data.batch.events, false);
         } else if (data.type === "mode" && data.mode) setMode(data.mode);
         else if (data.type === "ask" && leading) channel.postMessage({ type: "mode", mode: currentMode });
+        else if (data.type === "version" && data.version) sawVersion(data.version, false);
       };
       channel.postMessage({ type: "ask" }); // a tab opened later learns how the leader is connected
     }
@@ -169,6 +166,7 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
         /* try again next time */
       }
     };
+    let versionTimer: number | undefined;
     const startPolling = () => {
       if (stopped) return;
       announceMode("polling");
@@ -176,6 +174,7 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
         void poll();
         pollTimer = window.setInterval(() => void poll(), PULSE_MS);
       }
+      if (versionTimer === undefined) versionTimer = window.setInterval(() => void checkVersion(), VERSION_CHECK_MS);
     };
     const stopPolling = () => {
       window.clearInterval(pollTimer);
@@ -212,7 +211,9 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
               arrived = true;
               window.clearTimeout(giveUp);
               stopPolling();
-              if (lastId === null) lastId = (JSON.parse(data) as { last_id: number }).last_id;
+              const hello = JSON.parse(data) as { last_id: number; version?: string };
+              if (lastId === null) lastId = hello.last_id;
+              if (hello.version) sawVersion(hello.version, true);
               announceMode("stream");
             } else if (event === "events" && data) {
               announce(JSON.parse(data) as Batch);
@@ -253,19 +254,25 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     return () => {
       stopped = true;
       window.clearTimeout(retryTimer);
+      window.clearInterval(versionTimer);
       stopPolling();
       abort?.abort();
       channel?.close();
     };
   }, []);
 
-  const value = useMemo(() => ({ mode, muted, setMuted, subscribe }), [mode, muted, setMuted, subscribe]);
+  const value = useMemo(() => ({ mode, prefs, setPrefs, newVersion, subscribe }), [mode, prefs, setPrefs, newVersion, subscribe]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 export function useLiveStatus() {
   const ctx = useContext(Ctx);
-  return { mode: ctx?.mode ?? "off", muted: ctx?.muted ?? false, setMuted: ctx?.setMuted ?? (() => undefined) };
+  return {
+    mode: ctx?.mode ?? "off",
+    prefs: ctx?.prefs ?? DEFAULT_PREFS,
+    setPrefs: ctx?.setPrefs ?? (() => undefined),
+    newVersion: ctx?.newVersion ?? false,
+  };
 }
 
 /** Calls `fn` with the events whose kind starts with one of `prefixes` ("order.", "message.new" …). */

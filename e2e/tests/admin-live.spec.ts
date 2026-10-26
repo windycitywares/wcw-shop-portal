@@ -62,3 +62,29 @@ test("a new order offers a refresh on the orders list and pops up, without reloa
   await expect(page.getByRole("link", { name: order.number })).toBeVisible();
   seen.expectClean();
 });
+
+test("notification settings decide what pops up: a newsletter sign-up after ticking it", async ({ page }) => {
+  const seen = watch(page);
+  await page.goto("/admin/notifications/settings");
+  await adminReady(page);
+  await expect(page.getByTestId("live-mode")).toHaveText(/Live updates are on/, { timeout: 15_000 });
+  await page.getByRole("button", { name: "Play test sound" }).click();
+
+  const popup = page.getByLabel("Pop-up: Newsletter sign-ups and unsubscribes");
+  await popup.check();
+  await page.getByRole("button", { name: "Save settings" }).first().click();
+  await expect(page.getByText("Notification settings saved", { exact: true })).toBeVisible();
+
+  const api = await request.newContext({ baseURL: `${API}/` });
+  const email = `${unique("live-news")}@example.com`;
+  expect((await api.post("newsletter", { data: { email, locale: "en" } })).status()).toBeLessThan(300);
+  await api.dispose();
+  const toast = page.getByRole("status").filter({ hasText: "New newsletter subscriber" }).filter({ hasText: email });
+  await expect(toast).toBeVisible({ timeout: 15_000 });
+
+  // Put it back for the other tests (the admin login is shared).
+  await popup.uncheck();
+  await page.getByRole("button", { name: "Save settings" }).first().click();
+  await expect(page.getByText("Notification settings saved", { exact: true }).first()).toBeVisible();
+  seen.expectClean();
+});
