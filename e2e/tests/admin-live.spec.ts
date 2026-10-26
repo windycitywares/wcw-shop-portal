@@ -9,7 +9,7 @@ test("a new contact message pops up in the admin without a reload, and the bell 
   await adminReady(page);
 
   // The bell's footer says how updates arrive: the stream from the storefront server.
-  const bell = page.getByRole("button", { name: /^Notifications/ });
+  const bell = page.locator("summary", { hasText: "Notifications" }).first();
   await bell.click();
   await expect(page.getByTestId("live-status")).toHaveAttribute("data-mode", "stream", { timeout: 15_000 });
   await expect(page.getByTestId("live-status")).toHaveText("Live updates on");
@@ -35,7 +35,7 @@ test("a new order offers a refresh on the orders list and pops up, without reloa
   const seen = watch(page);
   await page.goto("/admin/orders");
   await adminReady(page);
-  const bell = page.getByRole("button", { name: /^Notifications/ });
+  const bell = page.locator("summary", { hasText: "Notifications" }).first();
   await bell.click();
   await expect(page.getByTestId("live-status")).toHaveAttribute("data-mode", "stream", { timeout: 15_000 });
   await page.keyboard.press("Escape");

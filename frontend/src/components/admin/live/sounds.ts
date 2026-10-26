@@ -9,12 +9,34 @@ const TONES: Record<SoundName, { freqs: number[]; step: number; length: number; 
 
 export const SOUND_LABELS: Record<SoundName, string> = { chime: "Chime", bell: "Bell", pop: "Pop" };
 
+// Browsers only let a page make sound after the person has clicked or typed on it. One shared audio context is
+// "unlocked" by the first click or key press on the admin, so a sound for a new order can play later, unprompted.
+let shared: AudioContext | null = null;
+function audio(): AudioContext | null {
+  if (shared) return shared;
+  const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  shared = AC ? new AC() : null;
+  return shared;
+}
+export function unlockSoundOnFirstInteraction() {
+  const unlock = () => {
+    void audio()?.resume().catch(() => undefined);
+    window.removeEventListener("pointerdown", unlock);
+    window.removeEventListener("keydown", unlock);
+  };
+  window.addEventListener("pointerdown", unlock);
+  window.addEventListener("keydown", unlock);
+  return unlock;
+}
+/** False until the browser lets this page play sound (see above). */
+export const soundAllowed = () => !!shared && shared.state === "running";
+
 export function playSound(name: SoundName, volume: number) {
   if (volume <= 0) return;
   try {
-    const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AC) return;
-    const ctx = new AC();
+    const ctx = audio();
+    if (!ctx) return;
+    if (ctx.state === "suspended") void ctx.resume().catch(() => undefined);
     const tone = TONES[name] ?? TONES.chime;
     const peak = 0.3 * (Math.min(volume, 100) / 100) ** 2 + 0.0002;
     tone.freqs.forEach((freq, i) => {
@@ -31,7 +53,6 @@ export function playSound(name: SoundName, volume: number) {
       osc.start(t);
       osc.stop(t + tone.length + 0.05);
     });
-    window.setTimeout(() => void ctx.close(), 1500);
   } catch {
     /* no sound is fine */
   }

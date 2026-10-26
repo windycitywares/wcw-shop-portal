@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { apiFetch, tokenStore } from "@/lib/client-api";
 import { DEFAULT_PREFS, plan, type NotificationPrefs } from "@/lib/liveCategories";
 import { useToast } from "../ui/Toast";
-import { playSound } from "./sounds";
+import { playSound, unlockSoundOnFirstInteraction } from "./sounds";
 
 /**
  * Live updates in the admin: new orders, payments, messages, sign-ups… as they happen (GET /admin/live/events).
@@ -80,6 +80,13 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
   const setPrefs = useCallback((p: NotificationPrefs) => {
     prefsRef.current = p;
     setPrefsState(p);
+  }, []);
+  useEffect(() => {
+    const unlock = unlockSoundOnFirstInteraction();
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
   }, []);
   useEffect(() => {
     apiFetch<{ prefs: NotificationPrefs }>("/admin/live/preferences").then((r) => setPrefs(r.prefs), () => undefined);
