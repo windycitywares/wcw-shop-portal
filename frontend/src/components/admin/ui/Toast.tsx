@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Icon } from "./Icon";
@@ -8,6 +9,9 @@ interface ToastInput {
   tone?: "success" | "danger" | "info";
   title: string;
   description?: string;
+  /** A link shown under the text ("View"), e.g. the order a live update is about. */
+  href?: string;
+  action?: string;
 }
 interface ToastItem extends ToastInput {
   id: number;
@@ -24,7 +28,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     (t: ToastInput) => {
       const id = nextId.current++;
       setItems((l) => [...l.slice(-3), { ...t, id }]);
-      window.setTimeout(() => dismiss(id), t.tone === "danger" ? 9000 : 4500);
+      window.setTimeout(() => dismiss(id), t.tone === "danger" || t.href ? 9000 : 4500);
     },
     [dismiss],
   );
@@ -42,10 +46,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               t.tone === "danger" ? "border-danger/40 border-l-danger" : t.tone === "info" ? "border-line border-l-accent" : "border-success/40 border-l-success",
             )}
           >
-            <Icon name={t.tone === "danger" ? "alert" : "check"} className={cn("mt-0.5 size-4", t.tone === "danger" ? "text-danger" : t.tone === "info" ? "text-muted" : "text-success")} strokeWidth={2} />
+            <Icon name={t.tone === "danger" ? "alert" : t.tone === "info" ? "bell" : "check"} className={cn("mt-0.5 size-4", t.tone === "danger" ? "text-danger" : t.tone === "info" ? "text-muted" : "text-success")} strokeWidth={2} />
             <div className="min-w-0 flex-1">
               <p className="font-medium">{t.title}</p>
               {t.description && <p className="mt-0.5 text-muted">{t.description}</p>}
+              {t.href && (
+                <Link href={t.href} onClick={() => dismiss(t.id)} className="mt-1 inline-block font-medium text-accent underline underline-offset-4">
+                  {t.action ?? "View"}
+                </Link>
+              )}
             </div>
             <button type="button" onClick={() => dismiss(t.id)} className="-mr-1 grid size-6 place-items-center rounded-full text-muted hover:bg-sand hover:text-ink">
               <Icon name="close" className="size-3.5" />
