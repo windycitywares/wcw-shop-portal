@@ -75,6 +75,8 @@ export const NAV: NavGroup[] = [
     items: [
       { href: "/admin/settings", label: "Settings", icon: "sliders", permission: "settings:manage" },
       { href: "/admin/team", label: "Team", icon: "users", permission: "users:manage" },
+      // Personal (each person's own pop-ups, sounds and desktop alerts), so every member of staff sees it.
+      { href: "/admin/notifications/settings", label: "Notification settings", icon: "bell", permission: null },
       { href: "/admin/email", label: "Email config", icon: "mail", permission: "settings:manage", hidden: true },
       { href: "/admin/email-templates", label: "Email templates", icon: "mail", permission: "settings:manage", hidden: true },
       { href: "/admin/audit", label: "Audit log", icon: "shield", permission: "audit:view", hidden: true },
