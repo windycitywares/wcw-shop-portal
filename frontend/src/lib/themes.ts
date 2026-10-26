@@ -16,6 +16,43 @@ export type ThemeChoice = ThemeId | "system";
 export const THEME_KEY = "wcw-theme";
 export const DEFAULT_THEME: ThemeChoice = "classic";
 
+/*
+ * Shared with windycitywares.com and the CRM: the choice is also saved in a `wcw-theme` cookie
+ * ("classic" | "midnight") for the whole windycitywares.com domain, so switching on any of the three sites
+ * carries over to the others. The cookie wins over this site's localStorage (kept as a fallback).
+ * Same cookie in wcw-main-site lib/theme.ts and the CRM's lib/theme.ts.
+ */
+function cookieDomain(): string {
+  const h = location.hostname;
+  return h === "windycitywares.com" || h.endsWith(".windycitywares.com") ? "; domain=.windycitywares.com" : "";
+}
+
+function readCookie(): string | null {
+  const m = document.cookie.match(/(?:^|;\s*)wcw-theme=([^;]*)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+/** The saved choice: shared cookie first, then this site's older localStorage value, else the default. */
+export function readThemeChoice(): ThemeChoice {
+  try {
+    const v = readCookie() ?? localStorage.getItem(THEME_KEY);
+    return v === "system" || THEMES.some((t) => t.id === v) ? (v as ThemeChoice) : DEFAULT_THEME;
+  } catch {
+    return DEFAULT_THEME;
+  }
+}
+
+/** Saves a light/dark choice for all three sites (cookie) and for this one (localStorage). */
+export function saveThemeChoice(id: ThemeId) {
+  const secure = location.protocol === "https:" ? "; secure" : "";
+  document.cookie = `${THEME_KEY}=${id}; path=/; max-age=31536000; samesite=lax${cookieDomain()}${secure}`;
+  try {
+    localStorage.setItem(THEME_KEY, id);
+  } catch {
+    /* private mode: the cookie still carries it */
+  }
+}
+
 export function resolveTheme(choice: ThemeChoice): ThemeId {
   if (choice !== "system") return choice;
   return typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches
@@ -39,6 +76,6 @@ export function applyTheme(choice: ThemeChoice, animate = false) {
 
 /**
  * Inline <head> script: applies the saved theme synchronously so the page never flashes the default
- * colours. `?theme=<id>` previews a theme without saving it (shareable links, CI screenshots). Kept dependency-free and wrapped in try/catch (storage can be blocked).
+ * colours. Order: `?theme=<id>` (a preview, not saved) → the shared cookie → localStorage → default. `?theme=<id>` previews a theme without saving it (shareable links, CI screenshots). Kept dependency-free and wrapped in try/catch (storage can be blocked).
  */
-export const themeBootScript = `(function(){try{var ids=${JSON.stringify(THEMES.map((t) => t.id))};var q=new URLSearchParams(location.search).get("theme");var c=q||localStorage.getItem("${THEME_KEY}")||"${DEFAULT_THEME}";var id=c==="system"?(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"midnight":"classic"):c;if(ids.indexOf(id)<0)id="classic";document.documentElement.setAttribute("data-theme",id);}catch(e){document.documentElement.setAttribute("data-theme","classic");}})();`;
+export const themeBootScript = `(function(){try{var ids=${JSON.stringify(THEMES.map((t) => t.id))};var q=new URLSearchParams(location.search).get("theme");var m=document.cookie.match(/(?:^|;\\s*)${THEME_KEY}=([^;]*)/);var c=q||(m&&decodeURIComponent(m[1]))||localStorage.getItem("${THEME_KEY}")||"${DEFAULT_THEME}";var id=c==="system"?(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"midnight":"classic"):c;if(ids.indexOf(id)<0)id="classic";document.documentElement.setAttribute("data-theme",id);}catch(e){document.documentElement.setAttribute("data-theme","classic");}})();`;
