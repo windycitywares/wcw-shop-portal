@@ -129,6 +129,10 @@ const en = {
     related: "More in this theme",
     images: "Product images",
     showImage: "Show image {index} of {total}",
+    zoomImage: "Zoom image",
+    closeZoom: "Close zoom",
+    prevImage: "Previous image",
+    nextImage: "Next image",
     notFound: "Product not found",
     stock: {
       in_stock: "In stock",

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Price } from "@/components/ui/misc";
 import { StockRequestDialog, optionGroups as requestOptionGroups } from "@/components/product/StockRequestDialog";
 import { API_URL } from "@/lib/client-api";
+import { useProductView } from "@/components/catalog/ProductView";
 import { WishlistButton } from "@/components/product/WishlistButton";
 
 /**
@@ -46,7 +47,9 @@ export function PurchasePanel({ product: initial }: { product: ProductDetail }) 
   const [requestOpen, setRequestOpen] = useState<null | "notify" | "other">(null);
   const { t, fmt, locale } = useI18n();
   const hasVariants = product.variants.length > 0;
-  const [variantId, setVariantId] = useState<number | null>(hasVariants ? product.variants[0].id : null);
+  const view = useProductView();
+  const variantId = view.variantId ?? (hasVariants ? product.variants[0].id : null);
+  const setVariantId = view.setVariantId;
   const optionGroups = useMemo(
     () =>
       hasVariants
