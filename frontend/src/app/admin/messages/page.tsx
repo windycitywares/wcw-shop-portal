@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
 
+import { LiveUpdatesBar, updates } from "@/components/admin/live/LiveUpdatesBar";
 type Status = "new" | "open" | "replied" | "closed" | "spam";
 type View = "active" | "replied" | "closed" | "spam" | "all";
 
@@ -182,6 +183,7 @@ export default function AdminMessages() {
         title="Messages"
         description="Questions sent from the Contact page. Replies are emailed to the customer from the shop's address, with their message quoted underneath."
       />
+      <LiveUpdatesBar prefixes={["message."]} describe={updates("new messages")} onRefresh={() => void load()} />
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}

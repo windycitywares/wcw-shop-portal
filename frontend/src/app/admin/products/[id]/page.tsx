@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
 
+import { LiveUpdatesBar, changedBy } from "@/components/admin/live/LiveUpdatesBar";
 const STATUS_TONE: Record<ContentStatus, Tone> = { draft: "neutral", in_review: "accent", published: "success", archived: "warning" };
 
 interface FormState {
@@ -248,6 +249,7 @@ export default function ProductEditor() {
           </>
         }
       />
+      {!isNew && <LiveUpdatesBar prefixes={["product."]} refId={Number(id)} describe={changedBy("product")} onRefresh={() => window.location.reload()} />}
 
       <form id="product-form" onSubmit={onSubmit} className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
         {error && (

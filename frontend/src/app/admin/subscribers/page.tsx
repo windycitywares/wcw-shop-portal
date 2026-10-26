@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/Button";
 import { Field, Input, Select } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
 
+import { LiveUpdatesBar, updates } from "@/components/admin/live/LiveUpdatesBar";
 interface Subscriber {
   id: number;
   email: string;
@@ -227,6 +228,7 @@ export default function AdminSubscribers() {
           </>
         }
       />
+      <LiveUpdatesBar prefixes={["subscriber."]} describe={updates("subscriber updates")} onRefresh={() => void load()} />
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}

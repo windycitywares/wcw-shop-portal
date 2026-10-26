@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/client-api";
+import { useLive } from "@/components/admin/live/LiveProvider";
 import type { Page, Product } from "@/lib/types";
 import { BarList } from "@/components/admin/charts/BarList";
 import { ChartFrame } from "@/components/admin/charts/ChartFrame";
@@ -71,13 +72,21 @@ export default function AdminDashboard() {
     );
   }, []);
 
+  // A sale, payment or refund elsewhere: the figures follow quietly (a few seconds later, once a burst settles).
+  const [tick, setTick] = useState(0);
+  const settle = useRef<number | undefined>(undefined);
+  useLive(["order."], () => {
+    window.clearTimeout(settle.current);
+    settle.current = window.setTimeout(() => setTick((t) => t + 1), 3000);
+  });
+
   useEffect(() => {
     if (!reports) return;
-    setLoadingOverview(true);
+    setLoadingOverview(tick === 0);
     apiFetch<Overview>(`/admin/reports/overview?${rangeParams(range)}`)
       .then(setOverview, (e) => setError(e.message))
       .finally(() => setLoadingOverview(false));
-  }, [reports, range]);
+  }, [reports, range, tick]);
 
   const health = useMemo(() => {
     const live = (products ?? []).filter((p) => p.status === "published");

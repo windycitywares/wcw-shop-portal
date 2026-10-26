@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
 
+import { LiveUpdatesBar, updates } from "@/components/admin/live/LiveUpdatesBar";
 interface Row {
   id: number;
   product_id: number;
@@ -96,6 +97,7 @@ export default function AdminStockRequests() {
         title="Stock requests"
         description="Signed-in customers ask to be told when something is available. Back-in-stock requests are emailed automatically when you add stock; special requests are for combinations you don't sell yet and wait for your answer."
       />
+      <LiveUpdatesBar prefixes={["stock_request."]} describe={updates("new requests")} onRefresh={() => void load()} />
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}

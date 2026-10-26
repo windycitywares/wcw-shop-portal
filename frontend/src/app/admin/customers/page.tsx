@@ -20,6 +20,7 @@ import { Tabs } from "@/components/admin/ui/Tabs";
 import { AccountsAdmin } from "@/components/admin/users/AccountsAdmin";
 import { useAuth } from "@/lib/auth";
 
+import { LiveUpdatesBar, updates } from "@/components/admin/live/LiveUpdatesBar";
 interface Customer {
   email: string;
   name: string | null;
@@ -232,6 +233,7 @@ function Buyers({ onManageLogin }: { onManageLogin?: (email: string) => void }) 
 
   return (
     <div>
+      <LiveUpdatesBar prefixes={["customer.", "order.new"]} describe={updates("new customers or orders")} onRefresh={load} />
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}

@@ -18,6 +18,7 @@ import { Button, ButtonLink } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/misc";
 import { ProductImage } from "@/components/ui/ProductImage";
 
+import { LiveUpdatesBar, updates } from "@/components/admin/live/LiveUpdatesBar";
 const ALL: ContentStatus[] = ["draft", "in_review", "published", "archived"];
 const TONE: Record<ContentStatus, Tone> = { draft: "neutral", in_review: "accent", published: "success", archived: "warning" };
 const TABS = [
@@ -173,6 +174,7 @@ export default function AdminProducts() {
           </>
         }
       />
+      <LiveUpdatesBar prefixes={["product."]} describe={updates("product updates")} onRefresh={() => void load()} />
 
       {error && (
         <Alert tone="danger" className="mb-4">
