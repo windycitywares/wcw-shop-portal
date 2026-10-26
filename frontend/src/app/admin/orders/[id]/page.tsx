@@ -17,6 +17,7 @@ import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
 import { ProductImage } from "@/components/ui/ProductImage";
 
+import { LiveUpdatesBar, changedBy } from "@/components/admin/live/LiveUpdatesBar";
 type Dialog = "paid" | "ship" | "refund" | "cancel" | null;
 const CARRIERS = ["USPS", "UPS", "FedEx", "DHL", "Other"];
 
@@ -117,6 +118,7 @@ export default function AdminOrderDetail() {
           </div>
         }
       />
+      <LiveUpdatesBar prefixes={["order."]} refId={Number(id)} describe={changedBy("order")} onRefresh={load} />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
         <div className="space-y-6">

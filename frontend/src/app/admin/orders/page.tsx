@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
 
+import { LiveUpdatesBar, updates } from "@/components/admin/live/LiveUpdatesBar";
 const PAGE_SIZE = 25;
 type TabId = "all" | "action" | "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
 const TABS: { id: TabId; label: string }[] = [
@@ -60,6 +61,7 @@ export default function AdminOrders() {
     }
   }, []);
 
+  const [tick, setTick] = useState(0); // bumped by "Refresh" on the live updates bar
   const params = useCallback(() => {
     const p = new URLSearchParams({ sort, page: String(page), page_size: String(PAGE_SIZE) });
     if (q) p.set("q", q);
@@ -77,7 +79,7 @@ export default function AdminOrders() {
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Couldn't load orders"))
       .finally(() => setLoading(false));
-  }, [params]);
+  }, [params, tick]);
 
   const columns: Column<OrderListItem>[] = [
     {
@@ -153,6 +155,7 @@ export default function AdminOrders() {
           </Button>
         }
       />
+      <LiveUpdatesBar prefixes={["order."]} describe={updates("order updates")} onRefresh={() => setTick((t) => t + 1)} />
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}

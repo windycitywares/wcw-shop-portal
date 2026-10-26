@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
 
+import { LiveUpdatesBar, updates } from "@/components/admin/live/LiveUpdatesBar";
 interface Review {
   id: number;
   product_id: number;
@@ -80,6 +81,7 @@ export default function AdminReviews() {
         title="Reviews"
         description="Reviews appear on the product page once you publish them. Verified buyers bought the design; reviews with links always wait here."
       />
+      <LiveUpdatesBar prefixes={["review."]} describe={updates("new reviews")} onRefresh={() => void load()} />
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}
