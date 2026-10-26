@@ -83,9 +83,9 @@ export function NotificationBell() {
             <span data-testid="live-status" data-mode={live.mode}>
               {live.mode === "stream" ? "Live updates on" : live.mode === "polling" ? "Checking for updates every 10 seconds" : "Connecting…"}
             </span>
-            <button type="button" onClick={() => live.setMuted(!live.muted)} className="rounded font-medium text-accent underline-offset-4 hover:underline focus-visible:outline-2">
-              {live.muted ? "Turn on order sound" : "Mute order sound"}
-            </button>
+            <Link href="/admin/notifications/settings" onClick={close} className="font-medium text-accent underline-offset-4 hover:underline">
+              Notification settings
+            </Link>
           </div>
         </div>
       )}

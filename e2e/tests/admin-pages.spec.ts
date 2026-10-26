@@ -4,6 +4,11 @@ import { a11y, adminReady, adminState, expectNoHorizontalScroll, watch } from ".
 
 test.use({ storageState: adminState });
 
+// These tests wait for the network to go quiet; the admin's live-updates stream never does, so it is switched off here.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("wcw-live", "off"));
+});
+
 for (const route of ADMIN_ROUTES) {
   test.describe(route.path, () => {
     test("loads without errors and passes the accessibility scan", async ({ page }) => {

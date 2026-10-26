@@ -29,6 +29,8 @@ jobs:
       NEXT_PUBLIC_ALLOW_INDEXING: ${{ vars.ALLOW_INDEXING || 'false' }}
       API_URL: ${{ vars.API_URL || 'https://shop-api.windycitywares.com/api/v1' }}
       NEXT_TELEMETRY_DISABLED: "1"
+      # Which build a page was loaded from; the admin asks to refresh when the server runs a newer one.
+      NEXT_PUBLIC_BUILD_SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
 

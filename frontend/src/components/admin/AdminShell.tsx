@@ -20,6 +20,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { BackToTop } from "@/components/ui/BackToTop";
 import { ToastProvider } from "./ui/Toast";
 import { LiveProvider } from "./live/LiveProvider";
+import { NewVersionBanner } from "./live/NewVersionBanner";
 
 const linkClass = (active: boolean, collapsed: boolean) =>
   cn(
@@ -253,6 +254,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         <div className="flex min-w-0 flex-col">
+          <NewVersionBanner />
           <TestModeBanner label="Test mode" text="Test mode: you're working on a copy of the shop's data. Nothing here changes the live shop.">
             {" "}
             <Link href="/admin/environment" className="underline underline-offset-4">

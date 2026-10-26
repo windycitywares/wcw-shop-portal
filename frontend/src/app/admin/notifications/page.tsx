@@ -6,7 +6,7 @@ import { ActivityRow, KIND, type Activity, type Feed } from "@/components/admin/
 import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { Panel } from "@/components/admin/ui/Panel";
 import { Tabs } from "@/components/admin/ui/Tabs";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/misc";
 
 type Filter = "all" | Activity["type"];
@@ -49,7 +49,15 @@ export default function AdminNotifications() {
 
   return (
     <div>
-      <PageHeader title="Activity" description="What happened in the shop in the last 30 days. Select an item to open it where it's handled." />
+      <PageHeader
+        title="Activity"
+        description="What happened in the shop in the last 30 days. Select an item to open it where it's handled."
+        actions={
+          <ButtonLink href="/admin/notifications/settings" size="sm" variant="secondary">
+            Notification settings
+          </ButtonLink>
+        }
+      />
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}
