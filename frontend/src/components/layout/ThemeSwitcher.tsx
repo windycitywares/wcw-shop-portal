@@ -3,17 +3,11 @@
 import { Moon01, Sun as SunIcon } from "@untitledui/icons";
 import { useEffect, useState } from "react";
 import { useOptionalI18n } from "@/i18n/client";
-import { applyTheme, DEFAULT_THEME, resolveTheme, THEME_KEY, THEMES, type ThemeChoice } from "@/lib/themes";
+import { applyTheme, readThemeChoice, resolveTheme, saveThemeChoice, type ThemeChoice } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 
-function readChoice(): ThemeChoice {
-  try {
-    const v = localStorage.getItem(THEME_KEY) as ThemeChoice | null;
-    return v === "system" || THEMES.some((t) => t.id === v) ? (v as ThemeChoice) : DEFAULT_THEME;
-  } catch {
-    return DEFAULT_THEME;
-  }
-}
+/** Shared with windycitywares.com and the CRM through the wcw-theme cookie (lib/themes.ts). */
+const readChoice = readThemeChoice;
 
 /** Whether Dark is showing now, and a switch that saves the opposite. An older "match my device" choice is kept until the shopper clicks. */
 function useDarkMode() {
@@ -23,22 +17,30 @@ function useDarkMode() {
     sync();
     const choice = readChoice();
     window.addEventListener("wcw-theme", sync);
-    if (choice !== "system") return () => window.removeEventListener("wcw-theme", sync);
+    // Switched on the main site or the CRM in another tab: follow it when this tab is shown again.
+    const onShow = () => {
+      if (document.visibilityState !== "visible") return;
+      const saved = resolveTheme(readChoice());
+      if (saved !== document.documentElement.dataset.theme) applyTheme(readChoice());
+    };
+    document.addEventListener("visibilitychange", onShow);
+    if (choice !== "system")
+      return () => {
+        window.removeEventListener("wcw-theme", sync);
+        document.removeEventListener("visibilitychange", onShow);
+      };
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => applyTheme("system", true);
     mq.addEventListener("change", onChange);
     return () => {
       window.removeEventListener("wcw-theme", sync);
+      document.removeEventListener("visibilitychange", onShow);
       mq.removeEventListener("change", onChange);
     };
   }, []);
   const toggle = () => {
     const next: ThemeChoice = resolveTheme(readChoice()) === "midnight" ? "classic" : "midnight";
-    try {
-      localStorage.setItem(THEME_KEY, next);
-    } catch {
-      /* private mode: applies for this visit only */
-    }
+    saveThemeChoice(next);
     applyTheme(next, true);
   };
   return [dark, toggle] as const;
