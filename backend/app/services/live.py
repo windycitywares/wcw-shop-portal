@@ -17,7 +17,7 @@ class LiveEventService:
         if after is None or after > last:  # first call, or the table was emptied / replaced (Test mode switch)
             return {"events": [], "last_id": int(last)}
         rows = (await self.session.execute(
-            text("SELECT id, kind, ref_id, title, detail, href, created_at FROM live_events "
+            text("SELECT id, kind, ref_id, title, detail, href, actor_id, actor_name, created_at FROM live_events "
                  "WHERE id > :after AND permission = ANY(:perms) ORDER BY id LIMIT :n"),
             {"after": after, "perms": permissions, "n": limit},
         )).mappings().all()

@@ -18,6 +18,7 @@ from app.core.permissions import Permission
 from app.domain.live import Said, order_change, products_changed
 
 INFO_KEY = "live_events_seen"
+ACTOR_KEY = "live_actor"  # (user id, name) of the signed-in person this session works for; set in app/api/deps.py
 ORDER_FIELDS = ("placed_at", "payment_status", "status")
 # What an editor changes; stock counts, sales and ratings move on their own and are not news.
 PRODUCT_FIELDS = ("title", "slug", "description", "base_price", "compare_at_price", "status", "stock_status",
@@ -88,6 +89,8 @@ def _after_flush(session: Session, flush_context: Any) -> None:  # noqa: ARG001
     from app.models.product import Product
 
     seen: set[tuple[str, Any]] = session.info.setdefault(INFO_KEY, set())
+    actor_id, actor_name = session.info.get(ACTOR_KEY) or (None, None)
+    by = {"actor_id": actor_id, "actor_name": actor_name}
     products: list[tuple[int | None, str, bool]] = []
     for obj, is_new in [(o, True) for o in session.new] + [(o, False) for o in session.dirty]:
         if isinstance(obj, LiveEvent):
@@ -105,7 +108,7 @@ def _after_flush(session: Session, flush_context: Any) -> None:  # noqa: ARG001
             continue
         seen.add(key)
         session.add(LiveEvent(kind=said.kind, ref_id=key[1], title=said.title[:200], detail=(said.detail or None) and said.detail[:300],
-                              href=href, permission=permission))
+                              href=href, permission=permission, **by))
     fresh = [p for p in products if ("product.changed", p[0]) not in seen]
     if fresh:
         seen.update(("product.changed", p[0]) for p in fresh)
@@ -115,7 +118,7 @@ def _after_flush(session: Session, flush_context: Any) -> None:  # noqa: ARG001
             pid = fresh[i][0] if single else None
             session.add(LiveEvent(kind=said.kind, ref_id=pid, title=said.title[:200], detail=None,
                                   href=f"/admin/products/{pid}" if pid else "/admin/products",
-                                  permission=Permission.CATALOG_VIEW_UNPUBLISHED.value))
+                                  permission=Permission.CATALOG_VIEW_UNPUBLISHED.value, **by))
 
 
 def _forget(session: Session, *_: Any) -> None:

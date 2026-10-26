@@ -18,4 +18,6 @@ class LiveEvent(Base):
     detail: Mapped[str | None] = mapped_column(String(300))
     href: Mapped[str | None] = mapped_column(String(300))
     permission: Mapped[str] = mapped_column(String(40))
+    actor_id: Mapped[int | None] = mapped_column(BigInteger)
+    actor_name: Mapped[str | None] = mapped_column(String(200))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
