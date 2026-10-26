@@ -19,6 +19,7 @@ from app.models.commerce import (
     Sale,
     StoreSetting,
 )
+from app.models.live import LiveEvent
 from app.models.engagement import Campaign, Review, ReviewVote, StockAlert, WishlistItem
 from app.models.order import Order, OrderItem
 from app.models.product import Product
@@ -26,7 +27,7 @@ from app.models.user import NewsletterSubscriber, User
 
 __all__ = [
     "Address", "AnalyticsEvent", "AnalyticsSession", "AuditLog", "Base", "Campaign", "Cart", "CartRule",
-    "AppMode", "Category", "ConsentDaily", "Contact", "ContactMessage", "ContactReply", "Coupon", "CrmOutbox", "CouponRedemption", "EmailOutbox",
+    "AppMode", "Category", "ConsentDaily", "Contact", "ContactMessage", "ContactReply", "Coupon", "CrmOutbox", "CouponRedemption", "EmailOutbox", "LiveEvent",
     "NewsletterSubscriber", "Order", "OrderEvent", "OrderItem", "PasswordResetToken", "Payment", "Product",
     "Review", "ReviewVote", "Sale", "StockAlert", "StoreSetting", "User", "WishlistItem",
 ]

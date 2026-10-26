@@ -15,11 +15,13 @@ from app.services.settings import SettingsService
 BATCH = 5000
 MAX_BATCHES = 10  # per table per run; the next run continues
 EMAIL_DAYS = 120
+LIVE_EVENT_DAYS = 7  # live updates are for "just now"; the bell and the pages have the history
 
 STEPS = (
     ("analytics_events", "DELETE FROM analytics_events WHERE id IN (SELECT id FROM analytics_events WHERE created_at < :cutoff ORDER BY id LIMIT :n)"),
     ("analytics_sessions", "DELETE FROM analytics_sessions WHERE id IN (SELECT id FROM analytics_sessions WHERE started_at < :cutoff LIMIT :n)"),
     ("carts", "DELETE FROM carts WHERE id IN (SELECT id FROM carts WHERE last_activity_at < :cutoff LIMIT :n)"),
+    ("live_events", "DELETE FROM live_events WHERE id IN (SELECT id FROM live_events WHERE created_at < :live_cutoff ORDER BY id LIMIT :n)"),
     ("email_outbox", "DELETE FROM email_outbox WHERE id IN (SELECT id FROM email_outbox WHERE status <> 'queued' AND created_at < :mail_cutoff LIMIT :n)"),
 )
 
@@ -27,7 +29,8 @@ STEPS = (
 async def purge(session: AsyncSession, now: datetime | None = None) -> dict[str, int]:
     now = now or datetime.now(timezone.utc)
     days = (await SettingsService(session).load()).analytics.retention_days
-    params = {"cutoff": now - timedelta(days=days), "mail_cutoff": now - timedelta(days=EMAIL_DAYS), "n": BATCH}
+    params = {"cutoff": now - timedelta(days=days), "mail_cutoff": now - timedelta(days=EMAIL_DAYS),
+              "live_cutoff": now - timedelta(days=LIVE_EVENT_DAYS), "n": BATCH}
     deleted: dict[str, int] = {}
     for table, sql in STEPS:
         total = 0

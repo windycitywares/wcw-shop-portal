@@ -10,6 +10,7 @@ from app.core.config import get_settings
 from app.core.database import get_session
 from app.core.exceptions import AuthenticationError, PermissionDeniedError
 from app.core.permissions import Permission, has_permission
+from app.core.live_events import ACTOR_KEY
 from app.core.security import decode_access_token
 from app.models.user import User
 
@@ -48,6 +49,8 @@ async def get_optional_user(
         raise AuthenticationError("Account not found or disabled")
     if user.password_changed_at and int(payload.get("iat", 0)) < int(user.password_changed_at.timestamp()):
         raise AuthenticationError("Your password was changed — please sign in again")
+    # Live updates name who made a change, and a person's own edits don't come back to them as news.
+    session.info[ACTOR_KEY] = (user.id, user.full_name or user.email)
     return user
 
 

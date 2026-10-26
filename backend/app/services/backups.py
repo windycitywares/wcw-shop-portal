@@ -304,6 +304,14 @@ class BackupService:
         except BackupError as exc:
             await self._rows("UPDATE backup_runs SET status = 'failed', finished_at = now(), error = :e WHERE id = :i", e=str(exc)[:1000], i=run_id)
             await self._audit(actor_email, "backup.failed", f"Backup failed: {exc}")
+            try:  # tell staff at once (live updates); never a reason for the backup run itself to fail
+                await self._rows(
+                    "INSERT INTO live_events (kind, ref_id, title, detail, href, permission) "
+                    "VALUES ('backup.failed', :i, 'A backup failed', :e, '/admin/backups', 'backups:manage')",
+                    i=run_id, e=str(exc)[:300],
+                )
+            except Exception:  # noqa: BLE001
+                pass
             return {"status": "failed", "error": str(exc), "file_name": name}
         await self._rows(
             "UPDATE backup_runs SET status = 'success', finished_at = now(), size_bytes = :s WHERE id = :i", s=len(sealed), i=run_id,
