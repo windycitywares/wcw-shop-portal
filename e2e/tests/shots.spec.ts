@@ -8,6 +8,10 @@ import { adminReady, adminState, shot, signedOut } from "./support";
  */
 test.describe("admin", () => {
   test.use({ storageState: adminState });
+  // The admin's live-updates stream never lets the network go quiet; these screenshots wait for that.
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("wcw-live", "off"));
+  });
 
   for (const route of ADMIN_ROUTES) {
     test(`${route.name} (desktop)`, async ({ page }) => {

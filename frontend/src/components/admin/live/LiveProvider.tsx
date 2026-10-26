@@ -91,6 +91,15 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // Switched off for this browser (the page-load tests wait for the network to go quiet, which an open stream never does).
+    try {
+      if (localStorage.getItem("wcw-live") === "off") {
+        setMode("off");
+        return;
+      }
+    } catch {
+      /* storage unavailable: carry on */
+    }
     let stopped = false;
     let leading = false;
     let currentMode: LiveMode = "connecting";
