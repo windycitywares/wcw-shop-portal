@@ -1,5 +1,5 @@
 import { expect, request, test } from "@playwright/test";
-import { API, adminApi, adminReady, adminState, unique, watch } from "./support";
+import { API, adminReady, adminState, unique, watch } from "./support";
 
 test.use({ storageState: adminState });
 
@@ -15,7 +15,8 @@ test("a new contact message pops up in the admin without a reload, and the bell 
   await expect(page.getByTestId("live-status")).toHaveText("Live updates on");
   await page.keyboard.press("Escape");
 
-  const api = await adminApi();
+  // Sent as a visitor: a staff member's own actions never pop up for them.
+  const api = await request.newContext({ baseURL: `${API}/` });
   const subject = unique("Live question");
   const sent = await api.post("contact", {
     data: { name: "Ari Live", email: `${unique("ari")}@example.com`, subject, message: "Do you ship to Canada?", locale: "en" },
