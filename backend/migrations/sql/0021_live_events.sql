@@ -9,6 +9,8 @@ CREATE TABLE live_events (
     detail VARCHAR(300),
     href VARCHAR(300),                   -- the admin page that handles it
     permission VARCHAR(40) NOT NULL,     -- who may see it (app/core/permissions.py)
+    actor_id BIGINT,                     -- the signed-in person whose request made the change (none: a shopper, a job, Stripe)
+    actor_name VARCHAR(200),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX ix_live_events_created_at ON live_events (created_at);

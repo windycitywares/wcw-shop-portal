@@ -38,6 +38,7 @@ class LiveEventTests(unittest.TestCase):
         self.assertIn("order.new", kinds)
         self.assertEqual(kinds.count("order.new"), 1)  # placed and paid in one save: one line
         new_order = next(e for e in got["events"] if e["kind"] == "order.new")
+        self.assertIsNone(new_order["actor_id"])  # a guest checkout: nobody signed in
         self.assertEqual(new_order["title"], f"New order #{order['number']}")
         self.assertEqual(new_order["href"], f"/admin/orders/{order['id']}")
         self.assertIn("message.new", kinds)
@@ -54,8 +55,11 @@ class LiveEventTests(unittest.TestCase):
         order = w.place(w.email("live-ship"), [item(w.product("8.00"))])["order"]
         after = self.start(w.admin)
         w.post(f"/admin/orders/{order['id']}/ship", {"carrier": "usps", "tracking_number": "9400 2000"}, w.admin)
-        titles = [e["title"] for e in self.since(after, w.admin)["events"]]
-        self.assertIn(f"Order #{order['number']} shipped", titles)
+        events = self.since(after, w.admin)["events"]
+        shipped = next(e for e in events if e["title"] == f"Order #{order['number']} shipped")
+        # Made by a signed-in member of staff: named, so their own browser can leave it out.
+        self.assertIsNotNone(shipped["actor_id"])
+        self.assertTrue(shipped["actor_name"])
 
     def test_each_role_sees_only_what_it_can_act_on(self):
         w = self.w
