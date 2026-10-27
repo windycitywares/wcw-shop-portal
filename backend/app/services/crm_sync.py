@@ -104,11 +104,13 @@ def contact_record_payload(c: Contact) -> dict[str, Any]:
 
 
 def newsletter_event(s: NewsletterSubscriber) -> tuple[str, dict[str, Any]] | None:
+    # `at` is when it happened here, so the CRM shows the real date and not the moment it heard about it.
     if s.unsubscribed_at is not None:
-        return "newsletter.unsubscribed", {"email": s.email}
+        return "newsletter.unsubscribed", {"email": s.email, "at": s.unsubscribed_at.isoformat()}
     if s.source in SERVICE_ONLY_SOURCES:
         return None  # a row kept only for service-email unsubscribe links: not a subscriber
-    return "newsletter.subscribed", {"email": s.email, "source": s.source}
+    return "newsletter.subscribed", {"email": s.email, "source": s.source,
+                                     "at": s.created_at.isoformat() if s.created_at else None}
 
 
 def contact_payload(m: ContactMessage) -> dict[str, Any]:

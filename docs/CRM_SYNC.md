@@ -34,7 +34,7 @@ ORM.
 
 `GET /api/v1/integrations/crm/{contacts|customers|orders|newsletter|products}?after_id=0&limit=200` (max 500), header
 `Authorization: Bearer <CRM_API_TOKEN>`. Pages by id: pass the answer's `next_after_id` until it is `null`.
-`orders` also takes `email=`. Items have the same shape as the events' `data`; newsletter items add `type`
+`orders` also takes `email=`. Items have the same shape as the events' `data`; newsletter items add `type` and `at` (when they joined or left)
 (`newsletter.subscribed` / `newsletter.unsubscribed`). Always live data. Answers 404 while `CRM_API_TOKEN` is unset;
 bad tokens are rate-limited per IP.
 

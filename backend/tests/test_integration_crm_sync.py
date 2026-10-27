@@ -67,6 +67,7 @@ class CrmSyncTests(unittest.TestCase):
         self.assertTrue(order[0]["marketing_opt_in"])
         self.assertEqual(order[0]["billing_address"]["city"], "Chicago")
         self.assertEqual(by_type["newsletter.subscribed"]["event"]["data"]["email"], email)
+        self.assertTrue(by_type["newsletter.subscribed"]["event"]["data"]["at"])  # when they joined, for the CRM
 
         sent = by_type["customer.upserted"]
         ts = sent["headers"]["X-WCW-Timestamp"]
