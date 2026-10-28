@@ -1,21 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/client-api";
 import { downloadFile } from "@/components/admin/download";
 import { dateTime } from "@/components/admin/charts/format";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
-import { IconButton, RowActions } from "@/components/admin/ui/IconButton";
-import { ConfirmDialog, Modal } from "@/components/admin/ui/Modal";
+import { CrmNotice } from "@/components/admin/CrmNotice";
+import { crmLink } from "@/lib/crm";
 import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { Pagination } from "@/components/admin/ui/Pagination";
 import { Panel } from "@/components/admin/ui/Panel";
 import { Pill } from "@/components/admin/ui/Pill";
 import { Tabs } from "@/components/admin/ui/Tabs";
-import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
-import { Field, Input, Select } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
 
 import { LiveUpdatesBar, updates } from "@/components/admin/live/LiveUpdatesBar";
@@ -44,21 +42,12 @@ const LANGUAGES: Record<string, string> = { en: "English", es: "Spanish", nl: "D
 const PAGE_SIZE = 25;
 
 export default function AdminSubscribers() {
-  const { can } = useAuth();
-  const { push } = useToast();
   const [status, setStatus] = useState<Status>("subscribed");
   const [draft, setDraft] = useState("");
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const [data, setData] = useState<Listing | null>(null);
   const [error, setError] = useState("");
-  const [adding, setAdding] = useState(false);
-  const [addError, setAddError] = useState("");
-  const [removing, setRemoving] = useState<Subscriber | null>(null);
-  const [deleting, setDeleting] = useState<Subscriber | null>(null);
-  const [pausing, setPausing] = useState<Subscriber | null>(null);
-  const [busy, setBusy] = useState(false);
-  const canManage = can("promotions:manage");
 
   // The bell links here with ?q=email.
   useEffect(() => {
@@ -88,75 +77,6 @@ export default function AdminSubscribers() {
   useEffect(() => {
     void load();
   }, [load]);
-
-  async function onAdd(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    setAddError("");
-    try {
-      await apiFetch("/admin/subscribers", { method: "POST", body: JSON.stringify({ email: fd.get("email"), locale: fd.get("locale") }) });
-      push({ title: "Subscriber added", description: String(fd.get("email")) });
-      setAdding(false);
-      await load();
-    } catch (err) {
-      setAddError(err instanceof Error ? err.message : "Could not add this address");
-    }
-  }
-
-  async function unsubscribe() {
-    if (!removing) return;
-    setBusy(true);
-    try {
-      await apiFetch(`/admin/subscribers/${removing.id}/unsubscribe`, { method: "POST" });
-      push({ title: "Taken off the list", description: removing.email });
-      setRemoving(null);
-      await load();
-    } catch (err) {
-      push({ title: "Not changed", description: err instanceof Error ? err.message : undefined, tone: "danger" });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function pause() {
-    if (!pausing) return;
-    setBusy(true);
-    try {
-      await apiFetch(`/admin/subscribers/${pausing.id}/pause`, { method: "POST" });
-      push({ title: "Subscriber paused", description: pausing.email });
-      setPausing(null);
-      await load();
-    } catch (err) {
-      push({ title: "Not paused", description: err instanceof Error ? err.message : undefined, tone: "danger" });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function resume(s: Subscriber) {
-    try {
-      await apiFetch(`/admin/subscribers/${s.id}/resume`, { method: "POST" });
-      push({ title: "Subscriber resumed", description: s.email });
-      await load();
-    } catch (err) {
-      push({ title: "Not resumed", description: err instanceof Error ? err.message : undefined, tone: "danger" });
-    }
-  }
-
-  async function remove() {
-    if (!deleting) return;
-    setBusy(true);
-    try {
-      await apiFetch(`/admin/subscribers/${deleting.id}`, { method: "DELETE" });
-      push({ title: "Subscriber deleted", description: deleting.email });
-      setDeleting(null);
-      await load();
-    } catch (err) {
-      push({ title: "Not deleted", description: err instanceof Error ? err.message : undefined, tone: "danger" });
-    } finally {
-      setBusy(false);
-    }
-  }
 
   const columns: Column<Subscriber>[] = [
     {
@@ -198,15 +118,11 @@ export default function AdminSubscribers() {
       key: "actions",
       header: <span className="sr-only">Actions</span>,
       align: "right",
-      cell: (s) =>
-        canManage ? (
-          <RowActions>
-            {s.subscribed && !s.paused && <IconButton icon="pause" label={`Pause ${s.email}`} onClick={() => setPausing(s)} />}
-            {s.paused && <IconButton icon="play" label={`Resume ${s.email}`} onClick={() => void resume(s)} />}
-            {s.subscribed && <IconButton icon="archive" label={`Take ${s.email} off the list`} onClick={() => setRemoving(s)} />}
-            <IconButton icon="trash" tone="danger" label={`Delete ${s.email}`} onClick={() => setDeleting(s)} />
-          </RowActions>
-        ) : null,
+      cell: (s) => (
+        <a href={crmLink(`/customers?q=${encodeURIComponent(s.email)}`)} target="_blank" rel="noopener noreferrer" className="text-sm font-medium underline underline-offset-2">
+          Open in CRM<span className="sr-only"> for {s.email} (new tab)</span>
+        </a>
+      ),
     },
   ];
 
@@ -214,20 +130,14 @@ export default function AdminSubscribers() {
     <div>
       <PageHeader
         title="Subscribers"
-        description="Everyone who joined the newsletter from the site, at checkout or in their account. Email campaigns go to the subscribed people on this list."
+        description="Everyone who joined the newsletter from the site, at checkout or in their account."
         actions={
-          <>
-            <Button size="sm" variant="secondary" onClick={() => downloadFile(`/admin/subscribers/export.csv?${query()}`, "wcw-subscribers.csv").catch((e) => setError(e.message))}>
-              Export CSV
-            </Button>
-            {canManage && (
-              <Button size="sm" onClick={() => setAdding(true)}>
-                Add subscriber
-              </Button>
-            )}
-          </>
+          <Button size="sm" variant="secondary" onClick={() => downloadFile(`/admin/subscribers/export.csv?${query()}`, "wcw-subscribers.csv").catch((e) => setError(e.message))}>
+            Export CSV
+          </Button>
         }
       />
+      <CrmNotice what="Subscribers" path="/customers" action="Open customers in the CRM" />
       <LiveUpdatesBar prefixes={["subscriber."]} describe={updates("subscriber updates")} onRefresh={() => void load()} />
       {error && (
         <Alert tone="danger" className="mb-4">
@@ -278,74 +188,6 @@ export default function AdminSubscribers() {
         <Pagination page={page} pageSize={PAGE_SIZE} total={data?.total ?? 0} onPage={setPage} />
       </Panel>
 
-      <p className="mt-4 text-sm text-muted">
-        People can leave with the link in every email. Pause someone to leave them out of campaigns for a while without taking them off the list; resume
-        whenever you like. You can also take someone off the list or delete their record, but only they can sign up again, so nobody is added back without
-        agreeing.
-      </p>
-
-      <Modal
-        open={adding}
-        onClose={() => setAdding(false)}
-        title="Add a subscriber"
-        description="For someone who asked to join in person or by email. No welcome offer is sent."
-        footer={
-          <>
-            <Button variant="ghost" size="sm" onClick={() => setAdding(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" form="add-subscriber-form" size="sm">
-              Add subscriber
-            </Button>
-          </>
-        }
-      >
-        <form id="add-subscriber-form" onSubmit={onAdd} className="space-y-4">
-          {addError && <Alert tone="danger">{addError}</Alert>}
-          <Field label="Email">{(p) => <Input {...p} name="email" type="email" required autoComplete="off" />}</Field>
-          <Field label="Language" hint="The language of the emails they receive.">
-            {(p) => (
-              <Select {...p} name="locale" defaultValue="en">
-                {Object.entries(LANGUAGES).map(([id, label]) => (
-                  <option key={id} value={id}>
-                    {label}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
-        </form>
-      </Modal>
-
-      <ConfirmDialog
-        open={!!removing}
-        title="Take this address off the list?"
-        tone="primary"
-        confirmLabel="Take off the list"
-        busy={busy}
-        onCancel={() => setRemoving(null)}
-        onConfirm={() => void unsubscribe()}
-        message={<p>{removing?.email} will not get any more newsletters or campaigns. Only they can sign up again.</p>}
-      />
-      <ConfirmDialog
-        open={!!pausing}
-        title="Pause this subscriber?"
-        tone="primary"
-        confirmLabel="Pause subscriber"
-        busy={busy}
-        onCancel={() => setPausing(null)}
-        onConfirm={() => void pause()}
-        message={<p>{pausing?.email} stays on the list but gets no email campaigns until you resume them. Order and account emails still go out.</p>}
-      />
-      <ConfirmDialog
-        open={!!deleting}
-        title="Delete this subscriber?"
-        confirmLabel="Delete subscriber"
-        busy={busy}
-        onCancel={() => setDeleting(null)}
-        onConfirm={() => void remove()}
-        message={<p>The record for {deleting?.email} is removed for good. Use this for a data-deletion request; otherwise taking them off the list keeps proof they opted out.</p>}
-      />
     </div>
   );
 }
