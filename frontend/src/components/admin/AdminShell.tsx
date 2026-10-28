@@ -8,7 +8,7 @@ import { isStaff, useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/client-api";
 import { setStoreTimeZone } from "./charts/format";
 import { cn } from "@/lib/utils";
-import { Logo } from "@/components/ui/Logo";
+import { Logo, LogoMark } from "@/components/ui/Logo";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { TestModeBanner } from "@/components/TestModeBanner";
 import { NotificationBell } from "./notifications/NotificationBell";
@@ -182,13 +182,10 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
   );
 }
 
-function Brand({ collapsed }: { collapsed: boolean }) {
+function Brand({ collapsed, className = "h-[22px] w-auto" }: { collapsed: boolean; className?: string }) {
   return (
-    <Link href="/admin" className="flex min-w-0 items-center gap-3 rounded-[var(--radius-control)] px-1 py-1" aria-label="WindyCityWares admin home">
-      <span aria-hidden="true" className="font-admin grid size-9 shrink-0 place-items-center rounded-lg bg-accent text-base font-bold text-on-accent shadow-[var(--shadow-card)]">
-        W
-      </span>
-      {!collapsed && <span className="font-admin truncate text-lg font-semibold text-ink">WCW Admin</span>}
+    <Link href="/admin" className="flex min-w-0 items-center rounded-[var(--radius-control)] px-1 py-1" aria-label="WindyCityWares admin home">
+      {collapsed ? <LogoMark className="size-9" /> : <Logo className={className} />}
     </Link>
   );
 }
@@ -239,7 +236,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         {/* Sidebar: a white menu with a soft shadow; the current page has a tint, an accent bar and an accent icon */}
         <aside className="sticky top-0 z-20 hidden h-dvh flex-col bg-surface shadow-[var(--shadow-card)] lg:flex">
           <div className={cn("flex h-16 shrink-0 items-center gap-2", collapsed ? "flex-col justify-center px-2" : "justify-between pl-4 pr-3")}>
-            {!collapsed && <Brand collapsed={false} />}
+            <Brand collapsed={collapsed} />
             <button
               type="button"
               onClick={() => setCollapsed((c) => !c)}
@@ -273,7 +270,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   <Dialog.Title className="sr-only">Admin menu</Dialog.Title>
                   <Dialog.Description className="sr-only">Go to a section of the admin.</Dialog.Description>
                   <div className="flex h-16 items-center justify-between pl-4 pr-3">
-                    <Brand collapsed={false} />
+                    <Brand collapsed={false} className="h-6 w-auto" />
                     <Dialog.Close className="grid size-9 place-items-center rounded-full text-muted hover:bg-sand hover:text-ink">
                       <Icon name="close" className="size-5" />
                       <span className="sr-only">Close menu</span>
