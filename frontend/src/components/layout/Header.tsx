@@ -25,7 +25,7 @@ export async function Header({ locale }: { locale: Locale }) {
           className="flex shrink-0 items-center rounded-full"
           aria-label={t.nav.homeLabel}
         >
-          <Logo className="h-6 w-auto sm:h-8 xl:h-10" />
+          <Logo className="h-6 w-auto sm:h-8 xl:h-9 min-[1700px]:h-10" />
         </Link>
         <div className="hidden flex-1 lg:block">
           <MegaMenu tree={tree} />
