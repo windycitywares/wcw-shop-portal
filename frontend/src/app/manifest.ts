@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "WindyCityWares",
     short_name: "WindyCityWares",
-    description: "Thoughtfully made goods.",
+    description: "Crafted with care. Designed with purpose. Treasured for a lifetime.",
     start_url: "/",
     display: "standalone",
     background_color: "#f6f5f1",
