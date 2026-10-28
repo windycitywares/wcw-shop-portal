@@ -8,7 +8,7 @@ import type { CategoryNode } from "@/lib/types";
 import { Container } from "@/components/ui/misc";
 
 const linkClass =
-  "inline-flex h-10 items-center rounded-full px-3.5 text-[0.9375rem] text-ink hover:bg-sand data-[state=open]:bg-sand";
+  "inline-flex h-10 items-center rounded-full px-3.5 text-[0.9375rem] text-ink hover:bg-sand data-[state=open]:bg-sand whitespace-nowrap";
 
 /**
  * Desktop navigation from the category tree (keyboard + screen-reader accessible via Radix).
