@@ -18,7 +18,7 @@ test("a newsletter sign-up shows in Subscribers, view-only, with a link to the C
   const row = page.getByRole("row").filter({ hasText: email });
   await expect(row).toHaveCount(1);
   await expect(row.getByText("Subscribed", { exact: true })).toBeVisible();
-  await expect(row.getByRole("link", { name: /Open in CRM/ })).toHaveAttribute("href", /\/customers\?q=/);
+  await expect(row.getByRole("link", { name: /in the CRM/ })).toHaveAttribute("href", /\/customers\?q=/);
   await expect(page.getByRole("button", { name: "Add subscriber" })).toHaveCount(0);
   await expect(row.getByRole("button")).toHaveCount(0);
   seen.expectClean();
