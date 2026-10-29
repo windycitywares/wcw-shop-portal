@@ -1,0 +1,3 @@
+module.exports=[55134,a=>{"use strict";var b=a.i(88780);a.s(["y",0,function(){try{return`co-${crypto.randomUUID()}`}catch{return`co-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,12)}`}},"B",0,{byToken:(a,c)=>(0,b.i)(`/orders/by-token/${encodeURIComponent(a)}?lang=${c}`),confirm:(a,c,d)=>(0,b.i)(`/orders/by-token/${encodeURIComponent(a)}/confirm?lang=${d}`,{method:"POST",body:JSON.stringify({session_id:c})}),pay:(a,c)=>(0,b.i)(`/orders/by-token/${encodeURIComponent(a)}/pay?lang=${c}`,{method:"POST"})}])}];
+
+//# sourceMappingURL=src_lib_orders_ts_1p4iwa6bke08u._.js.map

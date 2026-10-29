@@ -1,0 +1,39 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/promotions/layout,_N_T_/admin/promotions/page,_N_T_/admin/promotions"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/promotions/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 160,
+                "slots": null
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/01056ee1a041e51b56c0f6d8f02bc7a8785eaeda2814d27fa45115bdb7cfd1b3/$/admin/promotions",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin/promotions/page"
+    },
+    "isFallback": false
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/analytics/layout,_N_T_/admin/analytics/customers/layout,_N_T_/admin/analytics/customers/page,_N_T_/admin/analytics/customers"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/analytics/customers/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 96,
+                "slots": {
+                  "children": {
+                    "hints": 160,
+                    "slots": null
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/e49aa26e19f14866c32216f445261e9a923e1a220322f41b9d9cc80a64ff727a/$/admin/analytics/customers",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin/analytics/customers/page"
+    },
+    "isFallback": false
+  }
+}

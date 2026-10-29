@@ -1,0 +1,35 @@
+3:"$Sreact.fragment"
+4:"/_next/static/chunks/0umf92h1sb77c.js"
+5:I[39756,["$4"],"default"]
+6:I[37457,["$4"],"default"]
+b:"/_next/static/chunks/29d9io9itllgi.js"
+c:"/_next/static/chunks/1v5dlu10daw42.js"
+d:"/_next/static/chunks/0q90mzply98ba.js"
+e:"/_next/static/chunks/2l3u-y34d35q-.js"
+f:"/_next/static/chunks/0hlcyxe69aoqp.js"
+10:"/_next/static/chunks/2x6x064suba4v.js"
+11:"/_next/static/chunks/12qs8da1xrcdx.js"
+12:"ResetPasswordForm"
+13:I[6521,["$b","$c","$d","$e","$f","$10","$11"],"$12"]
+14:I[97367,["$4"],"OutletBoundary"]
+15:"$Sreact.suspense"
+18:"ViewportBoundary"
+19:I[97367,["$4"],"$18"]
+1a:"MetadataBoundary"
+1b:I[97367,["$4"],"$1a"]
+1c:I[27201,["$4"],"IconMark"]
+8:X
+8:C
+9:X
+a:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$3","c",{"children":[["$","div",null,{"className":"mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-md py-16 sm:py-24","children":[["$","h1",null,{"className":"text-5xl","children":"Elige una nueva contraseña"}],["$","p",null,{"className":"mt-4 text-muted","children":"Se cerrará tu sesión en todos los demás dispositivos."}],["$","$L13",null,{}]]}],[["$","script","script-0",{"src":"/_next/static/chunks/12qs8da1xrcdx.js","async":true}]],["$","$L14",null,{"children":["$","$15",null,{"name":"Next.MetadataOutlet","children":"$@16"}]}]]}],"p":"$@17","v":null,"s":"$9"}}]]
+2:[["children",{"s":"reset-password","h":64,"d":{"r":["$","$3","c",{"children":[null,["$","$L5",null,{"parallelRouterKey":"children","template":["$","$L6",null,{}]}]]}],"p":"$@7","v":"$8","s":"$9"},"c":"$Qa"}]]
+1:[["children",{"s":{"n":"locale","t":"d","k":"es","s":["admin","api","embed"]},"h":48,"c":"$Q2"}]]
+0:{"t":{"t":{"s":"","h":80,"c":"$Q1"},"h":{"r":["$","$3","h",{"children":[null,["$","$L19",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","2",{"name":"theme-color","content":"#f2f3ef"}]]}],["$","$L1b",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$15",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Elige una nueva contraseña | Windy City Wares"}],["$","meta","1",{"name":"description","content":"Artesanía, antigüedades, regalos y decoración del hogar, seleccionados a mano y enviados con cuidado."}],["$","meta","2",{"name":"application-name","content":"Windy City Wares"}],["$","link","3",{"rel":"manifest","href":"/manifest.webmanifest"}],["$","meta","4",{"name":"referrer","content":"no-referrer"}],["$","meta","5",{"name":"robots","content":"noindex, nofollow"}],["$","meta","6",{"property":"og:title","content":"Elige una nueva contraseña | Windy City Wares"}],["$","meta","7",{"property":"og:description","content":"Artesanía, antigüedades, regalos y decoración del hogar, seleccionados a mano y enviados con cuidado."}],["$","meta","8",{"property":"og:url","content":"https://shop.windycitywares.com"}],["$","meta","9",{"property":"og:site_name","content":"Windy City Wares"}],["$","meta","10",{"property":"og:locale","content":"es_ES"}],["$","meta","11",{"property":"og:image","content":"https://shop.windycitywares.com/-/opengraph-image.png?opengraph-image.1cnxrnp_vks8p.png"}],["$","meta","12",{"property":"og:image:type","content":"image/png"}],["$","meta","13",{"property":"og:image:width","content":"1200"}],["$","meta","14",{"property":"og:image:height","content":"630"}],["$","meta","15",{"property":"og:type","content":"website"}],["$","meta","16",{"name":"twitter:card","content":"summary_large_image"}],["$","meta","17",{"name":"twitter:title","content":"Elige una nueva contraseña | Windy City Wares"}],["$","meta","18",{"name":"twitter:description","content":"Artesanía, antigüedades, regalos y decoración del hogar, seleccionados a mano y enviados con cuidado."}],["$","meta","19",{"name":"twitter:image","content":"https://shop.windycitywares.com/-/opengraph-image.png?opengraph-image.1cnxrnp_vks8p.png"}],["$","meta","20",{"name":"twitter:image:type","content":"image/png"}],["$","meta","21",{"name":"twitter:image:width","content":"1200"}],["$","meta","22",{"name":"twitter:image:height","content":"630"}],["$","link","23",{"rel":"icon","href":"/favicon.ico?favicon.02nzuyazb7yof.ico","sizes":"48x48","type":"image/x-icon"}],["$","link","24",{"rel":"apple-touch-icon","href":"/apple-icon.png?apple-icon.3mrylfnvohbq_.png","sizes":"180x180","type":"image/png"}],["$","$L1c","25",{}]]}]}],null]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"p":"$@1d","v":null,"s":"$9"}},"a":"$@1e","u":"$@1f","b":"EvPoZCU2Gq_m8wb34NGku"}
+16:null
+1f:true
+9:300
+9:C
+1e:0
+7:"$undefined"
+1d:"$undefined"
+17:"$undefined"

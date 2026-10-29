@@ -1,0 +1,3 @@
+module.exports=[70690,35373,a=>{"use strict";var b=a.i(87924),c=a.i(81721);let d=(process.env.NEXT_PUBLIC_CRM_URL||"https://crm.windycitywares.com").replace(/\/$/,"");function e(a=""){return`${d}${a}`}a.s(["f",0,e],35373),a.s(["f",0,function({what:a,path:d,action:f}){return(0,b.jsx)(c.J,{tone:"info",className:"mb-4",children:(0,b.jsxs)("span",{"data-testid":"crm-notice",children:[a," are managed in the CRM; this page is for viewing only."," ",(0,b.jsxs)("a",{href:e(d),target:"_blank",rel:"noopener noreferrer",className:"font-medium underline underline-offset-2",children:[f,(0,b.jsx)("span",{className:"sr-only",children:" (opens the CRM in a new tab)"})]})]})})}],70690)}];
+
+//# sourceMappingURL=src_components_admin_CrmNotice_tsx_0-sbxa2lqomz0._.js.map
