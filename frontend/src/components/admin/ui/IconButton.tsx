@@ -31,3 +31,18 @@ export const IconButton = forwardRef<
 export function RowActions({ children }: { children: React.ReactNode }) {
   return <div className="flex items-center justify-end gap-1">{children}</div>;
 }
+
+/** An icon-only link that looks like an IconButton (opens somewhere else, e.g. the CRM). */
+export function IconLink({ icon, label, href, newTab = true, className }: { icon: IconName; label: string; href: string; newTab?: boolean; className?: string }) {
+  return (
+    <a
+      href={href}
+      title={label}
+      aria-label={newTab ? `${label} (new tab)` : label}
+      {...(newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      className={cn("grid size-8 place-items-center rounded-full text-muted transition-colors hover:bg-sand hover:text-ink focus-visible:outline-2", className)}
+    >
+      <Icon name={icon} className="size-4" />
+    </a>
+  );
+}

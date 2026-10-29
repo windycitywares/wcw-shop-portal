@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/client-api";
 import { downloadFile } from "@/components/admin/download";
 import { dateTime } from "@/components/admin/charts/format";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
+import { IconLink, RowActions } from "@/components/admin/ui/IconButton";
 import { CrmNotice } from "@/components/admin/CrmNotice";
 import { crmLink } from "@/lib/crm";
 import { PageHeader } from "@/components/admin/ui/PageHeader";
@@ -119,9 +120,9 @@ export default function AdminSubscribers() {
       header: <span className="sr-only">Actions</span>,
       align: "right",
       cell: (s) => (
-        <a href={crmLink(`/customers?q=${encodeURIComponent(s.email)}`)} target="_blank" rel="noopener noreferrer" className="text-sm font-medium underline underline-offset-2">
-          Open in CRM<span className="sr-only"> for {s.email} (new tab)</span>
-        </a>
+        <RowActions>
+          <IconLink icon="external" label={`Open ${s.email} in the CRM`} href={crmLink(`/customers?q=${encodeURIComponent(s.email)}`)} />
+        </RowActions>
       ),
     },
   ];

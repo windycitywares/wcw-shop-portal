@@ -9,7 +9,7 @@ import { DataTable, type Column } from "@/components/admin/ui/DataTable";
 import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { Panel, PanelHeader } from "@/components/admin/ui/Panel";
 import { Pill } from "@/components/admin/ui/Pill";
-import { Button } from "@/components/ui/Button";
+import { IconLink } from "@/components/admin/ui/IconButton";
 import { Alert } from "@/components/ui/misc";
 
 interface Campaign {
@@ -88,11 +88,7 @@ export default function AdminCampaigns() {
         title="Email campaigns"
         description="The campaigns sent from the shop, for reference."
         actions={
-          <a href={crmLink("/campaigns")} target="_blank" rel="noopener noreferrer">
-            <Button size="sm" tabIndex={-1}>
-              Open campaigns in the CRM<span className="sr-only"> (new tab)</span>
-            </Button>
-          </a>
+          <IconLink icon="external" label="Open campaigns in the CRM" href={crmLink("/campaigns")} />
         }
       />
       <CrmNotice what="Email campaigns" path="/campaigns" action="Write, send and track campaigns in the CRM" />
