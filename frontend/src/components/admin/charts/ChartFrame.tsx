@@ -78,7 +78,7 @@ export function ChartFrame({
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line">
+              <tbody className="divide-y divide-line [&>tr:nth-child(even)]:bg-sand/40">
                 {table.rows.map((r, ri) => (
                   <tr key={ri}>
                     {r.map((cell, i) => (

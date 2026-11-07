@@ -118,7 +118,7 @@ export default function NotificationSettings() {
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-line">
+            <tbody className="divide-y divide-line [&>tr:nth-child(even)]:bg-sand/40">
               {cats.map((cat) => (
                 <tr key={cat}>
                   <th scope="row" className="px-5 py-3 text-left font-normal">
