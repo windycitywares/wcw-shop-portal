@@ -82,4 +82,4 @@ export const PAYMENT_LABEL: Record<string, string> = {
   refunded: "Refunded",
 };
 
-export const PROVIDER_LABEL: Record<string, string> = { stripe: "Card (Stripe)", manual: "Pay later", test: "Test payment" };
+export const PROVIDER_LABEL: Record<string, string> = { stripe: "Card (Stripe)", manual: "Pay later", test: "Test payment", test_card: "Test card (no charge)" };

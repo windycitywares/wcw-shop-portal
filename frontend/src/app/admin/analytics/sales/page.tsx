@@ -26,7 +26,7 @@ interface SalesReport {
   fulfillment: { shipped: number; hours_to_ship: number; days_in_transit: number; unshipped_over_2d: number; awaiting_payment: number; awaiting_payment_value: number };
 }
 
-const PAYMENT: Record<string, string> = { stripe: "Card (Stripe)", manual: "Manual / invoice", unknown: "Not recorded" };
+const PAYMENT: Record<string, string> = { stripe: "Card (Stripe)", manual: "Manual / invoice", test: "Test payment", test_card: "Test card (no charge)", unknown: "Not recorded" };
 const BLOCKS = ["12–3am", "3–6am", "6–9am", "9am–12", "12–3pm", "3–6pm", "6–9pm", "9pm–12"];
 
 export default function SalesReportPage() {
