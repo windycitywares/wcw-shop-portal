@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core import captcha
+from app.core.client_ip import client_ip as real_client_ip
 from app.core.exceptions import AuthenticationError, NotFoundError, TooManyRequestsError
 from app.core.rate_limit import (
     failed_logins_by_email,
@@ -25,9 +26,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 def client_ip(request: Request) -> str:
-    # LiteSpeed/Passenger put the visitor's address first in X-Forwarded-For.
-    forwarded = request.headers.get("x-forwarded-for", "")
-    return forwarded.split(",")[0].strip() or (request.client.host if request.client else "unknown")
+    """The address the rate limits count a request under (see app/core/client_ip.py: a caller can't choose it)."""
+    return real_client_ip(request)
 
 
 def no_store(response: Response) -> None:

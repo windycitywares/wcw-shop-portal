@@ -15,6 +15,7 @@ from sqlalchemy import or_, select
 
 from app.api.deps import SessionDep
 from app.core import appmode
+from app.core.client_ip import client_ip
 from app.core.config import get_settings
 from app.core.enums import ContentStatus, UserRole
 from app.core.rate_limit import RateLimiter
@@ -30,8 +31,7 @@ MAX_LIMIT = 500
 
 
 def _client(request: Request) -> str:
-    forwarded = request.headers.get("x-forwarded-for", "")
-    return (forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else ""))[:64]
+    return client_ip(request)
 
 
 async def crm_token(request: Request, authorization: Annotated[str | None, Header()] = None) -> None:

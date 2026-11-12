@@ -68,6 +68,9 @@ class Settings(BaseSettings):
 
     # Public storefront URL, used for links in emails (password reset).
     site_url: str = "http://localhost:3000"
+    # Extra addresses allowed to say which visitor they act for (X-Forwarded-For), comma-separated. This machine's
+    # own addresses and private networks are always allowed; see app/core/client_ip.py.
+    trusted_proxies: str = ""
 
     # Outgoing email (HostItBro mailbox, e.g. no-reply@windycitywares.com). Leave SMTP_HOST empty in
     # development: emails are then written to the log instead of being sent.
