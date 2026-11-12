@@ -146,7 +146,7 @@ class CheckoutIn(BaseModel):
     shipping_address: AddressFields
     billing_address: AddressFields | None = None
     notes: str | None = Field(default=None, max_length=500)
-    payment_method: Literal["stripe", "manual", "test"]
+    payment_method: Literal["stripe", "manual", "test", "test_card"]
     locale: str = Field(default="en", pattern=LANG_PATTERN)
     captcha_token: str | None = Field(default=None, max_length=4096)
     idempotency_key: str | None = Field(default=None, max_length=64)
@@ -278,6 +278,20 @@ class CheckoutOut(BaseModel):
 class OrderLookupIn(BaseModel):
     number: str = Field(min_length=3, max_length=32)
     email: EmailStr
+
+
+class TestCardIn(BaseModel):
+    """A test card typed on the Test mode payment page. Looked at, never stored."""
+
+    number: str = Field(min_length=1, max_length=30)
+    exp_month: int = Field(ge=1, le=12)
+    exp_year: int = Field(ge=0, le=2100)
+    cvc: str = Field(min_length=1, max_length=4)
+
+
+class TestPaymentOut(BaseModel):
+    status: Literal["paid", "declined"]
+    message: str | None = None
 
 
 class ConfirmPaymentIn(BaseModel):

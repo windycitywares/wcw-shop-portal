@@ -12,6 +12,12 @@ export const ordersApi = {
       method: "POST",
       body: JSON.stringify({ session_id: sessionId }),
     }),
+  /** Test mode's card page: a test card pays the order; a declined one says why. */
+  payTestCard: (token: string, card: { number: string; exp_month: number; exp_year: number; cvc: string }) =>
+    apiFetch<{ status: "paid" | "declined"; message: string | null }>(`/orders/by-token/${encodeURIComponent(token)}/test-payment`, {
+      method: "POST",
+      body: JSON.stringify(card),
+    }),
   pay: (token: string, lang: string) =>
     apiFetch<PaymentAction>(`/orders/by-token/${encodeURIComponent(token)}/pay?lang=${lang}`, { method: "POST" }),
 };

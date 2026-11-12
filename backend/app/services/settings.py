@@ -62,8 +62,10 @@ def payment_methods(s: StoreSettings) -> list[str]:
     methods: list[str] = []
     if secret_key():
         methods.append("stripe")
-    if not app.is_production or appmode.is_test():
-        methods.append("test")  # no-charge payment for development, the browser tests and Test mode
+    if not app.is_production:
+        methods.append("test")  # instant no-charge payment for development and the browser tests
+    if not app.is_production or (appmode.is_test() and not secret_key()):
+        methods.append("test_card")  # Test mode without Stripe test keys: a card page that behaves like Stripe's
     return methods
 
 

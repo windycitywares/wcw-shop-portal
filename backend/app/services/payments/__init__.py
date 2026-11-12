@@ -4,8 +4,9 @@ from app.services.payments.base import PaymentStart, ProviderError
 from app.services.payments.manual import ManualProvider
 from app.services.payments.stripe import StripeProvider
 from app.services.payments.test import TestProvider
+from app.services.payments.test_card import TestCardProvider
 
-PROVIDERS = {"stripe": StripeProvider(), "manual": ManualProvider(), "test": TestProvider()}
+PROVIDERS = {"stripe": StripeProvider(), "manual": ManualProvider(), "test": TestProvider(), "test_card": TestCardProvider()}
 
 
 def get_provider(name: str):

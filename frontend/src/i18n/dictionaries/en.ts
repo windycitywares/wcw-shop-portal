@@ -162,10 +162,12 @@ const en = {
     methods: {
       stripe: "Card",
       test: "Test payment (no charge)",
+      test_card: "Test card (no charge)",
     },
     methodHints: {
       stripe: "You'll enter your card on Stripe's secure page. We never see your card number.",
       test: "For testing only. Never offered on the live shop.",
+      test_card: "A test card page that behaves like Stripe's. Nothing is charged.",
     },
     marketing: "Email me news and offers. You can unsubscribe at any time.",
     reminders: "Email me a reminder if I don't finish this order.",
@@ -336,6 +338,20 @@ const en = {
   discover: {
     recent: "Recently viewed",
     alsoBought: "Customers also bought",
+  },
+  testPayment: {
+    title: "Test payment",
+    notice: "This is a test checkout. Nothing is charged. Try 4242 4242 4242 4242 with any future date and any 3-digit code. 4000 0000 0000 0002 is declined.",
+    total: "Order total",
+    cardNumber: "Card number",
+    expiry: "Expiry (MM/YY)",
+    cvc: "Security code",
+    pay: "Pay",
+    paying: "Paying…",
+    cancel: "Back to my order",
+    declined: "Payment failed",
+    invalidExpiry: "Enter the expiry as MM/YY, for example 12/30.",
+    error: "The payment could not be processed. Please try again.",
   },
   testMode: {
     label: "Test mode",

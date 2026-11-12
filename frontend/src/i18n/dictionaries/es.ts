@@ -165,10 +165,12 @@ const es: Dictionary = {
     methods: {
       stripe: "Tarjeta",
       test: "Pago de prueba (sin cargo)",
+      test_card: "Tarjeta de prueba (sin cargo)",
     },
     methodHints: {
       stripe: "Introducirás tu tarjeta en la página segura de Stripe. Nunca vemos el número de tu tarjeta.",
       test: "Solo para pruebas. Nunca se ofrece en la tienda real.",
+      test_card: "Una página de tarjeta de prueba que se comporta como la de Stripe. No se cobra nada.",
     },
     marketing: "Envíame novedades y ofertas por email. Puedes darte de baja cuando quieras.",
     reminders: "Envíame un recordatorio si no termino este pedido.",
@@ -339,6 +341,20 @@ const es: Dictionary = {
   discover: {
     recent: "Vistos recientemente",
     alsoBought: "Otros clientes también compraron",
+  },
+  testPayment: {
+    title: "Pago de prueba",
+    notice: "Esto es una compra de prueba. No se cobra nada. Prueba 4242 4242 4242 4242 con cualquier fecha futura y cualquier código de 3 dígitos. 4000 0000 0000 0002 se rechaza.",
+    total: "Total del pedido",
+    cardNumber: "Número de tarjeta",
+    expiry: "Caducidad (MM/AA)",
+    cvc: "Código de seguridad",
+    pay: "Pagar",
+    paying: "Pagando…",
+    cancel: "Volver a mi pedido",
+    declined: "El pago ha fallado",
+    invalidExpiry: "Escribe la caducidad como MM/AA, por ejemplo 12/30.",
+    error: "No se pudo procesar el pago. Inténtalo de nuevo.",
   },
   testMode: {
     label: "Modo de prueba",

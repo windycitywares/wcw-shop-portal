@@ -27,6 +27,8 @@ from app.schemas.shop import (
     PaymentActionOut,
     QuoteIn,
     QuoteOut,
+    TestCardIn,
+    TestPaymentOut,
 )
 from app.services.account_notifications import AccountNotificationService
 from app.services.cart_pricing import CartPricer, to_out
@@ -117,6 +119,20 @@ async def confirm_payment(token: str, response: Response, session: SessionDep, d
     order = await service.by_token(token[:64])
     order = await service.confirm_stripe(order, data.session_id)
     return await public_out(session, order, lang)
+
+
+@router.post("/orders/by-token/{token}/test-payment", response_model=TestPaymentOut)
+async def pay_with_test_card(request: Request, token: str, response: Response, session: SessionDep, data: TestCardIn):
+    """Test mode's card page: a test card pays the order, a declined one says why. Only for orders placed with the test card."""
+    _private(response)
+    ip = client_ip(request)
+    if checkout_by_ip.is_blocked(ip):  # the same limit as placing an order
+        raise TooManyRequestsError("Too many payment attempts. Try again in a few minutes.")
+    checkout_by_ip.hit(ip)
+    service = OrderService(session)
+    order = await service.by_token(token[:64])
+    result = await service.pay_test_card(order, data.number, data.exp_month, data.exp_year, data.cvc)
+    return TestPaymentOut(status="paid" if result.paid else "declined", message=result.message)
 
 
 @router.post("/orders/by-token/{token}/pay", response_model=PaymentActionOut)

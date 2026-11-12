@@ -54,7 +54,7 @@ from app.schemas.settings import StoreSettings
 from app.schemas.shop import OrderEventOut, OrderPublicOut, OrderSummaryOut
 from app.services import emails, stock
 from app.services.cart_pricing import variant_label
-from app.services.payments import ProviderError, get_provider
+from app.services.payments import ProviderError, get_provider, test_card
 from app.services.settings import SettingsService
 from app.utils.text import escape_like
 
@@ -337,7 +337,7 @@ class OrderService:
         if not to:
             return None
         ctx = await email_context(self.session, order, settings, "en")
-        provider = {"stripe": "Card (Stripe)", "manual": "Pay later (awaiting payment)", "test": "Test payment"}.get(order.payment_provider or "", order.payment_provider or "")
+        provider = {"stripe": "Card (Stripe)", "manual": "Pay later (awaiting payment)", "test": "Test payment", "test_card": "Test card payment"}.get(order.payment_provider or "", order.payment_provider or "")
         link = f"{get_settings().site_url.rstrip('/')}/admin/orders/{order.id}"
         return emails.enqueue(self.session, "admin_new_order", to, {
             "number": order.number, "customer": f"{order.customer_name or ''} <{order.email}>".strip(), "items": ctx["items"],
@@ -434,6 +434,20 @@ class OrderService:
             log.warning("Could not check Stripe session for %s: %s", order.number, exc)
             return order
         return await self._apply_stripe_session(order, data)
+
+    async def pay_test_card(self, order: Order, number: str, exp_month: int, exp_year: int, cvc: str) -> test_card.CardResult:
+        """Test mode's card page: judge the typed test card and, if it passes, take the order through the same
+        `mark_paid` a real payment ends in (emails, stock and status follow). The card itself is not kept."""
+        if order.payment_provider != "test_card" or not test_card.available():
+            raise ConflictError("This order is not waiting for a test payment.")
+        if order.status == OrderStatus.CANCELLED:
+            raise ConflictError("This order was cancelled.")
+        if order.payment_status != "unpaid":
+            return test_card.CardResult(True)  # already paid: a second click is not an error
+        result = test_card.check_card(number, exp_month, exp_year, cvc)
+        if result.paid:
+            await self.mark_paid(order.id, provider="test_card", reference=f"test_{order.number}")
+        return result
 
     async def staff_mark_paid(self, order_id: int, data: MarkPaidIn, actor: User) -> Order:
         """Staff confirm money that arrived outside the card flow (a bank transfer, cash, a check)."""
