@@ -235,6 +235,9 @@ class CheckoutService:
         service = OrderService(self.session)
         order = await service.by_token(token)
         settings = await SettingsService(self.session).load()
+        if order.payment_provider == "test_card" and order.status == OrderStatus.PENDING and order.payment_status == "unpaid":
+            start = await get_provider("test_card").start(order, self._return_urls(order, lang), lang)
+            return PaymentActionOut(provider="test_card", status="redirect", redirect_url=start.redirect_url)
         if order.payment_provider != "stripe" or order.status != OrderStatus.PENDING or order.payment_status != "unpaid":
             return await self._payment_action(order, lang, settings)
         action = await self._payment_action(order, lang, settings)
