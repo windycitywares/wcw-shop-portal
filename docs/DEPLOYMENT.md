@@ -275,6 +275,15 @@ rm restore.dump   # it holds customer data
 ```
 Restoring replaces the live tables with the backup: put the shop in maintenance (or at least stop the cron) first.
 
+## Rate limits and visitor addresses
+
+Per-visitor limits (sign-in attempts, checkout, coupons, contact form…) count a request under the address it
+connected from. `X-Forwarded-For` is only believed when the request comes from this machine itself (the main
+site's server calling the API for a visitor) or a private network — see `backend/app/core/client_ip.py`. If
+the main site ever runs on another server, list that server's address in `TRUSTED_PROXIES` (comma-separated) in
+the backend `.env`, otherwise all of its visitors share one limit. Admin-only `GET /admin/environment/request`
+shows how a request reaches the app.
+
 ## Email and CAPTCHA
 
 Password-reset emails and contact-form notifications go out through a HostItBro mailbox; sign-up and
