@@ -18,19 +18,19 @@ export async function Header({ locale }: { locale: Locale }) {
   const [tree, t] = [await getCategoryTree(locale), getDictionary(locale)];
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/85">
-      <Container className="flex h-16 items-center gap-3 sm:gap-6 lg:h-[4.5rem]">
+      <Container className="flex h-16 items-center gap-2 sm:gap-6 lg:h-[4.5rem]">
         <MobileNav tree={tree} />
         <Link
           href={localePath(locale, "/")}
-          className="flex shrink-0 items-center rounded-full"
+          className="flex min-w-0 shrink items-center rounded-full sm:shrink-0"
           aria-label={t.nav.homeLabel}
         >
-          <Logo className="h-6 w-auto sm:h-8 xl:h-9 min-[1700px]:h-10" />
+          <Logo className="h-6 w-auto max-w-full sm:h-8 xl:h-9 min-[1700px]:h-10" />
         </Link>
         <div className="hidden flex-1 lg:block">
           <MegaMenu tree={tree} />
         </div>
-        <div className="ml-auto flex items-center gap-1 lg:ml-0">
+        <div className="ml-auto flex shrink-0 items-center gap-1 lg:ml-0">
           <SearchBar className="mr-2 hidden w-56 xl:block" />
           <LanguageSwitcher className="hidden sm:block" />
           <ThemeSwitcher className="hidden sm:block" />

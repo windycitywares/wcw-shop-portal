@@ -48,7 +48,7 @@ export function MobileNav({ tree }: { tree: CategoryNode[] }) {
   const close = () => setOpen(false);
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger className="-ml-2 grid size-10 place-items-center rounded-full hover:bg-sand lg:hidden" title={t.nav.openMenu}>
+      <Dialog.Trigger className="-ml-2 grid size-10 shrink-0 place-items-center rounded-full hover:bg-sand lg:hidden" title={t.nav.openMenu}>
         <Menu01 aria-hidden="true" className="size-5" strokeWidth={1.6} />
         <span className="sr-only">{t.nav.openMenu}</span>
       </Dialog.Trigger>

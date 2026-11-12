@@ -12,7 +12,7 @@ export function WishlistLink() {
   const wishlist = `${href("/account")}#my-wishlist`;
   const target = user ? wishlist : `${href("/login")}?next=${encodeURIComponent(wishlist)}`;
   return (
-    <Link href={target} title={t.wishlist.title} className="grid size-10 place-items-center rounded-full hover:bg-sand">
+    <Link href={target} title={t.wishlist.title} className="hidden size-10 place-items-center rounded-full hover:bg-sand sm:grid">
       <Heart aria-hidden="true" className="size-5" strokeWidth={1.6} />
       <span className="sr-only">{t.wishlist.title}</span>
     </Link>
