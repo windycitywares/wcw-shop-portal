@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 
 from app.api.deps import SessionDep, require
 from app.core.config import get_settings
@@ -24,6 +24,20 @@ async def _release(session) -> None:
     """End the request's own transaction first: it may hold locks on the test copy that copying has to replace.
     close() (not rollback) keeps the signed-in user's loaded fields readable afterwards."""
     await session.close()
+
+
+@router.get("/request")
+async def request_as_seen(request: Request, response: Response, _: Admin) -> dict[str, str | None]:
+    """How this request reached the app (admins only): the connecting address and the forwarding headers.
+    Used to check which address the per-visitor rate limits should key on behind this host's web server."""
+    response.headers["Cache-Control"] = "no-store"
+    return {
+        "peer": request.client.host if request.client else None,
+        "x_forwarded_for": request.headers.get("x-forwarded-for"),
+        "x_real_ip": request.headers.get("x-real-ip"),
+        "forwarded": request.headers.get("forwarded"),
+        "cf_connecting_ip": request.headers.get("cf-connecting-ip"),
+    }
 
 
 @router.get("", response_model=EnvironmentOut)
