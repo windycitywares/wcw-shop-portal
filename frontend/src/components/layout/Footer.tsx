@@ -65,10 +65,10 @@ export async function Footer({ locale }: { locale: Locale }) {
         {columns.map((col) => (
           <nav key={col.title} aria-label={col.title}>
             <h2 className="font-sans text-sm font-semibold text-white">{col.title}</h2>
-            <ul className="mt-4 space-y-2.5 text-sm">
+            <ul className="mt-3 space-y-0.5 text-sm">
               {col.links.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="hover:text-white">
+                  <Link href={link.href} className="inline-block py-1 hover:text-white">
                     {link.label}
                   </Link>
                 </li>
