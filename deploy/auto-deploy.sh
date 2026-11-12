@@ -11,6 +11,11 @@
 # 6. Background jobs (queued emails, reminders, weekly digest, clean-up): run-jobs.sh, every 5 minutes and after a check.
 set -uo pipefail
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"   # cron's default PATH is minimal
+# GitHub being slow or down must never hold this script (and the lock) for long: while it waits, the background
+# jobs below (queued emails such as password resets and order confirmations) don't run. Give up on a dead
+# connection after seconds, not minutes; every git call here and in the update-*.sh scripts inherits this.
+export GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=10 -o ServerAliveCountMax=3"
+export GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=30
 exec 9>"$HOME/.wcw-deploy.lock"
 flock -n 9 || exit 0   # a previous run is still going
 
@@ -49,9 +54,10 @@ summary=""
 add() { summary="${summary:+$summary; }$1"; }
 pin=$(gate pinned || true)   # "<commit> <storefront build|->" while an earlier version is held (Admin → Deployments)
 pin_commit="${pin%% *}"; pin_store="${pin##* }"
-if ! git fetch -q origin main; then
-  echo "$(ts) git fetch failed"
-  ok=0; add "git fetch failed"
+github=1
+if ! timeout 120 git fetch -q origin main; then
+  echo "$(ts) git fetch failed (GitHub unreachable?) — nothing changed; the shop keeps running the version it has"
+  ok=0; github=0; add "git fetch failed"
 elif [ "$reason" = "restore" ] && [ -n "$pin_commit" ]; then
   echo "$(ts) API: restoring ${pin_commit:0:7}"
   git show origin/main:deploy/update-api.sh > "$HOME/.wcw-update-api.sh"
@@ -85,6 +91,7 @@ fi
 
 # Storefront and main site print a line only when they install a new build. A held version keeps its storefront too.
 for part in storefront main-site; do
+  [ "$github" = 1 ] || continue   # GitHub didn't answer a moment ago: don't wait on it twice more
   if [ -n "$pin_commit" ] && [ "$part" = storefront ]; then continue; fi
   if [ "$reason" = "restore" ] && [ "$part" = main-site ]; then continue; fi
   out=$(bash "$REPO/deploy/update-$part.sh" --if-changed 2>&1); rc=$?
