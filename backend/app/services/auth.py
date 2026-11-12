@@ -292,6 +292,19 @@ class NewsletterService:
     async def subscribe(self, email: str, locale: str | None = "en") -> None:
         await self.add(email, locale, source="site", welcome=True)
 
+    async def opt_out(self, email: str, at: datetime | None = None) -> str:
+        """Someone left the list somewhere else (the CRM: a campaign's unsubscribe link, or staff removing them).
+        The shop's registry is what its own mail (cart reminders, the welcome offer) checks, so it must agree.
+        Answers "unsubscribed", "already" or "unknown" (nobody by that address here: nothing to record)."""
+        row = await self.repo.get_by(email=email.strip().lower())
+        if row is None:
+            return "unknown"
+        if row.unsubscribed_at is not None:
+            return "already"
+        row.unsubscribed_at = at or datetime.now(timezone.utc)
+        await self.session.commit()
+        return "unsubscribed"
+
     async def unsubscribe(self, token: str) -> bool:
         """Opt out with the link from an email. True when the token is known (repeating it is harmless)."""
         row = await self.repo.get_by(unsubscribe_token=token)
