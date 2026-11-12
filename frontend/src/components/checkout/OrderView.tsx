@@ -214,7 +214,7 @@ export function OrderView({ token }: { token: string }) {
                   <p className="mt-1 whitespace-pre-line">{payment.instructions}</p>
                 </>
               )}
-              {payment.provider === "stripe" && (
+              {(payment.provider === "stripe" || payment.provider === "test_card") && (
                 <Button className="mt-3 w-full" onClick={payNow} disabled={paying}>
                   {t.order.payNow}
                 </Button>
