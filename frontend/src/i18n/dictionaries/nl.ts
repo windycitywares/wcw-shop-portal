@@ -160,10 +160,12 @@ const nl: Dictionary = {
     methods: {
       stripe: "Kaart",
       test: "Testbetaling (gratis)",
+      test_card: "Testkaart (gratis)",
     },
     methodHints: {
       stripe: "Je vult je kaart in op de beveiligde pagina van Stripe. Wij zien je kaartnummer nooit.",
       test: "Alleen om te testen. Nooit beschikbaar in de echte winkel.",
+      test_card: "Een testkaartpagina die zich gedraagt als die van Stripe. Er wordt niets afgeschreven.",
     },
     marketing: "Mail me nieuws en aanbiedingen. Je kunt je altijd afmelden.",
     reminders: "Stuur me een herinnering als ik deze bestelling niet afrond.",
@@ -334,6 +336,20 @@ const nl: Dictionary = {
   discover: {
     recent: "Onlangs bekeken",
     alsoBought: "Andere klanten kochten ook",
+  },
+  testPayment: {
+    title: "Testbetaling",
+    notice: "Dit is een testbestelling. Er wordt niets afgeschreven. Probeer 4242 4242 4242 4242 met een toekomstige datum en een willekeurige code van 3 cijfers. 4000 0000 0000 0002 wordt geweigerd.",
+    total: "Totaal van de bestelling",
+    cardNumber: "Kaartnummer",
+    expiry: "Vervaldatum (MM/JJ)",
+    cvc: "Beveiligingscode",
+    pay: "Betalen",
+    paying: "Bezig met betalen…",
+    cancel: "Terug naar mijn bestelling",
+    declined: "Betaling mislukt",
+    invalidExpiry: "Vul de vervaldatum in als MM/JJ, bijvoorbeeld 12/30.",
+    error: "De betaling kon niet worden verwerkt. Probeer het opnieuw.",
   },
   testMode: {
     label: "Testmodus",
