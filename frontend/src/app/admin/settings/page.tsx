@@ -17,6 +17,7 @@ import { Alert } from "@/components/ui/misc";
 import { setStoreTimeZone } from "@/components/admin/charts/format";
 import { TIMEZONES } from "@/lib/timezones";
 import { SocialAdmin, type SocialRow } from "@/components/admin/settings/SocialAdmin";
+import { PaymentModeToggle } from "@/components/admin/settings/PaymentModeToggle";
 import { ShopLinksAdmin, type ShopLinkRow } from "@/components/admin/settings/ShopLinksAdmin";
 import { TrackingCode, type Snippet } from "@/components/admin/settings/TrackingCode";
 
@@ -420,10 +421,13 @@ function SettingsInner() {
               onSaved={(snippets) => setData({ ...data, settings: { ...data.settings, scripts: { snippets } as unknown as Record<string, Value> } })}
             />
           ) : data ? (
+            <>
+            {group.id === "payments" && <PaymentModeToggle stripeLive={!!data.status.stripe_configured} />}
             <GroupForm key={group.id} group={group} initial={data.settings[group.id] ?? {}} status={data.status} onSaved={(settings, status) => {
                 setStoreTimeZone((settings.general as { timezone?: string } | undefined)?.timezone);
                 setData({ settings, status: status ?? data.status });
               }} />
+            </>
           ) : (
             <div className="skeleton h-64" />
           )}
