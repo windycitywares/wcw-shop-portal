@@ -49,7 +49,7 @@ export function AccountMenu() {
           >
             {first.slice(0, 1).toUpperCase()}
           </span>
-          <span className="max-w-20 truncate text-sm font-medium sm:max-w-28">{first}</span>
+          <span className="hidden max-w-20 truncate text-sm font-medium sm:inline sm:max-w-28">{first}</span>
           <ChevronDown aria-hidden="true" className="size-3.5 shrink-0 text-muted" strokeWidth={2} />
         </>
       }
