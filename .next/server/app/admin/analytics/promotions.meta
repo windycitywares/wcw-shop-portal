@@ -1,0 +1,44 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/analytics/layout,_N_T_/admin/analytics/promotions/layout,_N_T_/admin/analytics/promotions/page,_N_T_/admin/analytics/promotions"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/analytics/promotions/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 96,
+                "slots": {
+                  "children": {
+                    "hints": 160,
+                    "slots": null
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/0bd9c4b5eebb40f0cfd6d6e9380da13e1b62eeb7793888a7e2a74bc799ea55f5/$/admin/analytics/promotions",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin/analytics/promotions/page"
+    },
+    "isFallback": false
+  }
+}

@@ -1,0 +1,3 @@
+module.exports=[64399,a=>{"use strict";var b=a.i(72131),c=a.i(30071);a.s(["TrackOnView",0,function(a){let d=JSON.stringify(a);return(0,b.useEffect)(()=>{"product_view"===a.type?(0,c.H)("product_view",{product_id:a.productId,value:a.value}):"search"===a.type?(0,c.H)("search",{data:{q:a.q,results:a.results}}):(0,c.H)(a.type,{value:a.value})},[d]),null}])}];
+
+//# sourceMappingURL=src_components_analytics_TrackOnView_tsx_149b3trsp8y3_._.js.map

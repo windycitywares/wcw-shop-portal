@@ -1,0 +1,44 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/notifications/layout,_N_T_/admin/notifications/settings/layout,_N_T_/admin/notifications/settings/page,_N_T_/admin/notifications/settings"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/notifications/settings/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 96,
+                "slots": {
+                  "children": {
+                    "hints": 160,
+                    "slots": null
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/8175f0c45d5cd967764b9520f0819713bcdceb1bbafec446548bbfdf4ae81ff6/$/admin/notifications/settings",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin/notifications/settings/page"
+    },
+    "isFallback": false
+  }
+}

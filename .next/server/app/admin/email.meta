@@ -1,0 +1,39 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/email/layout,_N_T_/admin/email/page,_N_T_/admin/email"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/email/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 160,
+                "slots": null
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/c94d61d1549a2d8636fc518e586006f075f63572e1507938a4d04cd551af2a61/$/admin/email",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin/email/page"
+    },
+    "isFallback": false
+  }
+}
