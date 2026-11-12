@@ -1,5 +1,5 @@
-"""Read-only API for the CRM (docs/CRM_SYNC.md): customers, orders, newsletter consent and the catalog,
-paged by id.
+"""API for the CRM (docs/CRM_SYNC.md): customers, orders, newsletter consent and the catalog, paged by id; and the
+one thing the CRM writes back, an opt-out (`POST /newsletter/opt-out`).
 
 Authenticated with `Authorization: Bearer <CRM_API_TOKEN>` (server setting), not a staff login. Answers 404 while
 the token isn't configured, so the endpoints don't exist as far as anyone else can tell. Always live data.
@@ -10,7 +10,10 @@ from __future__ import annotations
 import hmac
 from typing import Annotated, Any
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
+from pydantic import BaseModel, Field
 from sqlalchemy import or_, select
 
 from app.api.deps import SessionDep
@@ -121,6 +124,22 @@ async def newsletter(session: SessionDep, after_id: AfterId = 0, limit: Limit = 
         if found:
             items.append({"type": found[0], **found[1]})
     return _page(items, [s.id for s in rows], limit)
+
+
+class OptOutIn(BaseModel):
+    email: str = Field(min_length=3, max_length=320)
+    at: datetime | None = None  # when they left, in the CRM
+
+
+@router.post("/newsletter/opt-out", dependencies=[Token])
+async def newsletter_opt_out(session: SessionDep, data: OptOutIn) -> dict[str, str]:
+    """The CRM says this address left the list (unsubscribed from a campaign, or removed by staff). Recorded on the
+    live data, so the shop's own mail stops too. Repeating it is harmless."""
+    from app.services.auth import NewsletterService
+
+    with appmode.use(appmode.LIVE):
+        result = await NewsletterService(session).opt_out(data.email, data.at)
+    return {"result": result}
 
 
 @router.get("/products", dependencies=[Token])

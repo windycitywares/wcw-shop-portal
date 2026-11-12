@@ -50,6 +50,19 @@ CRM_API_TOKEN=<python -c "import secrets; print(secrets.token_urlsafe(36))">
 ```
 The CRM uses it to bring in customers and orders from before the sync was switched on.
 
+## Opt-outs from the CRM
+
+The one thing the CRM writes back. When someone leaves the list in the CRM (a campaign's unsubscribe link, or
+staff unsubscribing, removing or deleting them), the CRM calls
+
+`POST /api/v1/integrations/crm/newsletter/opt-out` with `{"email": "…", "at": "<ISO time>"}` and the same
+`Authorization: Bearer <CRM_API_TOKEN>`.
+
+The shop marks that address unsubscribed on the live data, so its own mail (cart reminders, the welcome offer)
+stops too. It answers `{"result": "unsubscribed" | "already" | "unknown"}`; repeating it is harmless. Signing up
+again on the shop is the person's own fresh consent and works as before. The change goes back to the CRM as a
+normal `newsletter.unsubscribed` event, which the CRM already has, so nothing loops.
+
 ## Checking
 
 ```sql

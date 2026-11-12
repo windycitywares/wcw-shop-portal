@@ -173,9 +173,6 @@ class CrmSyncTests(unittest.TestCase):
         self.assertEqual(self.deliver(), {"skipped": "not configured"})
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 @skip_unless_db
 class CrmReadApiTests(unittest.TestCase):
@@ -240,3 +237,22 @@ class CrmReadApiTests(unittest.TestCase):
                                            limit=500).json()["items"]]
         self.assertIn(live["id"], ids)
         self.assertNotIn(draft["id"], ids)
+
+    def test_crm_opt_out_reaches_the_shop(self):
+        w = self.w
+        email = w.email("crm-optout")
+        reset_limits()
+        self.assertEqual(w.post("/newsletter", {"email": email}).status_code, 202)
+        body = {"email": email.upper()}
+        self.assertEqual(w.client.post(w.url("/integrations/crm/newsletter/opt-out"), json=body).status_code, 401)
+        r = w.client.post(w.url("/integrations/crm/newsletter/opt-out"), json=body, headers=self.auth)
+        self.assertEqual(r.json(), {"result": "unsubscribed"})
+        self.assertIsNotNone(w.value("SELECT unsubscribed_at FROM newsletter_subscribers WHERE email = :e", e=email))
+        again = w.client.post(w.url("/integrations/crm/newsletter/opt-out"), json=body, headers=self.auth)
+        self.assertEqual(again.json(), {"result": "already"})
+        unknown = w.client.post(w.url("/integrations/crm/newsletter/opt-out"), json={"email": "nobody-here@example.com"}, headers=self.auth)
+        self.assertEqual(unknown.json(), {"result": "unknown"})
+
+
+if __name__ == "__main__":
+    unittest.main()
