@@ -39,17 +39,20 @@ export function FilterPanel({
   );
 
   return (
-    <details
-      className="group rounded-[var(--radius-card)] border border-line bg-surface p-5 lg:border-0 lg:bg-transparent lg:p-0"
-      open
-    >
-      <summary className="flex cursor-pointer list-none items-center justify-between font-medium lg:hidden [&::-webkit-details-marker]:hidden">
+    // On a phone the filters start folded away, so products come first; they open when filters are in use.
+    // A checkbox does the folding (no JavaScript, nothing jumps after the page loads); from lg up they always show.
+    <div className="rounded-[var(--radius-card)] border border-line bg-surface p-5 lg:border-0 lg:bg-transparent lg:p-0">
+      <input type="checkbox" id="filters-toggle" aria-label={t.listing.filters} className="peer sr-only lg:hidden" defaultChecked={hasFilters} />
+      <label
+        htmlFor="filters-toggle"
+        className="group flex cursor-pointer items-center justify-between font-medium peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-accent lg:hidden"
+      >
         {t.listing.filters}
-        <span aria-hidden="true" className="text-muted group-open:rotate-45">
+        <span aria-hidden="true" className="text-muted">
           +
         </span>
-      </summary>
-      <form action={basePath} method="get" className="mt-4 space-y-8 lg:mt-0">
+      </label>
+      <form action={basePath} method="get" className="mt-4 hidden space-y-8 peer-checked:block lg:mt-0 lg:block">
         {q && <input type="hidden" name="q" value={q} />}
         {sort && <input type="hidden" name="sort" value={sort} />}
 
@@ -139,6 +142,6 @@ export function FilterPanel({
           )}
         </div>
       </form>
-    </details>
+    </div>
   );
 }
