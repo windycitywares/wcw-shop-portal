@@ -341,7 +341,7 @@ export function CheckoutForm() {
           <Field label={t.addresses.fullName} error={errors.full_name}>
             {(p) => <Input {...p} autoComplete="name" required value={address.full_name} onChange={set("full_name")} />}
           </Field>
-          <Field label={`${t.addresses.company} ${t.addresses.optional}`}>
+          <Field label={t.addresses.company}>
             {(p) => <Input {...p} autoComplete="organization" value={address.company} onChange={set("company")} />}
           </Field>
           <Field label={t.addresses.line1} error={errors.line1}>
@@ -406,6 +406,11 @@ export function CheckoutForm() {
               </label>
             );
           })}
+          {config && config.payment_methods.length === 0 && (
+            <Alert tone="info">
+              {t.checkout.noPaymentMethods}
+            </Alert>
+          )}
         </fieldset>
 
         {!user && (

@@ -148,6 +148,7 @@ const en = {
     emptyAction: "Browse the shop",
   },
   checkout: {
+    noPaymentMethods: "Card payments aren't switched on yet, so orders can't be placed right now. Please check back soon.",
     title: "Checkout",
     contact: "Contact",
     email: "Email for your receipt",

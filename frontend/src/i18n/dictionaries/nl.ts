@@ -146,6 +146,7 @@ const nl: Dictionary = {
     emptyAction: "Bekijk de winkel",
   },
   checkout: {
+    noPaymentMethods: "Betalen met kaart is nog niet ingeschakeld, dus bestellen kan nu nog niet. Kom binnenkort terug.",
     title: "Afrekenen",
     contact: "Contact",
     email: "E-mail voor je bevestiging",

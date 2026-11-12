@@ -151,6 +151,7 @@ const es: Dictionary = {
     emptyAction: "Ver la tienda",
   },
   checkout: {
+    noPaymentMethods: "Los pagos con tarjeta aún no están activados, así que por ahora no se pueden hacer pedidos. Vuelve a intentarlo pronto.",
     title: "Finalizar compra",
     contact: "Contacto",
     email: "Email para tu recibo",
