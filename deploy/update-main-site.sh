@@ -62,7 +62,7 @@ if [ ! -d "$CACHE/.git" ]; then
 fi
 cd "$CACHE"
 git remote set-url origin "$REPO"
-git fetch -q --depth 1 origin site-build 2>/dev/null || no_access
+timeout 180 git fetch -q --depth 1 origin site-build 2>/dev/null || no_access
 rm -f "$NOACCESS"
 
 NEW=$(git rev-parse FETCH_HEAD)

@@ -34,7 +34,7 @@ if [ -n "$TARGET" ]; then
   git checkout -q -B "$BRANCH" "$TARGET"
 else
   echo "→ Fetching $BRANCH"
-  git fetch -q origin "$BRANCH"
+  timeout 120 git fetch -q origin "$BRANCH"
   git checkout -q -B "$BRANCH" "origin/$BRANCH"
 fi
 git log --oneline -1

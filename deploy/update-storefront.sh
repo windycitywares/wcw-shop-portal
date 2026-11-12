@@ -52,7 +52,7 @@ if [ ! -d "$CACHE/.git" ]; then
 fi
 cd "$CACHE"
 git remote set-url origin "$REPO"   # an older cache still points at the pre-rename address
-git fetch -q --depth 1 origin storefront-build
+timeout 180 git fetch -q --depth 1 origin storefront-build
 NEW=$(git rev-parse FETCH_HEAD)
 OLD=$(cat "$DEST/.deployed_build" 2>/dev/null || echo none)
 if [ "${1:-}" = "--if-changed" ] && [ "$NEW" = "$OLD" ]; then
