@@ -8,13 +8,17 @@ ticket there (SPEC 3.5). The event format is defined by the CRM: `wcw-crm-portal
 
 1. **Recording** — `app/core/crm_events.py` hooks every database session. When an order, a customer account, a
    newsletter row or a contact message is written through the ORM, it adds a `crm_outbox` row ("order 987 changed")
-   **in the same transaction**. Nothing is recorded while the sync is off or while Admin → Test mode is on. A
+   **in the same transaction**. Nothing is recorded while the sync is off. In Test mode the rows go into the Test copy's own outbox. A
    contact message is recorded once, when it arrives: opening, replying to or closing it is the shop's own
    bookkeeping and does not send anything (the CRM already has the ticket).
 2. **Sending** — the `crm_sync` job (`python -m app.scripts.run_jobs --only crm_sync`, run by the deploy cron) reads
    each changed record *as it is now*, signs the event (HMAC-SHA256 with the shared secret) and posts it. Several
    changes to the same record go out as one event. Failures retry with backoff (1 min … 6 h, 12 tries); a body the
    CRM rejects (400/413/422) is marked `failed` and logged. Sent rows are purged after 30 days.
+   **Test mode:** the job sends the live outbox always, and the Test copy's outbox as well when the copy exists. Test
+   events carry the id prefix `shop-test-`; the CRM files them in *its* Test copy (and drops them if it has none), so a
+   test signup or order appears in the CRM's test data and never in its live data. Needs the CRM release that
+   understands the prefix — deploy the CRM first.
 
 Raw SQL updates (e.g. `UPDATE orders …`) are not seen; change orders, users, subscribers and messages through the
 ORM.

@@ -154,24 +154,30 @@ class CrmSyncTests(unittest.TestCase):
         self.assertEqual(self.deliver().get("failed"), 1)
         self.assertEqual(self.outbox("customer", user_id)[-1]["status"], "failed")
 
-    def test_nothing_recorded_in_test_mode_or_when_off(self):
-        from app.core import appmode
-
-        real = appmode.is_test
-        appmode.is_test = lambda: True
-        try:
-            email, _ = self.w.register("testmode")
-        finally:
-            appmode.is_test = real
-        user_id = self.w.value("SELECT id FROM users WHERE email = :e", e=email)
-        self.assertEqual(self.outbox("customer", user_id), [])
-
+    def test_nothing_recorded_when_off(self):
         self.cfg.crm_webhook_url = None
         email, _ = self.w.register("off")
         user_id = self.w.value("SELECT id FROM users WHERE email = :e", e=email)
         self.assertEqual(self.outbox("customer", user_id), [])
         self.assertEqual(self.deliver(), {"skipped": "not configured"})
 
+    def test_the_test_copy_sends_test_events(self):
+        """Test mode's changes go out under their own id prefix, which the CRM files in its Test copy."""
+        import time
+        from datetime import datetime, timezone
+
+        from app.core import appmode
+        from app.services.crm_sync import CrmSync
+
+        email, _ = self.w.register("testsend")
+        user_id = self.w.value("SELECT id FROM users WHERE email = :e", e=email)
+        self.assertEqual(len(self.outbox("customer", user_id)), 1)  # recorded: test mode no longer opts out
+        counts = {"sent": 0, "skipped": 0, "retry": 0, "failed": 0}
+        # Without a copy the search path falls back to the live tables, which is enough to see the id and the send.
+        self.w.db(lambda s: CrmSync(s)._deliver(appmode.TEST, self.cfg, time.monotonic(), datetime.now(timezone.utc), counts))
+        mine = [e for e in self.sent if e["event"]["data"].get("email") == email]
+        self.assertEqual(len(mine), 1)
+        self.assertTrue(mine[0]["event"]["id"].startswith("shop-test-"))
 
 
 @skip_unless_db

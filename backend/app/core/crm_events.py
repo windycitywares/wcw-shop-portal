@@ -6,7 +6,8 @@ that writes through the ORM is covered (checkout, Stripe webhooks, admin edits, 
 contact page …) without each one having to remember. `app/services/crm_sync.py` sends them later with the
 record's state at that moment.
 
-Nothing is recorded while the CRM isn't configured, or while the shop works on its Test copy of the data.
+Nothing is recorded while the CRM isn't configured. While the shop works on its Test copy, the rows go into the
+copy's own outbox and are sent as test events, which the CRM files in its Test copy (docs/CRM_SYNC.md).
 """
 
 from __future__ import annotations
@@ -52,10 +53,9 @@ def _kind_for(obj: Any, is_new: bool) -> str | None:
 
 
 def _after_flush(session: Session, flush_context: Any) -> None:  # noqa: ARG001
-    from app.core import appmode
     from app.core.config import get_settings
 
-    if not get_settings().crm_sync_enabled or appmode.is_test():
+    if not get_settings().crm_sync_enabled:
         return
     from app.models.crm import CrmOutbox
 
