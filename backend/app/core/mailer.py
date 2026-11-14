@@ -35,6 +35,9 @@ class Mail:
     html: str | None = None
     reply_to: str | None = None
     headers: tuple[tuple[str, str], ...] = ()  # extra headers such as List-Unsubscribe
+    # The recipient asked for this email themselves a moment ago (they typed their own address into a sign-up form).
+    # Test mode lets it through to them: the address came from them, not from the copied customers.
+    requested_by_recipient: bool = False
 
 
 def build_message(mail: Mail, settings: Settings) -> EmailMessage:
@@ -137,7 +140,7 @@ def _for_test_mode(mail: Mail) -> Mail | None:
     from app.core import appmode
 
     state = appmode.current()
-    if not state.is_test:
+    if not state.is_test or mail.requested_by_recipient:
         return mail
     if not state.test_mail_to:
         log.warning("Test mode: email to %s (%s) not sent (no test inbox set)", mail.to, mail.subject)

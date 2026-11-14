@@ -47,6 +47,15 @@ class TestModeMailTests(unittest.TestCase):
         appmode.remember(appmode.ModeState("test", test_exists=True))
         self.assertIsNone(_for_test_mode(self.mail))
 
+    def test_a_sign_up_email_still_reaches_the_person_who_asked_for_it(self):
+        from dataclasses import replace
+
+        appmode.remember(appmode.ModeState("test", test_exists=True))  # not even an inbox set
+        welcome = replace(self.mail, requested_by_recipient=True)
+        self.assertIs(_for_test_mode(welcome), welcome)
+        appmode.remember(appmode.ModeState("test", test_exists=True, test_mail_to="qa@example.com"))
+        self.assertIs(_for_test_mode(welcome), welcome)  # to them, with their unsubscribe header, not to the test inbox
+
 
 class TestSignInTests(unittest.TestCase):
     """Who may sign in: on live data everyone active may; on the copy only staff, listed addresses,
