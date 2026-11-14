@@ -18,6 +18,8 @@ from app.models.commerce import EmailOutbox
 
 log = logging.getLogger("wcw.emails")
 MAX_ATTEMPTS = 5
+# Sent straight after someone submits their own address to the newsletter form; Test mode still delivers these to them.
+SIGNUP_KINDS = frozenset({"welcome_offer", "subscribe_confirmation"})
 MARKETING_KINDS = frozenset({"welcome_offer", "subscribe_confirmation", "abandoned_cart", "review_request", "back_in_stock", "campaign"})
 
 
@@ -71,7 +73,8 @@ async def _send_row(row: EmailOutbox) -> None:
     row.attempts += 1
     try:
         await mailer.send(mailer.Mail(to=row.to_email, subject=row.subject, text=row.body_text, html=row.body_html,
-                                      headers=_headers(row)))
+                                      headers=_headers(row),
+                                      requested_by_recipient=row.kind in SIGNUP_KINDS))
     except mailer.MailError as exc:
         row.last_error = exc.message[:500]
         row.status = "failed" if row.attempts >= MAX_ATTEMPTS else "queued"
