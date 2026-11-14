@@ -5,7 +5,9 @@ contact message as it is now, wraps it in a signed event and posts it. Several r
 sent once. The CRM ignores a re-sent event id, so a send that timed out after the CRM stored it is safe to
 repeat.
 
-Always works on the live data, whatever Admin → Test mode is set to.
+Sends the live data's outbox always (whatever Admin → Test mode is set to), and the Test copy's outbox too when the copy
+exists: test events carry the id prefix `shop-test-`, which the CRM files in its own Test copy, so a test signup or order
+shows up in the CRM's test data and never in its live data.
 """
 
 from __future__ import annotations
@@ -160,7 +162,15 @@ class CrmSync:
             return {"skipped": "not configured"}
         started, now = time.monotonic(), _now()
         counts = {"sent": 0, "skipped": 0, "retry": 0, "failed": 0}
-        with appmode.use(appmode.LIVE):
+        await self._deliver(appmode.LIVE, cfg, started, now, counts)
+        # `current()` is read outside the override, so it is the mode the first query above loaded.
+        if appmode.current().test_exists:
+            await self._deliver(appmode.TEST, cfg, started, now, counts)
+        return {k: v for k, v in counts.items() if v}
+
+    async def _deliver(self, mode: str, cfg, started: float, now: datetime, counts: dict[str, int]) -> None:
+        prefix = "shop-test-" if mode == appmode.TEST else "shop-"
+        with appmode.use(mode):
             rows = list((await self.session.execute(
                 select(CrmOutbox).where(CrmOutbox.status == "pending", CrmOutbox.next_attempt_at <= now)
                 .order_by(CrmOutbox.id).limit(BATCH)
@@ -181,7 +191,7 @@ class CrmSync:
                     counts["skipped"] += 1
                     continue
                 event_type, data = built
-                body = json.dumps({"id": f"shop-{latest.id}", "type": event_type, "occurred_at": _iso(latest.created_at),
+                body = json.dumps({"id": f"{prefix}{latest.id}", "type": event_type, "occurred_at": _iso(latest.created_at),
                                    "data": data}, separators=(",", ":"), default=str).encode()
                 ts = int(time.time())
                 code, text = await asyncio.to_thread(transport, str(cfg.crm_webhook_url), body, {
@@ -205,5 +215,4 @@ class CrmSync:
             ))).rowcount or 0
             await self.session.commit()
         if purged:
-            counts["purged"] = purged
-        return {k: v for k, v in counts.items() if v}
+            counts["purged"] = counts.get("purged", 0) + purged
