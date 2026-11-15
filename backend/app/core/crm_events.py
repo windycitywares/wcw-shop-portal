@@ -12,12 +12,17 @@ copy's own outbox and are sent as test events, which the CRM files in its Test c
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from typing import Any
 
 from sqlalchemy import event, inspect
 from sqlalchemy.orm import Session
 
+log = logging.getLogger("wcw.crm_sync")
 INFO_KEY = "crm_outbox_seen"
+ADDED_KEY = "crm_outbox_added"
+PUSH_NOW = True  # send right after the commit instead of waiting for the next cron run (tests switch it off)
 # Fields whose change the CRM cares about (anything else, e.g. a tracking token, is not worth an event).
 ORDER_FIELDS = ("status", "payment_status", "grand_total", "refunded_total", "email", "user_id", "customer_name",
                 "phone", "placed_at", "billing_address", "marketing_opt_in")
@@ -66,10 +71,58 @@ def _after_flush(session: Session, flush_context: Any) -> None:  # noqa: ARG001
         if kind and ref_id is not None and (kind, ref_id) not in seen:
             seen.add((kind, ref_id))
             session.add(CrmOutbox(kind=kind, ref_id=ref_id))  # written by the commit's next flush
+            session.info[ADDED_KEY] = True
 
 
 def _forget(session: Session, *_: Any) -> None:
     session.info.pop(INFO_KEY, None)
+    session.info.pop(ADDED_KEY, None)
+
+
+_tasks: set[asyncio.Task] = set()
+_pushing = False
+_again = False
+
+
+async def push_now() -> None:
+    """Send what was just recorded, so the CRM hears within a second or two instead of at the next cron run.
+
+    Best effort: the `crm_sync` job still retries anything this misses. Calls that arrive while a push is running
+    make it go round once more, so a burst of changes is not left waiting for the cron.
+    """
+    global _pushing, _again
+    if _pushing:
+        _again = True
+        return
+    _pushing = True
+    try:
+        while True:
+            _again = False
+            await asyncio.sleep(0.3)  # let the request that caused it finish and release its connection
+            from app.core.database import SessionFactory
+            from app.services.crm_sync import CrmSync
+
+            async with SessionFactory() as session:
+                await CrmSync(session).deliver_due()
+            if not _again:
+                break
+    except Exception:  # noqa: BLE001 - the cron job picks the rest up
+        log.debug("immediate CRM push failed", exc_info=True)
+    finally:
+        _pushing = False
+
+
+def _after_commit(session: Session) -> None:
+    added = session.info.get(ADDED_KEY)
+    _forget(session)
+    if not added or not PUSH_NOW:
+        return
+    try:
+        task = asyncio.get_running_loop().create_task(push_now())
+    except RuntimeError:  # no event loop here (a script): the cron job sends it
+        return
+    _tasks.add(task)
+    task.add_done_callback(_tasks.discard)
 
 
 _installed = False
@@ -80,6 +133,6 @@ def install() -> None:
     if _installed:
         return
     event.listen(Session, "after_flush", _after_flush)
-    event.listen(Session, "after_commit", _forget)
+    event.listen(Session, "after_commit", _after_commit)
     event.listen(Session, "after_rollback", _forget)
     _installed = True

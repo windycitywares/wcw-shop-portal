@@ -20,6 +20,10 @@ if RUN:
     os.environ["DATABASE_URL"] = os.environ["TEST_DATABASE_URL"]
     os.environ.setdefault("DB_USE_NULL_POOL", "true")
 
+    from app.core import crm_events
+
+    crm_events.PUSH_NOW = False  # tests call the CRM sync themselves and count what it sends
+
 skip_unless_db = unittest.skipUnless(RUN, "TEST_DATABASE_URL not set")
 API = "/api/v1"
 PASSWORD = "first-password-1"
