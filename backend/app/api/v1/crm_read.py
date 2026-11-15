@@ -14,7 +14,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, text
 
 from app.api.deps import SessionDep
 from app.core import appmode
@@ -138,6 +138,23 @@ async def newsletter_opt_out(session: SessionDep, data: OptOutIn) -> dict[str, s
     from app.services.auth import NewsletterService
 
     with appmode.use(appmode.LIVE):
+        result = await NewsletterService(session).opt_out(data.email, data.at)
+    return {"result": result}
+
+
+@router.post("/newsletter/test-opt-out", dependencies=[Token])
+async def newsletter_test_opt_out(session: SessionDep, data: OptOutIn) -> dict[str, str]:
+    """The same, from the CRM's Test mode: recorded on the shop's Test copy only (never the live data). Answers
+    "ignored" when the shop has no Test copy, so the CRM's test clicks can never unsubscribe a real person."""
+    from app.core.appmode import TEST_SCHEMA
+    from app.services.auth import NewsletterService
+
+    exists = (await session.execute(
+        text("SELECT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = :n)"), {"n": TEST_SCHEMA})).scalar()
+    await session.rollback()  # let go of the connection: the next one is opened on the Test copy
+    if not exists:
+        return {"result": "ignored"}
+    with appmode.use(appmode.TEST):
         result = await NewsletterService(session).opt_out(data.email, data.at)
     return {"result": result}
 
