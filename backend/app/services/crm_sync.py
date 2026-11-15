@@ -106,6 +106,8 @@ def contact_record_payload(c: Contact) -> dict[str, Any]:
 
 
 def newsletter_event(s: NewsletterSubscriber) -> tuple[str, dict[str, Any]] | None:
+    if s.source == "erased":
+        return None  # no address left to tell the CRM about (the CRM is where the erase came from)
     # `at` is when it happened here, so the CRM shows the real date and not the moment it heard about it.
     if s.unsubscribed_at is not None:
         return "newsletter.unsubscribed", {"email": s.email, "at": s.unsubscribed_at.isoformat()}
