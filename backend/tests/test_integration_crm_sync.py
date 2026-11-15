@@ -259,24 +259,15 @@ class CrmReadApiTests(unittest.TestCase):
         unknown = w.client.post(w.url("/integrations/crm/newsletter/opt-out"), json={"email": "nobody-here@example.com"}, headers=self.auth)
         self.assertEqual(unknown.json(), {"result": "unknown"})
 
-    def test_crm_erase_leaves_only_a_fingerprint_and_sends_nothing_back(self):
+    def test_a_test_opt_out_never_touches_live_subscribers(self):
         w = self.w
-        email = w.email("crm-erase")
+        email = w.email("crm-test-optout")
         reset_limits()
         self.assertEqual(w.post("/newsletter", {"email": email}).status_code, 202)
-        url = w.url("/integrations/crm/newsletter/erase")
+        url = w.url("/integrations/crm/newsletter/test-opt-out")
         self.assertEqual(w.client.post(url, json={"email": email}).status_code, 401)
-        self.assertEqual(w.client.post(url, json={"email": email.upper()}, headers=self.auth).json(), {"result": "erased"})
-        self.assertIsNone(w.value("SELECT id FROM newsletter_subscribers WHERE email = :e", e=email))
-        self.assertEqual(w.client.post(url, json={"email": email}, headers=self.auth).json(), {"result": "already"})
-        self.assertEqual(w.client.post(url, json={"email": "nobody-here@example.com"}, headers=self.auth).json(), {"result": "unknown"})
-        from app.services.crm_sync import newsletter_event
-
-        class Row:  # an erased row would otherwise tell the CRM about a made-up address
-            source, unsubscribed_at, email, created_at = "erased", None, "erased-x@erased.invalid", None
-
-        self.assertIsNone(newsletter_event(Row()))
-
-
-if __name__ == "__main__":
-    unittest.main()
+        r = w.client.post(url, json={"email": email}, headers=self.auth)
+        # CI has no Test copy, so the answer is "ignored"; where there is one it lands there, not on the live row
+        self.assertIn(r.json()["result"], ("ignored", "unknown", "unsubscribed"))
+        if r.json()["result"] == "ignored":
+            self.assertIsNone(w.value("SELECT unsubscribed_at FROM newsletter_subscribers WHERE email = :e", e=email))

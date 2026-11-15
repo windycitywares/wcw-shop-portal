@@ -14,7 +14,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, text
 
 from app.api.deps import SessionDep
 from app.core import appmode
@@ -142,25 +142,17 @@ async def newsletter_opt_out(session: SessionDep, data: OptOutIn) -> dict[str, s
     return {"result": result}
 
 
-@router.post("/newsletter/erase", dependencies=[Token])
-async def newsletter_erase(session: SessionDep, data: OptOutIn) -> dict[str, str]:
-    """The CRM says this person's newsletter record is to be erased. Done on the live data only: the row keeps no
-    address, just a fingerprint that stops anyone adding them back by hand. Repeating it is harmless."""
+@router.post("/newsletter/test-opt-out", dependencies=[Token])
+async def newsletter_test_opt_out(session: SessionDep, data: OptOutIn) -> dict[str, str]:
+    """The same, from the CRM's Test mode: recorded on the shop's Test copy only (never the live data). Answers
+    "ignored" when the shop has no Test copy, so the CRM's test clicks can never unsubscribe a real person."""
+    from app.core.appmode import TEST_SCHEMA
     from app.services.auth import NewsletterService
 
-    with appmode.use(appmode.LIVE):
-        result = await NewsletterService(session).erase(data.email)
-    return {"result": result}
-
-
-@router.get("/products", dependencies=[Token])
-async def products(session: SessionDep, after_id: AfterId = 0, limit: Limit = 200,
-                   q: Annotated[str | None, Query(max_length=120)] = None) -> dict[str, Any]:
-    """The published catalog: what a deal line may name (the CRM's picker searches it with `q`)."""
-    stmt = select(Product).where(Product.status == ContentStatus.PUBLISHED, Product.id > after_id)
-    if q and q.strip():
-        term = f"%{q.strip()}%"
-        stmt = stmt.where(or_(Product.title.ilike(term), Product.sku.ilike(term), Product.slug.ilike(term)))
-    with appmode.use(appmode.LIVE):
-        rows = list((await session.execute(stmt.order_by(Product.id).limit(limit))).scalars())
-    return _page([product_payload(p) for p in rows], [p.id for p in rows], limit)
+    exists = (await session.execute(
+        text("SELECT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = :n)"), {"n": TEST_SCHEMA})).scalar()
+    await session.rollback()  # let go of the connection: the next one is opened on the Test copy
+    if not exists:
+        return {"result": "ignored"}
+    with appmode.use(appmode.TEST):
+        result = await NewsletterService(session).opt_out(data.email, data.at)

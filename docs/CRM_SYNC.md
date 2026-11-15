@@ -74,10 +74,8 @@ SELECT kind, status, count(*) FROM crm_outbox GROUP BY 1, 2;            -- what 
 SELECT * FROM crm_outbox WHERE status IN ('pending','failed') ORDER BY id DESC LIMIT 20;
 ```
 
-## Erasing a person's newsletter record
+## Opt-outs from the CRM's Test mode
 
-`POST /integrations/crm/newsletter/erase` (same token and body as `/newsletter/opt-out`, live data only) answers
-`erased`, `already` or `unknown`. The subscriber row is renamed to `erased-<fingerprint>@erased.invalid` with no
-language, offer code or token, and kept as an `erased` row: it is never listed, never mailed and never sent to the CRM,
-and staff cannot add that address back by hand (only the person can sign up again, from the form). The same happens
-when staff delete a subscriber in Admin → Subscribers. No database change.
+`POST /integrations/crm/newsletter/test-opt-out` (same token and body as `/newsletter/opt-out`) records the opt-out on the
+shop's **Test copy** only, and answers `{"result":"ignored"}` when there is none. The CRM uses it while it is in Test mode,
+so test clicks never unsubscribe a real person on the live data.
