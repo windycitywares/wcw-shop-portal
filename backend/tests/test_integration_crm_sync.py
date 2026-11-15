@@ -272,6 +272,24 @@ class CrmReadApiTests(unittest.TestCase):
         if r.json()["result"] == "ignored":
             self.assertIsNone(w.value("SELECT unsubscribed_at FROM newsletter_subscribers WHERE email = :e", e=email))
 
+    def test_crm_erase_leaves_only_a_fingerprint_and_sends_nothing_back(self):
+        w = self.w
+        email = w.email("crm-erase")
+        reset_limits()
+        self.assertEqual(w.post("/newsletter", {"email": email}).status_code, 202)
+        url = w.url("/integrations/crm/newsletter/erase")
+        self.assertEqual(w.client.post(url, json={"email": email}).status_code, 401)
+        self.assertEqual(w.client.post(url, json={"email": email.upper()}, headers=self.auth).json(), {"result": "erased"})
+        self.assertIsNone(w.value("SELECT id FROM newsletter_subscribers WHERE email = :e", e=email))
+        self.assertEqual(w.client.post(url, json={"email": email}, headers=self.auth).json(), {"result": "already"})
+        self.assertEqual(w.client.post(url, json={"email": "nobody-here@example.com"}, headers=self.auth).json(), {"result": "unknown"})
+        from app.services.crm_sync import newsletter_event
+
+        class Row:  # an erased row would otherwise tell the CRM about a made-up address
+            source, unsubscribed_at, email, created_at = "erased", None, "erased-x@erased.invalid", None
+
+        self.assertIsNone(newsletter_event(Row()))
+
 
 if __name__ == "__main__":
     unittest.main()

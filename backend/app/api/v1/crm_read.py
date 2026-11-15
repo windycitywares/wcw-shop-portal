@@ -156,6 +156,15 @@ async def newsletter_test_opt_out(session: SessionDep, data: OptOutIn) -> dict[s
         return {"result": "ignored"}
     with appmode.use(appmode.TEST):
         result = await NewsletterService(session).opt_out(data.email, data.at)
+
+@router.post("/newsletter/erase", dependencies=[Token])
+async def newsletter_erase(session: SessionDep, data: OptOutIn) -> dict[str, str]:
+    """The CRM says this person's newsletter record is to be erased. Done on the live data only: the row keeps no
+    address, just a fingerprint that stops anyone adding them back by hand. Repeating it is harmless."""
+    from app.services.auth import NewsletterService
+
+    with appmode.use(appmode.LIVE):
+        result = await NewsletterService(session).erase(data.email)
     return {"result": result}
 
 

@@ -56,6 +56,13 @@ class SubscriberAdminTests(unittest.TestCase):
 
         self.assertEqual(w.delete(f"/admin/subscribers/{added.json()['id']}", w.admin).status_code, 204)
         self.assertEqual(self.listing(q=email)["total"], 0)
+        # erased, not just deleted: the address is gone, staff cannot add it back, only the person can
+        self.assertIsNone(w.value("SELECT id FROM newsletter_subscribers WHERE email = :e", e=email))
+        again = w.post("/admin/subscribers", {"email": email, "locale": "en"}, w.admin)
+        self.assertEqual(again.status_code, 409, again.text)
+        reset_limits()
+        self.assertEqual(w.post("/newsletter", {"email": email, "locale": "en"}).status_code, 202)
+        self.assertEqual(self.listing(q=email, status="subscribed")["total"], 1)
 
     def test_pause_leaves_them_out_of_campaigns_until_resumed(self):
         w = self.w

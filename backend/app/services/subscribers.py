@@ -104,6 +104,8 @@ class SubscriberService:
         if existing is not None and existing.unsubscribed_at is not None:
             raise ConflictError("This person unsubscribed. Only they can sign up again, from the form on the site.")
         news = NewsletterService(self.session)
+        if await news.is_erased(email):
+            raise ConflictError("This person's record was erased. Only they can sign up again, from the form on the site.")
         row = await news.add(email, locale, source="admin", welcome=False, commit=False)
         audit.record(self.session, actor, "subscriber.add", "subscriber", row.id, f"Added {row.email} to the newsletter")
         await self.session.commit()
@@ -138,8 +140,8 @@ class SubscriberService:
         return next(r for r in await self._rows(row.email, "all") if r.id == row.id)
 
     async def delete(self, subscriber_id: int, actor: User) -> None:
-        """Remove the row for good (for a data-deletion request). The address can sign up again later."""
+        """Erase the person's newsletter record (a data-deletion request). The address is gone for good; only a
+        fingerprint stays, so nobody can add them back by hand. Only they can sign up again."""
         row = await self._get(subscriber_id)
-        audit.record(self.session, actor, "subscriber.delete", "subscriber", row.id, f"Deleted {row.email} from the newsletter list")
-        await self.session.delete(row)
-        await self.session.commit()
+        audit.record(self.session, actor, "subscriber.erase", "subscriber", row.id, f"Erased newsletter record #{row.id}")
+        await NewsletterService(self.session).erase(row.email)
