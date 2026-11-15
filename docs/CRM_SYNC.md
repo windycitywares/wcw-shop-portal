@@ -73,3 +73,11 @@ normal `newsletter.unsubscribed` event, which the CRM already has, so nothing lo
 SELECT kind, status, count(*) FROM crm_outbox GROUP BY 1, 2;            -- what is waiting / sent / failed
 SELECT * FROM crm_outbox WHERE status IN ('pending','failed') ORDER BY id DESC LIMIT 20;
 ```
+
+## Erasing a person's newsletter record
+
+`POST /integrations/crm/newsletter/erase` (same token and body as `/newsletter/opt-out`, live data only) answers
+`erased`, `already` or `unknown`. The subscriber row is renamed to `erased-<fingerprint>@erased.invalid` with no
+language, offer code or token, and kept as an `erased` row: it is never listed, never mailed and never sent to the CRM,
+and staff cannot add that address back by hand (only the person can sign up again, from the form). The same happens
+when staff delete a subscriber in Admin → Subscribers. No database change.

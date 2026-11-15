@@ -1,3 +1,4 @@
+import hashlib
 import secrets
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -205,6 +206,12 @@ class UserService(AuthService):
         return user
 
 
+def erased_address(email: str) -> str:
+    """What an erased subscriber's row is renamed to: the address is gone, only its fingerprint remains."""
+    digest = hashlib.sha256(email.strip().lower().encode()).hexdigest()[:40]
+    return f"erased-{digest}@erased.invalid"
+
+
 class NewsletterService:
     """The marketing consent registry: who opted in, when they left, and the one-time welcome offer."""
 
@@ -224,6 +231,11 @@ class NewsletterService:
         """Subscribe an address (or welcome it back). New subscribers get the welcome coupon when that is switched on."""
         email = email.strip().lower()
         locale = locale if locale in LANGUAGES else "en"
+        if source != "admin":  # they signed up themselves: that is consent again, so the erase marker can go
+            erased = await self.repo.get_by(email=erased_address(email))
+            if erased is not None:
+                await self.session.delete(erased)
+                await self.session.flush()
         row = await self.repo.get_by(email=email)
         if row is not None and row.source not in SERVICE_ONLY_SOURCES:
             queued = []
@@ -304,6 +316,26 @@ class NewsletterService:
         row.unsubscribed_at = at or datetime.now(timezone.utc)
         await self.session.commit()
         return "unsubscribed"
+
+    async def is_erased(self, email: str) -> bool:
+        return await self.repo.get_by(email=erased_address(email)) is not None
+
+    async def erase(self, email: str) -> str:
+        """Forget this address for good (the CRM: someone asked to be erased). The row stays only as a fingerprint, with
+        no address, language, offer code or token, so marketing can't be sent to them or added back by hand.
+        Answers "erased", "already" or "unknown"."""
+        email = email.strip().lower()
+        if await self.is_erased(email):
+            return "already"
+        row = await self.repo.get_by(email=email)
+        if row is None:
+            return "unknown"
+        row.email = erased_address(email)
+        row.source, row.locale, row.welcome_coupon, row.paused_at = "erased", None, None, None
+        row.unsubscribe_token = secrets.token_urlsafe(24)
+        row.unsubscribed_at = row.unsubscribed_at or datetime.now(timezone.utc)
+        await self.session.commit()
+        return "erased"
 
     async def unsubscribe(self, token: str) -> bool:
         """Opt out with the link from an email. True when the token is known (repeating it is harmless)."""
