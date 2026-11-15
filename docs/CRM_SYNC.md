@@ -73,3 +73,9 @@ normal `newsletter.unsubscribed` event, which the CRM already has, so nothing lo
 SELECT kind, status, count(*) FROM crm_outbox GROUP BY 1, 2;            -- what is waiting / sent / failed
 SELECT * FROM crm_outbox WHERE status IN ('pending','failed') ORDER BY id DESC LIMIT 20;
 ```
+
+## Opt-outs from the CRM's Test mode
+
+`POST /integrations/crm/newsletter/test-opt-out` (same token and body as `/newsletter/opt-out`) records the opt-out on the
+shop's **Test copy** only, and answers `{"result":"ignored"}` when there is none. The CRM uses it while it is in Test mode,
+so test clicks never unsubscribe a real person on the live data.
