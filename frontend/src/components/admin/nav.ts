@@ -33,6 +33,11 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
+    // Etsy sales and listings, read from Etsy; the team adds costs, tracking and notes (docs/ETSY.md).
+    label: "Etsy",
+    items: [{ href: "/admin/etsy", label: "Etsy", icon: "truck", permission: "etsy:manage" }],
+  },
+  {
     // Reports, grouped by the question each answers; the tabs inside the page list that group's reports.
     label: "Analytics",
     items: [

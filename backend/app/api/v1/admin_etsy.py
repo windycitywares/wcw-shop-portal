@@ -61,11 +61,11 @@ async def callback(
 ) -> RedirectResponse:
     """Etsy sends the browser here. The one-time `state` we stored when it left is the only check, so nothing else
     is trusted from the request. The person is then sent on to the settings page with the outcome."""
-    base = get_settings().site_url.rstrip("/") + "/admin/settings?tab=etsy"
+    base = get_settings().site_url.rstrip("/") + "/admin/etsy?"
     if error or not (state and code):
-        return RedirectResponse(f"{base}&etsy=failed&reason={quote(error or 'Etsy did not allow access')}")
+        return RedirectResponse(f"{base}etsy=failed&reason={quote(error or 'Etsy did not allow access')}")
     try:
         name = await EtsyConnectionService(session).finish(state, code)
     except (EtsyError, ValidationFailedError) as exc:
-        return RedirectResponse(f"{base}&etsy=failed&reason={quote(str(exc)[:200])}")
-    return RedirectResponse(f"{base}&etsy=connected&shop={quote(name)}")
+        return RedirectResponse(f"{base}etsy=failed&reason={quote(str(exc)[:200])}")
+    return RedirectResponse(f"{base}etsy=connected&shop={quote(name)}")

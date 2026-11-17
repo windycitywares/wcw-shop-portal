@@ -73,9 +73,9 @@ class EtsyConnectionService:
         row = await self.row()
         stored = (row.oauth_state or "").split("|")
         if len(stored) != 3 or stored[0] != state:
-            raise ValidationFailedError("This connection attempt is not recognised. Start again from Settings → Etsy.")
+            raise ValidationFailedError("This connection attempt is not recognised. Start again from Etsy → Connection.")
         if datetime.now(timezone.utc) - datetime.fromisoformat(stored[1]) > OAUTH_VALID_FOR:
-            raise ValidationFailedError("This connection attempt expired. Start again from Settings → Etsy.")
+            raise ValidationFailedError("This connection attempt expired. Start again from Etsy → Connection.")
         verifier = secretbox.unseal(row.oauth_verifier)
         if not row.client_id or not verifier:
             raise ValidationFailedError("The connection attempt could not be completed. Start again.")
