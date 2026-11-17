@@ -62,3 +62,25 @@ class StatusTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OAuthTests(unittest.TestCase):
+    def test_pkce_challenge_matches_the_rfc_example(self):
+        from app.domain import etsy_oauth as o
+
+        self.assertEqual(o.challenge("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"), "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM")
+
+    def test_authorize_url_carries_state_and_scopes(self):
+        from app.domain import etsy_oauth as o
+
+        url = o.authorize_url(client_id="abc", redirect_uri="https://x.test/cb", state="st", verifier="v" * 50)
+        self.assertIn("client_id=abc", url)
+        self.assertIn("state=st", url)
+        self.assertIn("code_challenge_method=S256", url)
+        self.assertIn("transactions_w", url)
+
+    def test_user_id_from_token(self):
+        from app.domain import etsy_oauth as o
+
+        self.assertEqual(o.user_id_from_token("12345.abcdef"), 12345)
+        self.assertIsNone(o.user_id_from_token("nope"))
