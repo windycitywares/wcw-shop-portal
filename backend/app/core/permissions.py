@@ -30,6 +30,8 @@ class Permission(StrEnum):
     MESSAGES_MANAGE = "messages:manage"  # the contact inbox
     ENVIRONMENT_MANAGE = "environment:manage"  # switch between live and test data
     BACKUPS_MANAGE = "backups:manage"  # database backups
+    ETSY_MANAGE = "etsy:manage"  # Etsy orders, costs, tracking, listings (Admin and Staff)
+    ETSY_SETTINGS = "etsy:settings"  # connect / reconnect the Etsy shop, alert settings (Admin only)
 
 
 _AUTHOR = {
@@ -45,6 +47,7 @@ _PUBLISHER = _AUTHOR | {
     Permission.CATALOG_DELETE,
     Permission.CATEGORY_MANAGE,
     Permission.REVIEWS_MODERATE,
+    Permission.ETSY_MANAGE,
 }
 
 ROLE_PERMISSIONS: dict[UserRole, frozenset[Permission]] = {
