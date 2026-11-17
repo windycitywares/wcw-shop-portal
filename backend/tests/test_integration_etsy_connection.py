@@ -37,7 +37,7 @@ class EtsyConnectionTests(unittest.TestCase):
 
     def test_allow_access_round_trip(self):
         w = self.w
-        w.put("/admin/etsy/credentials", {"client_id": "keystring123"}, w.admin)
+        w.put("/admin/etsy/credentials", {"client_id": "keystring123", "client_secret": "s3cret-value"}, w.admin)
         url = w.post("/admin/etsy/connect", None, w.admin).json()["url"]
         q = parse_qs(urlparse(url).query)
         self.assertEqual(q["client_id"], ["keystring123"])
