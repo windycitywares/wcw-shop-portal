@@ -86,7 +86,8 @@ class EtsyConnectionService:
         user_id = oauth.user_id_from_token(access)
         if user_id is None:
             raise EtsyError("Etsy's answer did not identify the account")
-        shops = await etsy_client.get(f"/users/{user_id}/shops", client_id=row.client_id, access_token=access)
+        key = etsy_client.api_key(row.client_id, secretbox.unseal(row.client_secret_enc))
+        shops = await etsy_client.get(f"/users/{user_id}/shops", api_key=key, access_token=access)
         shop = shops if "shop_id" in shops else (shops.get("results") or [None])[0]
         if not shop:
             raise EtsyError("That Etsy account has no shop")
@@ -106,7 +107,7 @@ class EtsyConnectionService:
         row.token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=int(tokens.get("expires_in", 3600)))
 
     async def access_token(self) -> tuple[str, str]:
-        """(keystring, a valid access token), refreshing it when it is about to expire. Records the failure when it can't."""
+        """(the x-api-key value, a valid access token), refreshing it when it is about to expire. Records the failure when it can't."""
         row = await self.row()
         if not (row.client_id and row.access_token and row.refresh_token):
             raise EtsyError("Etsy is not connected")
@@ -121,7 +122,7 @@ class EtsyConnectionService:
         token = secretbox.unseal(row.access_token)
         if not token:
             raise EtsyError("The stored Etsy access can't be read. Reconnect Etsy in Settings.")
-        return row.client_id, token
+        return etsy_client.api_key(row.client_id, secretbox.unseal(row.client_secret_enc)), token
 
     async def fail(self, message: str) -> None:
         row = await self.row()

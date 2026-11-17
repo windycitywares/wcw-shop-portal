@@ -60,7 +60,14 @@ async def refresh(*, client_id: str, refresh_token: str) -> dict[str, Any]:
     return await _call(req)
 
 
-async def get(path: str, *, client_id: str, access_token: str, params: dict[str, Any] | None = None) -> Any:
+async def get(path: str, *, api_key: str, access_token: str, params: dict[str, Any] | None = None) -> Any:
     url = oauth.API_BASE + path + ("?" + urllib.parse.urlencode(params, doseq=True) if params else "")
-    req = urllib.request.Request(url, headers={"x-api-key": client_id, "Authorization": f"Bearer {access_token}"})
+    req = urllib.request.Request(url, headers={"x-api-key": api_key, "Authorization": f"Bearer {access_token}"})
     return await _call(req)
+
+
+def api_key(client_id: str, shared_secret: str | None) -> str:
+    """Etsy wants `keystring:shared_secret` in x-api-key on every API call (the OAuth token calls take the keystring alone)."""
+    if not shared_secret:
+        raise EtsyError("The Etsy shared secret is not saved. Add it in Admin → Etsy.")
+    return f"{client_id}:{shared_secret}"
