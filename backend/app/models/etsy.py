@@ -16,6 +16,8 @@ class EtsyConnection(Base):
     __tablename__ = "etsy_connection"
 
     id: Mapped[int] = mapped_column(SmallInteger, primary_key=True, default=1)
+    client_id: Mapped[str | None] = mapped_column(String(100))  # the app's keystring
+    client_secret_enc: Mapped[str | None] = mapped_column(Text)  # the shared secret, sealed
     etsy_shop_id: Mapped[int | None] = mapped_column(BigInteger)
     shop_name: Mapped[str | None] = mapped_column(String(200))
     access_token: Mapped[str | None] = mapped_column(Text)  # sealed
