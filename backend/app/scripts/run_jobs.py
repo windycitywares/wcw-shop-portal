@@ -47,6 +47,12 @@ async def _etsy_listings(session: AsyncSession, now: datetime, args: argparse.Na
     return await EtsyListingSync(session).run()
 
 
+async def _etsy_orders(session: AsyncSession, now: datetime, args: argparse.Namespace) -> Any:
+    from app.services.etsy_orders import EtsyOrderSync
+
+    return await EtsyOrderSync(session).run()
+
+
 async def _cart_reminders(session: AsyncSession, now: datetime, args: argparse.Namespace) -> Any:
     from app.services.carts import CartRecoveryJob
 
@@ -101,6 +107,7 @@ JOBS: dict[str, Job] = {
     "outbox": _outbox,
     "crm_sync": _crm_sync,
     "etsy_listings": _etsy_listings,
+    "etsy_orders": _etsy_orders,
     "cart_reminders": _cart_reminders,
     "review_requests": _review_requests,
     "back_in_stock": _back_in_stock,

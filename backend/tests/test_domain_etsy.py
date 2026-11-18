@@ -112,3 +112,48 @@ class ListingParseTests(unittest.TestCase):
         self.assertEqual(out["state"], "inactive")
         self.assertIsNone(out["price"])
         self.assertEqual(out["currency"], "USD")
+
+
+class ReceiptParseTests(unittest.TestCase):
+    RAW = {
+        "receipt_id": 555, "status": "Paid", "is_paid": True, "is_shipped": False, "name": "Sam Buyer", "buyer_user_id": 9,
+        "first_line": "1 Main St", "city": "Chicago", "state": "IL", "zip": "60601", "country_iso": "US",
+        "created_timestamp": 1760000000, "message_from_buyer": "Please hurry",
+        "grandtotal": {"amount": 3550, "divisor": 100, "currency_code": "USD"},
+        "total_shipping_cost": {"amount": 500, "divisor": 100, "currency_code": "USD"},
+        "discount_amt": {"amount": 200, "divisor": 100, "currency_code": "USD"},
+        "total_tax_cost": {"amount": 250, "divisor": 100, "currency_code": "USD"},
+        "transactions": [
+            {"transaction_id": 1, "listing_id": 77, "title": "Mug", "quantity": 2, "price": {"amount": 1500, "divisor": 100, "currency_code": "USD"},
+             "expected_ship_date": 1760500000, "variations": [{"formatted_name": "Size", "formatted_value": "L"}]},
+        ],
+    }
+
+    def test_money_and_items(self):
+        from app.domain import etsy_receipt as r
+
+        out = r.parse(self.RAW)
+        o = out["order"]
+        self.assertEqual(o["items_total"], Decimal("30.00"))
+        self.assertEqual(o["shipping_charged"], Decimal("5.00"))
+        self.assertEqual(o["discounts"], Decimal("2.00"))
+        self.assertEqual(o["tax"], Decimal("2.50"))
+        self.assertEqual(o["implied_status"], "new")
+        self.assertIsNotNone(o["paid_at"])
+        self.assertEqual(out["items"][0]["quantity"], 2)
+        self.assertEqual(out["items"][0]["variations"], [{"name": "Size", "value": "L"}])
+        self.assertEqual(o["ship_address"]["city"], "Chicago")
+        self.assertIsNone(o["buyer_email"])
+
+    def test_shipped_and_tracking(self):
+        from app.domain import etsy_receipt as r
+
+        raw = {**self.RAW, "is_shipped": True, "shipments": [{"tracking_code": "9400", "carrier_name": "usps"}]}
+        o = r.parse(raw)["order"]
+        self.assertEqual(o["implied_status"], "shipped")
+        self.assertEqual((o["etsy_tracking"], o["etsy_carrier"]), ("9400", "usps"))
+
+    def test_canceled(self):
+        from app.domain import etsy_receipt as r
+
+        self.assertEqual(r.parse({**self.RAW, "status": "Canceled"})["order"]["implied_status"], "cancelled")
