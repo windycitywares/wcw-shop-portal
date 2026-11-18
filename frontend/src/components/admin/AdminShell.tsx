@@ -157,8 +157,9 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
   return (
     <nav aria-label="Admin" className={cn("flex-1 overflow-y-auto pb-6 pt-2", collapsed ? "px-2" : "px-4")}>
       {NAV.map((group, gi) => {
-        if (group.channel && !channels.includes(group.channel)) return null;
-        const items = group.items.filter((i) => !i.hidden && (!i.permission || can(i.permission)));
+        const items = group.items.filter(
+          (i) => !i.hidden && (!i.permission || can(i.permission)) && (!i.channel || channels.includes(i.channel)),
+        );
         if (items.length === 0) return null;
         return (
           <div key={group.label ?? gi} className={gi > 0 ? "mt-4" : ""}>
@@ -174,7 +175,7 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
                 return (
                   <li key={item.href}>
                     <Link
-                      href={item.href}
+                      href={item.sections?.[0].href ?? item.href}
                       onClick={onNavigate}
                       aria-current={active ? "page" : undefined}
                       title={collapsed ? item.label : undefined}

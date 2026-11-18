@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/client-api";
+import { ShopTabs } from "@/components/admin/ShopTabs";
 import { dateTime, money } from "@/components/admin/charts/format";
 import { ATTENTION_LABEL, EXCEPTIONS, MAIN_PATH, STATUS_LABEL, STATUS_TONE, type OrderSummary } from "@/components/admin/etsy/orders";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
@@ -114,6 +115,7 @@ export default function EtsyOrders() {
         description="Paid Etsy orders arrive here on their own within minutes. Enter what you paid and how you shipped; profit follows."
         actions={<Link href="/admin/settings?tab=external_shops&shop=etsy" className="text-sm font-medium text-accent underline">Etsy connection</Link>}
       />
+      <ShopTabs shop="etsy" />
       {error ? <Alert tone="danger">{error}</Alert> : null}
       <Panel>
         <Tabs<View>

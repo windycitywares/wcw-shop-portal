@@ -22,7 +22,9 @@ Never: scrape Etsy pages, automate the Etsy website, or contact buyers outside E
 2. Admin → Settings → External shops → **Etsy**: paste the keystring and shared secret → **Save Etsy keys**.
    The secret is sealed (`app/core/secretbox.py`) and never returned by the API.
 3. **Connect Etsy** → Etsy's "Allow access". Tokens are sealed; refresh is automatic.
-4. The **Etsy** group appears in the left menu (it is shown only while a channel is connected: `GET /admin/channels`).
+4. **External shops → Etsy** appears in the left menu, with Orders and Listings as tabs (an entry is shown only while
+   its shop is connected: `GET /admin/channels`). Another marketplace is one item in `nav.ts` with its `channel` and
+   `sections`, its pages, and its tab in `ExternalShops.tsx`.
 
 Etsy requires `x-api-key: <keystring>:<shared secret>` on API calls (the token calls take the keystring alone).
 Rotating the shared secret on Etsy means pasting the new one in the Etsy tab.

@@ -10,11 +10,13 @@ export interface NavItem {
   hidden?: boolean;
   /** Other path prefixes that also mean "this item" (a menu entry that covers several pages). */
   also?: string[];
+  /** An external shop (etsy, later amazon, walmart …): shown only while that shop is connected. */
+  channel?: string;
+  /** Pages inside this item (shown as tabs on those pages and in the breadcrumb). */
+  sections?: { href: string; label: string }[];
 }
 export interface NavGroup {
   label: string | null;
-  /** An external shop (etsy, later amazon, walmart …): the group shows only while that channel is connected. */
-  channel?: string;
   items: NavItem[];
 }
 
@@ -35,12 +37,14 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
-    // Etsy sales and listings, read from Etsy; the team adds costs, tracking and notes (docs/ETSY.md).
-    label: "Etsy",
-    channel: "etsy",
+    // Marketplaces you also sell on, one entry each, shown once connected in Settings → External shops.
+    // A new marketplace = one item here (with its channel) + its pages + its tab in Settings.
+    label: "External shops",
     items: [
-      { href: "/admin/etsy/orders", label: "Etsy orders", icon: "orders", permission: "etsy:manage" },
-      { href: "/admin/etsy/products", label: "Etsy listings", icon: "products", permission: "etsy:manage" },
+      {
+        href: "/admin/etsy", label: "Etsy", icon: "truck", permission: "etsy:manage", channel: "etsy",
+        sections: [{ href: "/admin/etsy/orders", label: "Orders" }, { href: "/admin/etsy/products", label: "Listings" }],
+      },
     ],
   },
   {
@@ -201,6 +205,14 @@ export function crumbsFor(pathname: string, tab: string | null): Crumb[] {
   } else {
     const group = NAV.find((g) => g.label && g.items.some((i) => i.href === href));
     if (group?.label) crumbs.push({ label: group.label });
+  }
+  const section = item?.sections?.find((x) => matches(pathname, x.href));
+  if (item && section) {
+    crumbs.push({ label: item.label, href: item.sections![0].href });
+    const deeper = pathname.startsWith(`${section.href}/`);
+    crumbs.push(deeper ? { label: section.label, href: section.href } : { label: section.label });
+    if (deeper) crumbs.push({ label: "Details" });
+    return crumbs;
   }
   if (item) {
     const deeper = pathname.startsWith(`${item.href}/`);
