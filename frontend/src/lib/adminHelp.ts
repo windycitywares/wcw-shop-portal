@@ -91,6 +91,23 @@ const HELP: Record<string, HelpEntry> = {
       "Campaigns respect each subscriber's unsubscribe choice.",
     ],
   },
+  "/admin/etsy/orders": {
+    title: "Etsy orders",
+    body: [
+      "Every paid Etsy order arrives here by itself within about five minutes. Etsy's details (items, prices, address) can't be changed here.",
+      "Open an order to enter what you paid, the supplier, the shipping cost and tracking. Profit is worked out from those; anything missing is listed under Profit.",
+      "Needs attention lists orders that are waiting too long, late for Etsy's ship-by date, missing a cost, or losing money.",
+      "Etsy sets New, Cancelled, Shipped and Delivered by itself and never moves an order backwards. Everything else (Purchased, Issue reported, Return requested…) is yours. Every change is kept in the order's History.",
+    ],
+  },
+  "/admin/etsy/products": {
+    title: "Etsy listings",
+    body: [
+      "Your Etsy listings, read from Etsy every 15 minutes. Change listings on Etsy itself; this list follows.",
+      "Click a listing to add your default supplier, purchase cost and notes. New orders start with that cost, so profit is right from day one.",
+      "A listing that disappears from Etsy is marked “Removed from Etsy”, not deleted, so old orders still make sense.",
+    ],
+  },
   "/admin/carts": {
     title: "Abandoned carts",
     body: [

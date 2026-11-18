@@ -80,5 +80,6 @@ npm run typecheck
 
 ## Not built yet
 
-Drag-and-drop category UI (the `/categories/reorder` API is ready) and marketplace API sync (Etsy/Amazon).
+Drag-and-drop category UI (the `/categories/reorder` API is ready) and Amazon/Walmart sync. Etsy sync is being built in
+phases (docs/ETSY.md).
 Stripe needs live keys and the tax rate needs setting in Admin → Settings. See README "Next steps".

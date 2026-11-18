@@ -118,3 +118,19 @@ are the order they were written in, with the original list kept in the PR that s
 | 13 | **Help content on each admin screen** (what it does, what to watch for) | admin 2 | #84 (merged) |
 | 14 | Subscribe copy **generic**, and the signed-in shopper's email **pre-filled** | newsletter 1 | #78 (merged) |
 | 15 | **Abandoned carts** aren't working — a reminder may only go to shoppers who ticked a box; make that configurable | cart reminders 1 | #80 (merged) |
+
+## Etsy → shop (started 2026-11-17; spec and rules in docs/ETSY.md)
+
+Shop only (not the CRM). The owner approves each phase before the next starts.
+
+| Phase | Batch | PR | State |
+|-------|-------|----|-------|
+| 1 | Data layer: tables, permissions, profit and status rules | #203 | merged |
+| 1 | Connection: keys (sealed), Allow access (OAuth + PKCE), disconnect; keystring:secret header fix | #204–#206 | merged |
+| 1 | Listing sync (every 15 min) and listings API | #207 | merged |
+| 1 | Etsy listings page; connection under Settings → External shops (a tab per marketplace); menu group per connected shop | #208–#211 | merged |
+| 1 | Order sync: paid orders arrive, costs prefilled, forward-only status, history | #212 | |
+| 1 | Orders API: filters, needs attention, costs/tracking, status, profit, history + audit | #213 | |
+| 1 | Orders screens: list and detail | #214 | |
+| 2 | Tracking to Etsy (with retry), delivered/automatic statuses, real Etsy fees from the ledger | | waiting for approval |
+| 3 | Replacements, returns, refunds; messages inbox (from Etsy's notification emails); alerts by email; dashboard | | |
