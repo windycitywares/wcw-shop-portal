@@ -11,7 +11,7 @@ from sqlalchemy import and_, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError, ValidationFailedError
-from app.domain import etsy_attention, etsy_profit, etsy_status
+from app.domain import etsy_attention, etsy_payments, etsy_profit, etsy_status
 from app.models.etsy import EtsyOrder, EtsyOrderEvent, EtsyOrderItem
 from app.models.user import User
 from app.services import audit
@@ -143,6 +143,10 @@ class EtsyOrderAdmin:
             "tracking_sent_at": o.tracking_sent_at, "tracking_error": o.tracking_error, "purchased_at": o.purchased_at,
             "shipped_at": o.shipped_at, "delivered_at": o.delivered_at, "notes": o.notes, "synced_at": o.synced_at,
             "etsy_url": f"https://www.etsy.com/your/orders/sold?order_id={o.etsy_receipt_id}",
+            "supplier_owed": etsy_payments.owed(o.purchase_cost, o.shipping_cost),
+            "supplier_payment": etsy_payments.status(order_status=o.status, purchase_cost=o.purchase_cost, paid=o.supplier_paid_at is not None),
+            "supplier_paid_at": o.supplier_paid_at, "supplier_paid_amount": o.supplier_paid_amount,
+            "supplier_payment_ref": o.supplier_payment_ref, "supplier_paid_by": o.supplier_paid_by,
             "line_items": [{"id": i.id, "etsy_listing_id": i.etsy_listing_id, "title": i.title, "sku": i.sku,
                             "variations": i.variations, "quantity": i.quantity, "unit_price": i.unit_price} for i in items],
             "history": [{"id": e.id, "kind": e.kind, "from_status": e.from_status, "to_status": e.to_status,

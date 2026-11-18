@@ -63,6 +63,12 @@ export interface OrderDetail extends OrderSummary {
   notes: string | null;
   synced_at: string;
   etsy_url: string;
+  supplier_owed: string | null;
+  supplier_payment: "pending" | "settled" | "cost_missing" | "not_due";
+  supplier_paid_at: string | null;
+  supplier_paid_amount: string | null;
+  supplier_payment_ref: string | null;
+  supplier_paid_by: string | null;
   line_items: { id: number; etsy_listing_id: number | null; title: string; sku: string | null; variations: { name: string; value: string }[]; quantity: number; unit_price: string }[];
   history: HistoryLine[];
 }

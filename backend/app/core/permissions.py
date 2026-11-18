@@ -31,6 +31,7 @@ class Permission(StrEnum):
     ENVIRONMENT_MANAGE = "environment:manage"  # switch between live and test data
     BACKUPS_MANAGE = "backups:manage"  # database backups
     ETSY_MANAGE = "etsy:manage"  # Etsy orders, costs, tracking, listings (Admin and Staff)
+    ETSY_PAYMENTS = "etsy:payments"  # record and undo supplier payments (Admin only)
     ETSY_SETTINGS = "etsy:settings"  # connect / reconnect the Etsy shop, alert settings (Admin only)
 
 

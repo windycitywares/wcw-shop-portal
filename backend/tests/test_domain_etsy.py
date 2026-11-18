@@ -266,3 +266,16 @@ class DashboardTests(unittest.TestCase):
         self.assertIsNone(out["totals"]["profit"])
         self.assertIsNone(out["totals"]["aov"])
         self.assertEqual(len(out["series"]), 3)
+
+
+class SupplierPaymentRuleTests(unittest.TestCase):
+    def test_owed_and_status(self):
+        from app.domain import etsy_payments as p
+
+        self.assertEqual(p.owed(Decimal("10"), Decimal("4.5")), Decimal("14.50"))
+        self.assertEqual(p.owed(Decimal("10"), None), Decimal("10.00"))
+        self.assertIsNone(p.owed(None, Decimal("4")))
+        self.assertEqual(p.status(order_status="new", purchase_cost=None, paid=False), p.COST_MISSING)
+        self.assertEqual(p.status(order_status="new", purchase_cost=Decimal("1"), paid=False), p.PENDING)
+        self.assertEqual(p.status(order_status="cancelled", purchase_cost=Decimal("1"), paid=False), p.NOT_DUE)
+        self.assertEqual(p.status(order_status="cancelled", purchase_cost=Decimal("1"), paid=True), p.SETTLED)

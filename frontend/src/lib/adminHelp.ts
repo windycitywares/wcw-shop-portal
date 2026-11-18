@@ -108,6 +108,15 @@ const HELP: Record<string, HelpEntry> = {
       "Etsy sets New, Cancelled, Shipped and Delivered by itself and never moves an order backwards. Everything else (Purchased, Issue reported, Return requested…) is yours. Every change is kept in the order's History.",
     ],
   },
+  "/admin/etsy/payments": {
+    title: "Supplier payments",
+    body: [
+      "What you owe each supplier for Etsy orders: purchase cost + shipping cost. An order is Pending once its purchase cost is entered, and Settled when an admin marks it paid.",
+      "Tick several pending orders and press Mark paid to settle a whole supplier invoice at once (one date and reference). For one order you can enter a different amount.",
+      "A payment never changes the order's costs. Undo puts it back to Pending; both are kept in the order's history.",
+      "Export CSV or Excel for your books, or Print or save PDF for a statement. Exports follow the tab and filters you have chosen.",
+    ],
+  },
   "/admin/etsy/products": {
     title: "Etsy listings",
     body: [
