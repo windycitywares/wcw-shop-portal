@@ -40,7 +40,7 @@ class EtsyListingSync:
                 while True:
                     data = await etsy_client.get(
                         f"/shops/{conn.etsy_shop_id}/listings", api_key=key, access_token=token,
-                        params={"state": state, "limit": PAGE, "offset": offset, "includes": ["Images", "Inventory"]})
+                        params={"state": state, "limit": PAGE, "offset": offset, "includes": "Images,Inventory"})
                     results = data.get("results") or []
                     for raw in results:
                         c, u = await self._upsert(etsy_listing.parse({**raw, "state": raw.get("state") or state}), now)
