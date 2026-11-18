@@ -83,6 +83,8 @@ export default function EtsyOrderPage() {
   };
 
   const p = order.profit;
+  // Without a purchase cost the "profit" would just be the revenue: say it is incomplete instead of showing 100 %.
+  const noCost = p.missing.includes("purchase_cost");
   const address = ADDRESS_ORDER.map((k) => order.ship_address[k]).filter(Boolean);
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
@@ -197,8 +199,10 @@ export default function EtsyOrderPage() {
                 <Row label="Shipping cost">{m(order.shipping_cost)}</Row>
                 <Row label="Etsy fees">{order.etsy_fees == null ? <span className="text-muted">Phase 2</span> : m(order.etsy_fees)}</Row>
                 <Row label="Total cost">{m(p.total_cost)}</Row>
-                <Row label="Net profit" strong><span className={Number(p.net_profit) < 0 ? "text-danger" : undefined}>{m(p.net_profit)}</span></Row>
-                <Row label="Margin">{p.margin_pct == null ? "—" : `${Number(p.margin_pct).toFixed(1)}%`}</Row>
+                <Row label="Net profit" strong>
+                  {noCost ? <span className="font-normal text-muted">Enter the purchase cost</span> : <span className={Number(p.net_profit) < 0 ? "text-danger" : undefined}>{m(p.net_profit)}</span>}
+                </Row>
+                <Row label="Margin">{noCost || p.margin_pct == null ? "—" : `${Number(p.margin_pct).toFixed(1)}%`}</Row>
                 <Row label="Days from payment to shipping">{p.days_to_ship ?? "—"}</Row>
               </dl>
               {p.missing.length ? <p className="mt-3 text-xs text-muted">Not included yet: {p.missing.map((k) => MISSING_LABEL[k] ?? k).join(", ")}.</p> : null}

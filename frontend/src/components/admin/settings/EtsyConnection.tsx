@@ -129,6 +129,8 @@ export function EtsyConnection() {
                 </Row>
                 {conn.connected ? <Row label="Shop">{conn.shop_name}</Row> : null}
                 {conn.connected_at ? <Row label="Connected">{dateTime(conn.connected_at)}</Row> : null}
+                {conn.connected ? <Row label="Listings last synced">{conn.listings_synced_at ? dateTime(conn.listings_synced_at) : "Not yet"}</Row> : null}
+                {conn.connected ? <Row label="Orders last synced">{conn.orders_synced_at ? dateTime(conn.orders_synced_at) : "Not yet"}</Row> : null}
                 {conn.last_error ? <Row label="Last problem"><span className="text-danger">{conn.last_error}</span></Row> : null}
               </dl>
               {admin ? (
