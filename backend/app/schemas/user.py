@@ -16,6 +16,8 @@ class UserOut(ORMModel):
     role: UserRole
     is_active: bool
     created_at: datetime
+    supplier_name: str | None = None
+    supplier_channels: list[str] = []
 
 
 class UserMe(UserOut):

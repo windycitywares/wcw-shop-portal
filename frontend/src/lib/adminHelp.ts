@@ -117,6 +117,14 @@ const HELP: Record<string, HelpEntry> = {
       "Export CSV or Excel for your books, or Print or save PDF for a statement. Exports follow the tab and filters you have chosen.",
     ],
   },
+  "/admin/supplier/etsy": {
+    title: "Your orders",
+    body: [
+      "These are the Etsy orders the shop placed with you. 'To ship' lists the oldest ship-by date first; late ones are marked.",
+      "Open an order to see exactly what to make (with any personalisation) and where to send it. Add your carrier and tracking number, then press Mark shipped.",
+      "'Owed to you' shows what the shop hasn't paid yet. Your payments tab lists every payment and can be exported.",
+    ],
+  },
   "/admin/etsy/products": {
     title: "Etsy listings",
     body: [

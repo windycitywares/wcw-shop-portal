@@ -1,6 +1,6 @@
 // Mirrors the API schemas in backend/app/schemas.
 
-export type Role = "admin" | "publisher" | "author" | "customer";
+export type Role = "admin" | "publisher" | "author" | "customer" | "supplier";
 export type ContentStatus = "draft" | "in_review" | "published" | "archived";
 export type StockStatus = "in_stock" | "out_of_stock" | "backorder" | "preorder";
 export type AttributeValue = string | number | boolean | Array<string | number>;
@@ -122,6 +122,9 @@ export interface User {
   is_active: boolean;
   created_at: string;
   permissions: string[];
+  /** Supplier logins only: the supplier name on orders, and the external shops they may see. */
+  supplier_name?: string | null;
+  supplier_channels?: string[];
 }
 
 export interface ImporterInfo {

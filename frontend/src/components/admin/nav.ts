@@ -50,6 +50,14 @@ export const NAV: NavGroup[] = [
           { href: "/admin/etsy/payments", label: "Supplier payments" },
         ],
       },
+      {
+        // What a supplier login sees instead (role supplier): only their own orders and payments.
+        href: "/admin/supplier/etsy", label: "Etsy", icon: "truck", permission: "supplier:portal", channel: "etsy",
+        sections: [
+          { href: "/admin/supplier/etsy", label: "My orders" },
+          { href: "/admin/supplier/etsy/payments", label: "My payments" },
+        ],
+      },
     ],
   },
   {

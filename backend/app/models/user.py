@@ -27,6 +27,9 @@ class User(TimestampMixin, Base):
     notifications_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))  # admin bell: read up to here
     # How live updates reach this person (0022): only what they changed; app/domain/live_prefs.py adds the defaults.
     notification_prefs: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default=text("'{}'::jsonb"))
+    # Supplier logins (0027): the supplier name as written on orders, and the external shops they may see.
+    supplier_name: Mapped[str | None] = mapped_column(String(200))
+    supplier_channels: Mapped[list[str]] = mapped_column(JSONB, default=list, server_default=text("'[]'::jsonb"))
 
 
 class NewsletterSubscriber(TimestampMixin, Base):

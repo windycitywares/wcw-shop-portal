@@ -96,9 +96,27 @@ the payment: date, amount, reference, who). Cancelled orders are *not due* unles
 - Export: CSV (opens in Excel), Excel (.xlsx, money formatted), and a printable statement (Print or save PDF).
 - Migration 0026 adds `supplier_paid_at`, `supplier_paid_amount`, `supplier_payment_ref`, `supplier_paid_by`.
 
+## Supplier logins (Team → Supplier logins)
+
+An admin adds a login per supplier: email + password, the **supplier name** (must match the Supplier field on orders;
+case doesn't matter) and the **external shops** they may see (Etsy now; each new marketplace becomes a tick box).
+Role `supplier` (migration 0027) has one permission, `supplier:portal`, and nothing else.
+
+A supplier signs in at /login and lands on External shops → Etsy → **My orders** / **My payments**
+(`/admin/supplier/etsy…`, API `/supplier/…`, `app/services/supplier_portal.py`):
+
+- Sees only orders whose supplier is theirs, on shops that are both allowed and connected; anything else is a 404/403.
+- Sees what to make (items, options, personalisation), ship-to address, ship-by date (late flagged), buyer note and
+  gift message, and what they are owed / were paid. Never the shop's prices, revenue, profit, other suppliers, the
+  buyer's email or phone, or team notes and cost history.
+- Can enter their own order number, carrier and tracking, and **Mark shipped** (tracking required) — written to the
+  order's history under their name, exactly as a team member's change would be.
+- Exports their payments (CSV / Excel). The rest of the admin (menu, search, notifications) is hidden and its API
+  answers 403.
+
 ## Who can do what
 
-Admin: everything, including Settings → External shops and recording supplier payments. Staff (the Publisher role): orders, listings, costs, status.
+Admin: everything, including Settings → External shops and recording supplier payments. Staff (the Publisher role): orders, listings, costs, status. Supplier logins: only their own orders (above).
 Buyer details are only shown to signed-in team members and only used to fulfil the order.
 
 ## Test mode
