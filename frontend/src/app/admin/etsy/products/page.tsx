@@ -160,7 +160,7 @@ export default function EtsyProducts() {
         description="Read from Etsy every 15 minutes. Etsy details can't be edited here; add your default supplier, cost and notes."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Link href="/admin/settings?tab=external_shops" className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-accent underline">Etsy connection</Link>
+            <Link href="/admin/settings?tab=external_shops&shop=etsy" className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-accent underline">Etsy connection</Link>
             <Button variant="secondary" onClick={syncNow} disabled={syncing}>{syncing ? "Syncing…" : "Sync from Etsy now"}</Button>
           </div>
         }
