@@ -98,11 +98,12 @@ async def listings(
     response: Response, session: SessionDep, user: Team,
     q: Annotated[str | None, Query(max_length=100)] = None,
     state: Annotated[str | None, Query(max_length=20)] = None,
+    supplier: Annotated[str | None, Query(max_length=200)] = None,
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 25,
 ) -> dict[str, Any]:
     response.headers["Cache-Control"] = "no-store"
-    rows, total = await etsy_listings.search(session, q, state, page, page_size)
+    rows, total = await etsy_listings.search(session, q, state, page, page_size, supplier)
     return {"items": [_listing(r) for r in rows], "total": total, "page": page, "page_size": page_size}
 
 

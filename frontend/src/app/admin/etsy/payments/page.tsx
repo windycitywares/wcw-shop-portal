@@ -8,6 +8,7 @@ import { downloadFile } from "@/components/admin/download";
 import { dateTime, fmtInt, money } from "@/components/admin/charts/format";
 import { SettleDialog } from "@/components/admin/etsy/SettleDialog";
 import { ShopTabs } from "@/components/admin/ShopTabs";
+import { SupplierFilter, useSupplierFilter } from "@/components/admin/etsy/SupplierFilter";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
 import { ConfirmDialog } from "@/components/admin/ui/Modal";
 import { PageHeader } from "@/components/admin/ui/PageHeader";
@@ -17,7 +18,7 @@ import { Pill } from "@/components/admin/ui/Pill";
 import { Tabs } from "@/components/admin/ui/Tabs";
 import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
-import { Field, Input, Select } from "@/components/ui/Field";
+import { Field, Input } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
 
 type State = "pending" | "settled" | "cost_missing" | "all";
@@ -69,7 +70,7 @@ export default function SupplierPaymentsPage() {
   const admin = can("etsy:payments");
   const { push } = useToast();
   const [state, setState] = useState<State>("pending");
-  const [supplier, setSupplier] = useState("");
+  const [supplier, setSupplier] = useSupplierFilter();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [page, setPage] = useState(1);
@@ -248,15 +249,7 @@ export default function SupplierPaymentsPage() {
       <ShopTabs shop="etsy" />
 
       <div className="flex flex-wrap items-end gap-3" role="group" aria-label="Filters">
-        <Field label="Supplier" className="w-full sm:w-60">
-          {(p) => (
-            <Select {...p} value={supplier} onChange={(e) => { setSupplier(e.target.value); setPage(1); }}>
-              <option value="">All suppliers</option>
-              <option value="__none__">Supplier not set</option>
-              {overview?.options.suppliers.map((s) => <option key={s} value={s}>{s}</option>)}
-            </Select>
-          )}
-        </Field>
+        <SupplierFilter value={supplier} onChange={(v) => { setSupplier(v); setPage(1); }} />
         <Field label={state === "settled" ? "Paid from" : "Ordered from"}>{(p) => <Input {...p} type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1); }} />}</Field>
         <Field label="To">{(p) => <Input {...p} type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(1); }} />}</Field>
         {supplier || from || to ? <Button size="sm" variant="ghost" onClick={() => { setSupplier(""); setFrom(""); setTo(""); setPage(1); }}>Clear filters</Button> : null}
