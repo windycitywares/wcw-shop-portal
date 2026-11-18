@@ -61,8 +61,10 @@ class EtsyConnectionTests(unittest.TestCase):
         self.assertTrue(status["connected"])
         self.assertEqual(status["shop_name"], "WindyCityWaresUS")
         self.assertNotIn("4242.tok", w.get("/admin/etsy/connection", w.admin).text)
+        self.assertEqual(w.get("/admin/channels", w.publisher).json(), {"connected": ["etsy"]})
 
         self.assertFalse(w.post("/admin/etsy/disconnect", None, w.admin).json()["connected"])
+        self.assertEqual(w.get("/admin/channels", w.publisher).json(), {"connected": []})
 
 
 if __name__ == "__main__":

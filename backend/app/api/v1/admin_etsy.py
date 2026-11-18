@@ -123,3 +123,17 @@ async def update_listing(listing_id: int, body: ListingInternalIn, session: Sess
 @router.post("/sync")
 async def sync_now(session: SessionDep, user: Team) -> dict[str, Any]:
     return await etsy_listings.EtsyListingSync(session).run(force=True)
+
+
+channels_router = APIRouter(prefix="/admin/channels", tags=["admin: channels"])
+
+
+@channels_router.get("")
+async def connected_channels(response: Response, session: SessionDep, user: Team) -> dict[str, list[str]]:
+    """Which external shops are connected, so the admin menu shows a group for each. Each new marketplace adds its own
+    check here; the menu itself needs only the group in nav.ts."""
+    response.headers["Cache-Control"] = "no-store"
+    connected: list[str] = []
+    if (await EtsyConnectionService(session).status())["connected"]:
+        connected.append("etsy")
+    return {"connected": connected}

@@ -127,9 +127,26 @@ function Crumbs() {
   );
 }
 
+/** The external shops that are connected (Settings → External shops). Fetched once; a failure just hides their groups. */
+function useConnectedChannels(): string[] {
+  const { can } = useAuth();
+  const allowed = can("etsy:manage");
+  const [channels, setChannels] = useState<string[]>([]);
+  useEffect(() => {
+    if (!allowed) return;
+    let live = true;
+    apiFetch<{ connected: string[] }>("/admin/channels").then((r) => live && setChannels(r.connected), () => undefined);
+    return () => {
+      live = false;
+    };
+  }, [allowed]);
+  return channels;
+}
+
 function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collapsed: boolean }) {
   const { can } = useAuth();
   const pathname = usePathname();
+  const channels = useConnectedChannels();
   if (inSettings(pathname)) {
     return (
       <Suspense fallback={null}>
@@ -140,6 +157,7 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
   return (
     <nav aria-label="Admin" className={cn("flex-1 overflow-y-auto pb-6 pt-2", collapsed ? "px-2" : "px-4")}>
       {NAV.map((group, gi) => {
+        if (group.channel && !channels.includes(group.channel)) return null;
         const items = group.items.filter((i) => !i.hidden && (!i.permission || can(i.permission)));
         if (items.length === 0) return null;
         return (

@@ -13,6 +13,8 @@ export interface NavItem {
 }
 export interface NavGroup {
   label: string | null;
+  /** An external shop (etsy, later amazon, walmart …): the group shows only while that channel is connected. */
+  channel?: string;
   items: NavItem[];
 }
 
@@ -35,6 +37,7 @@ export const NAV: NavGroup[] = [
   {
     // Etsy sales and listings, read from Etsy; the team adds costs, tracking and notes (docs/ETSY.md).
     label: "Etsy",
+    channel: "etsy",
     items: [
       { href: "/admin/etsy/products", label: "Etsy listings", icon: "products", permission: "etsy:manage" },
     ],
