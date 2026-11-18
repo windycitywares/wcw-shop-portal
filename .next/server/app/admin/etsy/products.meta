@@ -1,0 +1,44 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/etsy/layout,_N_T_/admin/etsy/products/layout,_N_T_/admin/etsy/products/page,_N_T_/admin/etsy/products"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/etsy/products/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 96,
+                "slots": {
+                  "children": {
+                    "hints": 160,
+                    "slots": null
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/5d30d8c9aa4bf35a92da748641f07be300fe481676cc46be7714c1577f74ef0e/$/admin/etsy/products",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin/etsy/products/page"
+    },
+    "isFallback": false
+  }
+}

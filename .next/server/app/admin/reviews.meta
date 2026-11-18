@@ -1,0 +1,39 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/reviews/layout,_N_T_/admin/reviews/page,_N_T_/admin/reviews"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/reviews/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 160,
+                "slots": null
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/73c5d70315bd9ec9b35fa019e33abc1cb7b21607bd843395975b1bcab7761fb5/$/admin/reviews",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin/reviews/page"
+    },
+    "isFallback": false
+  }
+}

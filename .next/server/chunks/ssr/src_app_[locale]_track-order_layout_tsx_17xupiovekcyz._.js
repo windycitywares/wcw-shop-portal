@@ -1,0 +1,3 @@
+module.exports=[98182,a=>{"use strict";var b=a.i(23109),c=a.i(32889);async function d({params:a}){let{locale:e}=await a;return{title:(0,c.f)((0,b.Y)(e)?e:"en").track.title,robots:{index:!1,follow:!1}}}a.s(["default",0,function({children:a}){return a},"generateMetadata",0,d])},4061,function(a){a.n(a.i(98182))}];
+
+//# sourceMappingURL=src_app_%5Blocale%5D_track-order_layout_tsx_17xupiovekcyz._.js.map

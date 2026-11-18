@@ -1,0 +1,44 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/analytics/layout,_N_T_/admin/analytics/products/layout,_N_T_/admin/analytics/products/page,_N_T_/admin/analytics/products"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/analytics/products/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 96,
+                "slots": {
+                  "children": {
+                    "hints": 160,
+                    "slots": null
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/5cf756d8e666c0400619b5289b95107e6fb02b8bfae2fce2fb9c62a1ed21d684/$/admin/analytics/products",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin/analytics/products/page"
+    },
+    "isFallback": false
+  }
+}

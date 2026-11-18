@@ -1,0 +1,44 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/etsy/layout,_N_T_/admin/etsy/payments/layout,_N_T_/admin/etsy/payments/page,_N_T_/admin/etsy/payments"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/etsy/payments/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 96,
+                "slots": {
+                  "children": {
+                    "hints": 160,
+                    "slots": null
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/b262cfb7398feef72f490e8bd87cc88038c15e2168406f7cf086e6299ab9ad3c/$/admin/etsy/payments",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin/etsy/payments/page"
+    },
+    "isFallback": false
+  }
+}

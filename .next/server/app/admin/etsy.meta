@@ -1,0 +1,39 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/etsy/layout,_N_T_/admin/etsy/page,_N_T_/admin/etsy"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/etsy/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 160,
+                "slots": null
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/87663ee99e586f3f79d44434db0693e7aab6f9a8d921c276b3c49bea56f6ea5e/$/admin/etsy",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin/etsy/page"
+    },
+    "isFallback": false
+  }
+}
