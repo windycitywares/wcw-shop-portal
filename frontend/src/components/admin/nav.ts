@@ -36,7 +36,6 @@ export const NAV: NavGroup[] = [
     // Etsy sales and listings, read from Etsy; the team adds costs, tracking and notes (docs/ETSY.md).
     label: "Etsy",
     items: [
-      { href: "/admin/etsy", label: "Etsy", icon: "truck", permission: "etsy:manage" },
       { href: "/admin/etsy/products", label: "Etsy listings", icon: "products", permission: "etsy:manage" },
     ],
   },
@@ -128,6 +127,7 @@ export function titleFor(pathname: string): string {
 
 /** The store settings sections (each is /admin/settings?tab=<id>). */
 export const SETTINGS_TABS: { id: string; label: string; about: string }[] = [
+  { id: "external_shops", label: "External shops", about: "Connect Etsy (and later other marketplaces) so their listings and orders come into the shop." },
   { id: "shipping", label: "Shipping", about: "What shipping costs, free shipping, and how many days it takes." },
   { id: "tax", label: "Sales tax", about: "Whether you collect sales tax, the rate and the states." },
   { id: "payments", label: "Payments", about: "Card payments and what customers see when an order is waiting for money." },

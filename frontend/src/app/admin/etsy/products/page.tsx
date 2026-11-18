@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { apiFetch } from "@/lib/client-api";
 import { dateTime, money } from "@/components/admin/charts/format";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
@@ -157,8 +158,12 @@ export default function EtsyProducts() {
       <PageHeader
         title="Etsy listings"
         description="Read from Etsy every 15 minutes. Etsy details can't be edited here; add your default supplier, cost and notes."
-        back={{ href: "/admin/etsy", label: "Etsy" }}
-        actions={<Button variant="secondary" onClick={syncNow} disabled={syncing}>{syncing ? "Syncing…" : "Sync from Etsy now"}</Button>}
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Link href="/admin/settings?tab=external_shops" className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-accent underline">Etsy connection</Link>
+            <Button variant="secondary" onClick={syncNow} disabled={syncing}>{syncing ? "Syncing…" : "Sync from Etsy now"}</Button>
+          </div>
+        }
       />
       {error ? <Alert tone="danger">{error}</Alert> : null}
       <Panel>

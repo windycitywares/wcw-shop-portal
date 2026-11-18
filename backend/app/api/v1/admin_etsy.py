@@ -64,7 +64,7 @@ async def callback(
 ) -> RedirectResponse:
     """Etsy sends the browser here. The one-time `state` we stored when it left is the only check, so nothing else
     is trusted from the request. The person is then sent on to the settings page with the outcome."""
-    base = get_settings().site_url.rstrip("/") + "/admin/etsy?"
+    base = get_settings().site_url.rstrip("/") + "/admin/settings?tab=external_shops&"
     if error or not (state and code):
         return RedirectResponse(f"{base}etsy=failed&reason={quote(error or 'Etsy did not allow access')}")
     try:

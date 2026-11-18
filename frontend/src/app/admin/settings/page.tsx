@@ -20,6 +20,7 @@ import { SocialAdmin, type SocialRow } from "@/components/admin/settings/SocialA
 import { PaymentModeToggle } from "@/components/admin/settings/PaymentModeToggle";
 import { ShopLinksAdmin, type ShopLinkRow } from "@/components/admin/settings/ShopLinksAdmin";
 import { TrackingCode, type Snippet } from "@/components/admin/settings/TrackingCode";
+import { EtsyConnection } from "@/components/admin/settings/EtsyConnection";
 
 type Value = string | number | boolean | null | string[] | Record<string, string>;
 type Settings = Record<string, Record<string, Value>>;
@@ -42,6 +43,12 @@ interface Group {
 
 /** Every setting the shop owner can change, in plain words (backend/app/schemas/settings.py has the rules). */
 const GROUPS: Group[] = [
+  {
+    id: "external_shops",
+    label: "External shops",
+    description: "Connect the marketplaces you sell on (Etsy now; more can be added here later). Orders and listings are read from them.",
+    fields: [],
+  },
   {
     id: "shipping",
     label: "Shipping",
@@ -405,7 +412,9 @@ function SettingsInner() {
       )}
       {group ? (
         <div className="max-w-4xl">
-          {data && group.id === "shop_links" ? (
+          {group.id === "external_shops" ? (
+            <EtsyConnection />
+          ) : data && group.id === "shop_links" ? (
             <ShopLinksAdmin
               initial={((data.settings.shop_links as unknown as { links?: ShopLinkRow[] })?.links ?? [])}
               onSaved={(links) => setData({ ...data, settings: { ...data.settings, shop_links: { links } as unknown as Record<string, Value> } })}
