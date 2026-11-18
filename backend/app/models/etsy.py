@@ -91,6 +91,10 @@ class EtsyOrder(Base):
     past_order: Mapped[bool] = mapped_column(Boolean, default=False)  # already shipped when it first arrived: never needs attention
     supplier: Mapped[str | None] = mapped_column(String(200))
     supplier_order_number: Mapped[str | None] = mapped_column(String(100))
+    supplier_paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)  # None = not paid yet
+    supplier_paid_amount: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    supplier_payment_ref: Mapped[str | None] = mapped_column(String(100))
+    supplier_paid_by: Mapped[str | None] = mapped_column(String(200))
     shipping_cost: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     carrier: Mapped[str | None] = mapped_column(String(60))
     tracking_number: Mapped[str | None] = mapped_column(String(100))

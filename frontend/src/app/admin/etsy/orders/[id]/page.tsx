@@ -13,6 +13,9 @@ import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
+import { useAuth } from "@/lib/auth";
+import { SettleDialog } from "@/components/admin/etsy/SettleDialog";
+import { ConfirmDialog } from "@/components/admin/ui/Modal";
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : "Something went wrong");
 const m = (v: string | number | null | undefined) => (v == null ? "—" : money(Number(v), { cents: true }));
@@ -26,6 +29,10 @@ function Row({ label, children, strong }: { label: string; children: React.React
     <div className={`flex flex-wrap justify-between gap-x-4 gap-y-0.5 py-2 text-sm ${strong ? "font-semibold" : ""}`}>
       <dt className={strong ? "" : "text-muted"}>{label}</dt>
       <dd className="min-w-0 text-right">{children}</dd>
+      <SettleDialog open={settleOpen} orders={[{ id: order.id, etsy_receipt_id: order.etsy_receipt_id, owed: order.supplier_owed }]}
+        onClose={() => setSettleOpen(false)} onDone={reload} />
+      <ConfirmDialog open={undoOpen} tone="primary" title="Undo this supplier payment?" message="The order goes back to Pending; the undo is kept in its history."
+        confirmLabel="Undo payment" busy={saving} onConfirm={undoPayment} onCancel={() => setUndoOpen(false)} />
     </div>
   );
 }
@@ -41,14 +48,20 @@ export default function EtsyOrderPage() {
   const [saving, setSaving] = useState(false);
   const [nextStatus, setNextStatus] = useState("");
   const [statusNote, setStatusNote] = useState("");
+  const { can } = useAuth();
+  const [settleOpen, setSettleOpen] = useState(false);
+  const [undoOpen, setUndoOpen] = useState(false);
 
   const show = useCallback((o: OrderDetail) => {
     setOrder(o);
     setForm(toForm(o));
   }, []);
-  useEffect(() => {
+  const reload = useCallback(() => {
     apiFetch<OrderDetail>(`/admin/etsy/orders/${id}`).then(show, (e) => setError(errorText(e)));
   }, [id, show]);
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   if (error) return <Alert tone="danger">{error}</Alert>;
   if (!order || !form) return <div className="skeleton h-96" />;
@@ -82,6 +95,21 @@ export default function EtsyOrderPage() {
     }
   };
 
+  const undoPayment = async () => {
+    setSaving(true);
+    try {
+      await apiFetch(`/admin/etsy/supplier-payments/${order.id}/undo`, { method: "POST", body: JSON.stringify({}) });
+      push({ title: "Payment undone" });
+      setUndoOpen(false);
+      reload();
+    } catch (e) {
+      push({ title: "Payment not undone", description: errorText(e), tone: "danger" });
+    } finally {
+      setSaving(false);
+    }
+  };
+  const PAY_LABEL = { pending: "Pending", settled: "Settled", cost_missing: "Cost missing", not_due: "Not due (cancelled)" } as const;
+  const PAY_TONE = { pending: "warning", settled: "success", cost_missing: "danger", not_due: "neutral" } as const;
   const p = order.profit;
   // Without a purchase cost the "profit" would just be the revenue: say it is incomplete instead of showing 100 %.
   const noCost = p.missing.includes("purchase_cost");
@@ -191,6 +219,27 @@ export default function EtsyOrderPage() {
           </Panel>
 
           <Panel>
+            <PanelHeader title="Supplier payment" description="Purchase cost + shipping cost, paid to the supplier." />
+            <PanelBody className="grid grid-cols-[minmax(0,1fr)] gap-3">
+              <div><Pill tone={PAY_TONE[order.supplier_payment]}>{PAY_LABEL[order.supplier_payment]}</Pill></div>
+              <dl className="divide-y divide-line">
+                <Row label="Owed">{m(order.supplier_owed)}</Row>
+                {order.supplier_paid_at ? <Row label="Paid">{m(order.supplier_paid_amount)} on {order.supplier_paid_at.slice(0, 10)}</Row> : null}
+                {order.supplier_payment_ref ? <Row label="Reference">{order.supplier_payment_ref}</Row> : null}
+                {order.supplier_paid_by ? <Row label="Recorded by">{order.supplier_paid_by}</Row> : null}
+              </dl>
+              {can("etsy:payments") && order.supplier_payment === "pending" ? (
+                <div><Button variant="secondary" onClick={() => setSettleOpen(true)} disabled={dirty.length > 0}>Mark paid</Button></div>
+              ) : null}
+              {can("etsy:payments") && order.supplier_payment === "settled" ? (
+                <div><Button variant="ghost" onClick={() => setUndoOpen(true)}>Undo payment</Button></div>
+              ) : null}
+              {order.supplier_payment === "cost_missing" ? <p className="text-xs text-muted">Enter the purchase cost first.</p> : null}
+              {dirty.length > 0 && order.supplier_payment === "pending" ? <p className="text-xs text-muted">Save the order first.</p> : null}
+            </PanelBody>
+          </Panel>
+
+          <Panel>
             <PanelHeader title="Profit" />
             <PanelBody>
               <dl className="divide-y divide-line">
@@ -224,6 +273,10 @@ export default function EtsyOrderPage() {
           </Panel>
         </div>
       </div>
+      <SettleDialog open={settleOpen} orders={[{ id: order.id, etsy_receipt_id: order.etsy_receipt_id, owed: order.supplier_owed }]}
+        onClose={() => setSettleOpen(false)} onDone={reload} />
+      <ConfirmDialog open={undoOpen} tone="primary" title="Undo this supplier payment?" message="The order goes back to Pending; the undo is kept in its history."
+        confirmLabel="Undo payment" busy={saving} onConfirm={undoPayment} onCancel={() => setUndoOpen(false)} />
     </div>
   );
 }

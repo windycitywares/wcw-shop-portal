@@ -82,9 +82,23 @@ best sellers (profit of a multi-item order shared by item price), where buyers a
 on-time rate and cancellations. Profit and margin only count orders with a purchase cost; the page says how many.
 Rules: `app/domain/etsy_dashboard.py` (tested in `tests/test_domain_etsy.py`).
 
+## Supplier payments (External shops → Etsy → Supplier payments)
+
+Owed to the supplier = purchase cost + actual shipping cost (the supplier buys and ships). States
+(`app/domain/etsy_payments.py`): **Cost missing** (no purchase cost yet) → **Pending** → **Settled** (an admin recorded
+the payment: date, amount, reference, who). Cancelled orders are *not due* unless already paid.
+
+- Admins (`etsy:payments`) mark one order paid (any amount) or many at once (each at what it owes) — one supplier
+  invoice in one go — and can undo. Staff see everything but can't record payments.
+- A payment never changes the order's costs; payments and undos are in the order's history and the audit log.
+- Per-supplier totals (pending / settled), tabs Pending · Settled · Cost missing · All, filters supplier and dates
+  (order date; paid date on Settled).
+- Export: CSV (opens in Excel), Excel (.xlsx, money formatted), and a printable statement (Print or save PDF).
+- Migration 0026 adds `supplier_paid_at`, `supplier_paid_amount`, `supplier_payment_ref`, `supplier_paid_by`.
+
 ## Who can do what
 
-Admin: everything, including Settings → External shops. Staff (the Publisher role): orders, listings, costs, status.
+Admin: everything, including Settings → External shops and recording supplier payments. Staff (the Publisher role): orders, listings, costs, status.
 Buyer details are only shown to signed-in team members and only used to fulfil the order.
 
 ## Test mode

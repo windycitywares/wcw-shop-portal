@@ -47,6 +47,7 @@ export const NAV: NavGroup[] = [
           { href: "/admin/etsy", label: "Dashboard" },
           { href: "/admin/etsy/orders", label: "Orders" },
           { href: "/admin/etsy/products", label: "Listings" },
+          { href: "/admin/etsy/payments", label: "Supplier payments" },
         ],
       },
     ],
