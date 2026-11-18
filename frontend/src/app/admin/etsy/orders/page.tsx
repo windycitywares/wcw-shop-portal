@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/client-api";
 import { ShopTabs } from "@/components/admin/ShopTabs";
-import { dateTime, money } from "@/components/admin/charts/format";
+import { Stat, Thumb } from "@/components/admin/etsy/ui";
+import { dateTime, fmtInt, money } from "@/components/admin/charts/format";
 import { ATTENTION_LABEL, EXCEPTIONS, MAIN_PATH, STATUS_LABEL, STATUS_TONE, type OrderSummary } from "@/components/admin/etsy/orders";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
 import { Icon } from "@/components/admin/ui/Icon";
@@ -70,9 +71,12 @@ export default function EtsyOrders() {
       key: "order",
       header: "Order",
       cell: (o) => (
-        <Link href={`/admin/etsy/orders/${o.id}`} className="block min-w-0 font-medium text-accent underline-offset-2 hover:underline">
-          #{o.etsy_receipt_id}
-          <span className="block truncate text-xs font-normal text-muted">{o.buyer_name ?? "Buyer"} · {dateTime(o.ordered_at)}</span>
+        <Link href={`/admin/etsy/orders/${o.id}`} className="flex min-w-0 items-center gap-3 font-medium text-accent underline-offset-2 hover:underline">
+          <Thumb src={o.items[0]?.image} size="sm" />
+          <span className="min-w-0">
+            #{o.etsy_receipt_id}
+            <span className="block truncate text-xs font-normal text-muted">{o.buyer_name ?? "Buyer"} · {dateTime(o.ordered_at)}</span>
+          </span>
         </Link>
       ),
     },
@@ -80,7 +84,7 @@ export default function EtsyOrders() {
       key: "items",
       header: "Items",
       hide: "md",
-      cell: (o) => <span className="line-clamp-2 max-w-64">{o.items.map((i) => `${i.quantity}× ${i.title}`).join(", ")}</span>,
+      cell: (o) => <span className="line-clamp-2 max-w-64" title={o.items.map((i) => `${i.quantity}× ${i.title}`).join(", ")}>{o.items.map((i) => `${i.quantity}× ${i.title.split(" - ")[0]}`).join(", ")}</span>,
     },
     { key: "status", header: "Status", cell: (o) => <Pill tone={STATUS_TONE[o.status] ?? "neutral"}>{STATUS_LABEL[o.status] ?? o.status}</Pill> },
     { key: "revenue", header: "Revenue", align: "right", hide: "sm", cell: (o) => m(o.profit.revenue) },
@@ -117,6 +121,16 @@ export default function EtsyOrders() {
       />
       <ShopTabs shop="etsy" />
       {error ? <Alert tone="danger">{error}</Alert> : null}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Stat label="Needs attention" value={data ? fmtInt(data.attention) : "—"} sub="Late, unpurchased or missing a cost" tone={data?.attention ? "danger" : undefined}
+          active={view === "attention" && !status} onClick={() => { setView("attention"); setStatus(""); setPage(1); }} />
+        <Stat label="To purchase" value={data ? fmtInt(data.counts.new ?? 0) : "—"} sub="New, paid on Etsy" tone={data?.counts.new ? "warning" : undefined}
+          active={status === "new"} onClick={() => { setView("all"); setStatus("new"); setPage(1); }} />
+        <Stat label="To ship" value={data ? fmtInt(data.counts.purchased ?? 0) : "—"} sub="Purchased, not shipped"
+          active={status === "purchased"} onClick={() => { setView("all"); setStatus("purchased"); setPage(1); }} />
+        <Stat label="Shipped" value={data ? fmtInt(data.counts.shipped ?? 0) : "—"} sub="Delivery not confirmed yet"
+          active={status === "shipped"} onClick={() => { setView("all"); setStatus("shipped"); setPage(1); }} />
+      </div>
       <Panel>
         <Tabs<View>
           label="Which orders"

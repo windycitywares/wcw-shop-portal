@@ -20,7 +20,7 @@ export interface OrderSummary {
   supplier: string | null;
   currency: string;
   tracking_number: string | null;
-  items: { title: string; quantity: number }[];
+  items: { title: string; quantity: number; image?: string | null }[];
   profit: Profit;
   attention: string[];
   /** Already shipped when it first came in from Etsy: kept for history, never flagged. */
@@ -69,7 +69,7 @@ export interface OrderDetail extends OrderSummary {
   supplier_paid_amount: string | null;
   supplier_payment_ref: string | null;
   supplier_paid_by: string | null;
-  line_items: { id: number; etsy_listing_id: number | null; title: string; sku: string | null; variations: { name: string; value: string }[]; quantity: number; unit_price: string }[];
+  line_items: { id: number; etsy_listing_id: number | null; title: string; image?: string | null; sku: string | null; variations: { name: string; value: string }[]; quantity: number; unit_price: string }[];
   history: HistoryLine[];
 }
 

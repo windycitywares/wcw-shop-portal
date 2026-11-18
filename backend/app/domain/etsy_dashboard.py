@@ -158,7 +158,7 @@ def build(orders: Iterable[Order], previous: Iterable[Order], buckets: list[date
     series = []
     for b in buckets:
         t = per_bucket.get(b, Totals())
-        series.append({"bucket": b.isoformat(), "orders": t.orders, "revenue": _f(t.revenue), "cost": _f(t.cost),
+        series.append({"bucket": b.isoformat(), "orders": t.orders, "units": t.units, "revenue": _f(t.revenue), "cost": _f(t.cost),
                        "profit": _f(t.profit) if t.costed_orders else None})
 
     top_products = sorted(products.values(), key=lambda r: r["revenue"], reverse=True)[:10]

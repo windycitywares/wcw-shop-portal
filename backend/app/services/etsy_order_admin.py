@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError, ValidationFailedError
 from app.domain import etsy_attention, etsy_payments, etsy_profit, etsy_status
-from app.models.etsy import EtsyOrder, EtsyOrderEvent, EtsyOrderItem
+from app.models.etsy import EtsyListing, EtsyOrder, EtsyOrderEvent, EtsyOrderItem
 from app.models.user import User
 from app.services import audit
 from app.utils.text import escape_like
@@ -96,10 +96,11 @@ class EtsyOrderAdmin:
             select(EtsyOrder).where(*cond).order_by(EtsyOrder.ordered_at.desc(), EtsyOrder.id.desc())
             .limit(page_size).offset((page - 1) * page_size))).scalars().all()
         items = await self._items([r.id for r in rows])
+        images = await self._images([i for its in items.values() for i in its])
         counts = dict((await self.session.execute(select(EtsyOrder.status, func.count()).group_by(EtsyOrder.status))).all())
         needing = (await self.session.execute(select(func.count()).select_from(EtsyOrder).where(_attention_sql(now)))).scalar_one()
         return {
-            "items": [self.summary(r, items.get(r.id, []), now) for r in rows], "total": total, "page": page,
+            "items": [self.summary(r, items.get(r.id, []), now, images) for r in rows], "total": total, "page": page,
             "page_size": page_size, "counts": counts, "attention": needing,
         }
 
@@ -110,13 +111,23 @@ class EtsyOrderAdmin:
                 out.setdefault(it.order_id, []).append(it)
         return out
 
+    async def _images(self, items: list[EtsyOrderItem]) -> dict[int, str]:
+        """First photo of each listing in these items (for thumbnails)."""
+        ids = {i.etsy_listing_id for i in items if i.etsy_listing_id}
+        if not ids:
+            return {}
+        rows = (await self.session.execute(
+            select(EtsyListing.etsy_listing_id, EtsyListing.images).where(EtsyListing.etsy_listing_id.in_(ids)))).all()
+        return {lid: imgs[0] for lid, imgs in rows if imgs}
+
     @staticmethod
-    def summary(o: EtsyOrder, items: list[EtsyOrderItem], now: datetime) -> dict[str, Any]:
+    def summary(o: EtsyOrder, items: list[EtsyOrderItem], now: datetime, images: dict[int, str] | None = None) -> dict[str, Any]:
+        images = images or {}
         return {
             "id": o.id, "etsy_receipt_id": o.etsy_receipt_id, "status": o.status, "ordered_at": o.ordered_at,
             "paid_at": o.paid_at, "ship_by": o.ship_by, "buyer_name": o.buyer_name, "supplier": o.supplier,
             "currency": o.currency, "tracking_number": o.tracking_number, "past_order": o.past_order,
-            "items": [{"title": i.title, "quantity": i.quantity} for i in items],
+            "items": [{"title": i.title, "quantity": i.quantity, "image": images.get(i.etsy_listing_id or 0)} for i in items],
             "profit": profit(o), "attention": etsy_attention.reasons(facts(o), now),
         }
 
@@ -130,10 +141,11 @@ class EtsyOrderAdmin:
         o = await self.get(order_id)
         now = datetime.now(timezone.utc)
         items = (await self._items([o.id])).get(o.id, [])
+        images = await self._images(items)
         events = (await self.session.execute(
             select(EtsyOrderEvent).where(EtsyOrderEvent.order_id == o.id).order_by(EtsyOrderEvent.id.desc()))).scalars().all()
         return {
-            **self.summary(o, items, now),
+            **self.summary(o, items, now, images),
             "etsy_state": o.etsy_state, "etsy_buyer_id": o.etsy_buyer_id, "buyer_email": o.buyer_email,
             "buyer_phone": o.buyer_phone, "ship_address": o.ship_address, "gift_message": o.gift_message,
             "buyer_note": o.buyer_note, "items_total": o.items_total, "shipping_charged": o.shipping_charged,
@@ -148,6 +160,7 @@ class EtsyOrderAdmin:
             "supplier_paid_at": o.supplier_paid_at, "supplier_paid_amount": o.supplier_paid_amount,
             "supplier_payment_ref": o.supplier_payment_ref, "supplier_paid_by": o.supplier_paid_by,
             "line_items": [{"id": i.id, "etsy_listing_id": i.etsy_listing_id, "title": i.title, "sku": i.sku,
+                            "image": images.get(i.etsy_listing_id or 0),
                             "variations": i.variations, "quantity": i.quantity, "unit_price": i.unit_price} for i in items],
             "history": [{"id": e.id, "kind": e.kind, "from_status": e.from_status, "to_status": e.to_status,
                          "message": e.message, "source": e.source, "actor_name": e.actor_name, "created_at": e.created_at}

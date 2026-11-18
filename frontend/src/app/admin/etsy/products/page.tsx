@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/client-api";
 import { ShopTabs } from "@/components/admin/ShopTabs";
+import { Thumb } from "@/components/admin/etsy/ui";
 import { dateTime, money } from "@/components/admin/charts/format";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
 import { Modal } from "@/components/admin/ui/Modal";
@@ -54,6 +55,14 @@ const STATES: [string, string][] = [
 ];
 const TONE: Record<string, Tone> = { active: "success", inactive: "neutral", sold_out: "warning", draft: "neutral", expired: "neutral", removed: "danger" };
 const LABEL = Object.fromEntries(STATES.filter(([k]) => k));
+/** "$80.00" or "$80.00 – $170.00" when the options are priced differently. */
+function priceRange(l: Listing): string {
+  const prices = l.variations.map((v) => Number(v.price)).filter((n) => n > 0);
+  if (prices.length > 1 && Math.min(...prices) !== Math.max(...prices)) {
+    return `${money(Math.min(...prices), { cents: true })} – ${money(Math.max(...prices), { cents: true })}`;
+  }
+  return l.price ? money(Number(l.price), { cents: true }) : "—";
+}
 const errorText = (e: unknown) => (e instanceof Error ? e.message : "Something went wrong");
 
 export default function EtsyProducts() {
@@ -134,21 +143,19 @@ export default function EtsyProducts() {
       header: "Listing",
       cell: (l) => (
         <button type="button" onClick={() => open(l)} className="flex min-w-0 items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-accent">
-          {l.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={l.image} alt="" className="size-10 shrink-0 rounded-md object-cover" loading="lazy" />
-          ) : (
-            <span className="size-10 shrink-0 rounded-md bg-canvas" aria-hidden="true" />
-          )}
+          <Thumb src={l.image} />
           <span className="min-w-0">
-            <span className="block truncate font-medium">{l.title}</span>
-            <span className="block truncate text-xs text-muted">{l.skus.join(", ") || "No SKU"}</span>
+            <span className="block truncate font-medium" title={l.title}>{l.title.split(" - ")[0]}</span>
+            <span className="block truncate text-xs text-muted">
+              {l.variations.length > 1 ? `${l.variations.length} options` : l.skus.join(", ") || "One option"}
+              {l.internal_purchase_cost ? " · cost set" : ""}
+            </span>
           </span>
         </button>
       ),
     },
     { key: "state", header: "Status", cell: (l) => <Pill tone={TONE[l.state] ?? "neutral"}>{LABEL[l.state] ?? l.state}</Pill> },
-    { key: "price", header: "Etsy price", align: "right", cell: (l) => (l.price ? money(Number(l.price), { cents: true }) : "—") },
+    { key: "price", header: "Etsy price", align: "right", cell: (l) => priceRange(l) },
     { key: "qty", header: "In stock", align: "right", hide: "sm", cell: (l) => l.quantity ?? "—" },
     { key: "supplier", header: "Supplier", hide: "md", cell: (l) => l.internal_supplier ?? <span className="text-muted">Not set</span> },
     { key: "cost", header: "Our cost", align: "right", hide: "md", cell: (l) => (l.internal_purchase_cost ? money(Number(l.internal_purchase_cost), { cents: true }) : <span className="text-muted">Not set</span>) },

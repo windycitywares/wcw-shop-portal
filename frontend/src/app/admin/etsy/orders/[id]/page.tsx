@@ -15,6 +15,7 @@ import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/misc";
 import { useAuth } from "@/lib/auth";
 import { SettleDialog } from "@/components/admin/etsy/SettleDialog";
+import { StatusSteps, Thumb } from "@/components/admin/etsy/ui";
 import { ConfirmDialog } from "@/components/admin/ui/Modal";
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : "Something went wrong");
@@ -122,6 +123,11 @@ export default function EtsyOrderPage() {
           </a>
         }
       />
+      <Panel>
+        <PanelBody>
+          <StatusSteps status={order.status} />
+        </PanelBody>
+      </Panel>
       {order.past_order ? (
         <Alert>This order was already shipped when Etsy was connected. It is kept for history and reports and is never flagged; you can still add its costs.</Alert>
       ) : null}
@@ -135,8 +141,9 @@ export default function EtsyOrderPage() {
             <PanelHeader title="Items" description="From Etsy; read-only." />
             <ul className="divide-y divide-line">
               {order.line_items.map((i) => (
-                <li key={i.id} className="flex flex-wrap justify-between gap-2 px-5 py-3 text-sm">
-                  <span className="min-w-0">
+                <li key={i.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
+                  <Thumb src={i.image} size="lg" />
+                  <span className="min-w-0 flex-1">
                     <span className="font-medium">{i.quantity}× {i.title}</span>
                     <span className="block text-xs text-muted">
                       {[i.sku, ...i.variations.map((v) => `${v.name}: ${v.value}`)].filter(Boolean).join(" · ") || "No SKU"}
