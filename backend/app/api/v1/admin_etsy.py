@@ -1,5 +1,6 @@
 """Etsy connection: credentials, "Allow access" and disconnect. Orders and listings come in later batches (docs/ETSY.md)."""
 
+from decimal import Decimal
 from typing import Annotated, Any
 from urllib.parse import quote
 
@@ -9,9 +10,11 @@ from pydantic import BaseModel, Field
 
 from app.api.deps import SessionDep, require
 from app.core.config import get_settings
-from app.core.exceptions import ValidationFailedError
+from app.core.exceptions import NotFoundError, ValidationFailedError
 from app.core.permissions import Permission
+from app.models.etsy import EtsyListing
 from app.models.user import User
+from app.services import audit, etsy_listings
 from app.services.etsy_client import EtsyError
 from app.services.etsy_connection import EtsyConnectionService
 
@@ -69,3 +72,54 @@ async def callback(
     except (EtsyError, ValidationFailedError) as exc:
         return RedirectResponse(f"{base}etsy=failed&reason={quote(str(exc)[:200])}")
     return RedirectResponse(f"{base}etsy=connected&shop={quote(name)}")
+
+
+# ---- listings (read-only mirror of Etsy; the team edits only the internal_* fields) ----
+
+
+class ListingInternalIn(BaseModel):
+    internal_supplier: str | None = Field(default=None, max_length=200)
+    internal_purchase_cost: Decimal | None = Field(default=None, ge=0, max_digits=12, decimal_places=2)
+    internal_notes: str | None = Field(default=None, max_length=5000)
+
+
+def _listing(r: EtsyListing) -> dict[str, Any]:
+    return {
+        "id": r.id, "etsy_listing_id": r.etsy_listing_id, "title": r.title, "state": r.state, "price": r.price,
+        "currency": r.currency, "quantity": r.quantity, "skus": r.skus, "url": r.url, "image": (r.images or [None])[0],
+        "variations": r.variations, "tags": r.tags, "description": r.description, "synced_at": r.synced_at,
+        "internal_supplier": r.internal_supplier, "internal_purchase_cost": r.internal_purchase_cost,
+        "internal_notes": r.internal_notes,
+    }
+
+
+@router.get("/listings")
+async def listings(
+    response: Response, session: SessionDep, user: Team,
+    q: Annotated[str | None, Query(max_length=100)] = None,
+    state: Annotated[str | None, Query(max_length=20)] = None,
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 25,
+) -> dict[str, Any]:
+    response.headers["Cache-Control"] = "no-store"
+    rows, total = await etsy_listings.search(session, q, state, page, page_size)
+    return {"items": [_listing(r) for r in rows], "total": total, "page": page, "page_size": page_size}
+
+
+@router.patch("/listings/{listing_id}")
+async def update_listing(listing_id: int, body: ListingInternalIn, session: SessionDep, user: Team) -> dict[str, Any]:
+    """Only the team's own fields. Anything from Etsy is read-only and is ignored here by design."""
+    row = await session.get(EtsyListing, listing_id)
+    if row is None:
+        raise NotFoundError("Listing not found")
+    for k, v in body.model_dump(exclude_unset=True).items():
+        setattr(row, k, v)
+    audit.record(session, user, "etsy.listing.internal", "etsy_listing", row.id, f"Internal info for {row.title[:80]}")
+    await session.commit()
+    await session.refresh(row)
+    return _listing(row)
+
+
+@router.post("/sync")
+async def sync_now(session: SessionDep, user: Team) -> dict[str, Any]:
+    return await etsy_listings.EtsyListingSync(session).run(force=True)

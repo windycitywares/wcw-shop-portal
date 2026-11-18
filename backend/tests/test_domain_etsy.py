@@ -84,3 +84,31 @@ class OAuthTests(unittest.TestCase):
 
         self.assertEqual(o.user_id_from_token("12345.abcdef"), 12345)
         self.assertIsNone(o.user_id_from_token("nope"))
+
+
+class ListingParseTests(unittest.TestCase):
+    def test_parse(self):
+        from app.domain import etsy_listing as l
+
+        raw = {
+            "listing_id": 77, "title": " Mug ", "state": "active", "quantity": 4, "tags": ["mug"],
+            "price": {"amount": 1999, "divisor": 100, "currency_code": "USD"}, "last_modified_timestamp": 1760000000,
+            "images": [{"url_fullxfull": "https://i.etsystatic.com/a.jpg"}],
+            "inventory": {"products": [{"sku": "MUG-S", "property_values": [{"property_name": "Size", "values": ["S"]}],
+                                        "offerings": [{"price": {"amount": 1999, "divisor": 100, "currency_code": "USD"}, "quantity": 4, "is_enabled": True}]}]},
+        }
+        out = l.parse(raw)
+        self.assertEqual(out["title"], "Mug")
+        self.assertEqual(out["price"], Decimal("19.99"))
+        self.assertEqual(out["skus"], ["MUG-S"])
+        self.assertEqual(out["variations"][0]["options"], {"Size": "S"})
+        self.assertEqual(out["images"], ["https://i.etsystatic.com/a.jpg"])
+        self.assertEqual(out["etsy_updated_at"].year, 2025)
+
+    def test_unknown_state_and_missing_money(self):
+        from app.domain import etsy_listing as l
+
+        out = l.parse({"listing_id": 1, "state": "weird"})
+        self.assertEqual(out["state"], "inactive")
+        self.assertIsNone(out["price"])
+        self.assertEqual(out["currency"], "USD")
