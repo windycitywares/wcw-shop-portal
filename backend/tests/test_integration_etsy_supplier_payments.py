@@ -52,7 +52,8 @@ class SupplierPaymentTests(unittest.TestCase):
         self.assertEqual((ov["pending_count"], ov["settled_count"], ov["settled_amount"]), (0, 2, "34.00"))
         settled = self.get("/admin/etsy/supplier-payments", state="settled").json()["items"]
         self.assertEqual({s["payment_ref"] for s in settled}, {"PayPal 123"})
-        self.assertEqual({s["paid_by"] for s in settled}, {"Ada Admin"})
+        admin_name = w.value("SELECT coalesce(full_name, email) FROM users WHERE email = :e", e=w.admin_email)
+        self.assertEqual({s["paid_by"] for s in settled}, {admin_name})  # other tests may rename the shared admin
 
         detail = w.get(f"/admin/etsy/orders/{self.ids[0]}", w.publisher).json()
         self.assertEqual(detail["supplier_payment"], "settled")
