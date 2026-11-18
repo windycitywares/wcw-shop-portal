@@ -16,8 +16,9 @@ class EtsyDashboardTests(unittest.TestCase):
     def setUp(self):
         reset_limits()
         self.w = world()
-        self.sup = f"Dash {self.w.sfx}"
-        base = 6_000_000 + abs(hash(self.w.sfx)) % 1_000_000
+        key = f"{self.w.sfx}-{self._testMethodName}"  # each test its own orders: the world is shared
+        self.sup = f"Dash {key}"
+        base = 6_000_000 + abs(hash(key)) % 3_000_000
         when = datetime.now(timezone.utc) - timedelta(days=1)
         for i, cost in enumerate(("10.00", None)):
             oid = self.w.sql(
@@ -48,6 +49,7 @@ class EtsyDashboardTests(unittest.TestCase):
     def test_product_filter_and_empty_range(self):
         w = self.w
         self.assertEqual(w.get("/admin/etsy/dashboard", w.publisher, listing_id=self.listing).json()["totals"]["orders"], 2)
+        self.assertEqual(w.get("/admin/etsy/dashboard", w.publisher, supplier=self.sup, listing_id=1).json()["totals"]["orders"], 0)
         old = w.get("/admin/etsy/dashboard", w.publisher, supplier=self.sup, start="2020-01-01", end="2020-01-31").json()
         self.assertEqual(old["totals"]["orders"], 0)
 
