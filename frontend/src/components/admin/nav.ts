@@ -39,6 +39,7 @@ export const NAV: NavGroup[] = [
     label: "Etsy",
     channel: "etsy",
     items: [
+      { href: "/admin/etsy/orders", label: "Etsy orders", icon: "orders", permission: "etsy:manage" },
       { href: "/admin/etsy/products", label: "Etsy listings", icon: "products", permission: "etsy:manage" },
     ],
   },
