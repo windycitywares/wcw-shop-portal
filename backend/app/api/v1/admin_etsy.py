@@ -112,7 +112,12 @@ async def update_listing(listing_id: int, body: ListingInternalIn, session: Sess
     row = await session.get(EtsyListing, listing_id)
     if row is None:
         raise NotFoundError("Listing not found")
-    for k, v in body.model_dump(exclude_unset=True).items():
+    patch = body.model_dump(exclude_unset=True)
+    if "internal_supplier" in patch and (patch["internal_supplier"] or "").strip().lower() != (row.internal_supplier or "").lower():
+        from app.services.suppliers import SupplierDirectory
+
+        patch["internal_supplier"] = await SupplierDirectory(session).resolve(patch["internal_supplier"])
+    for k, v in patch.items():
         setattr(row, k, v)
     audit.record(session, user, "etsy.listing.internal", "etsy_listing", row.id, f"Internal info for {row.title[:80]}")
     await session.commit()

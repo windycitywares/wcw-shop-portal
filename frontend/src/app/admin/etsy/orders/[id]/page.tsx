@@ -16,6 +16,7 @@ import { Alert } from "@/components/ui/misc";
 import { useAuth } from "@/lib/auth";
 import { SettleDialog } from "@/components/admin/etsy/SettleDialog";
 import { StatusSteps, Thumb } from "@/components/admin/etsy/ui";
+import { SupplierSelect } from "@/components/admin/SupplierSelect";
 import { ConfirmDialog } from "@/components/admin/ui/Modal";
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : "Something went wrong");
@@ -169,7 +170,7 @@ export default function EtsyOrderPage() {
             <PanelBody className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
               <Field label="Purchase cost ($)">{(f) => <Input {...f} inputMode="decimal" value={form.purchase_cost} onChange={set("purchase_cost")} />}</Field>
               <Field label="Actual shipping cost ($)">{(f) => <Input {...f} inputMode="decimal" value={form.shipping_cost} onChange={set("shipping_cost")} />}</Field>
-              <Field label="Supplier">{(f) => <Input {...f} value={form.supplier} onChange={set("supplier")} maxLength={200} />}</Field>
+              <Field label="Supplier">{(f) => <SupplierSelect {...f} value={form.supplier} onChange={(v) => setForm({ ...form, supplier: v })} />}</Field>
               <Field label="Supplier order number">{(f) => <Input {...f} value={form.supplier_order_number} onChange={set("supplier_order_number")} maxLength={100} />}</Field>
               <Field label="Carrier">{(f) => <Input {...f} value={form.carrier} onChange={set("carrier")} placeholder="USPS, UPS, FedEx…" maxLength={60} />}</Field>
               <Field label="Tracking number" hint="Phase 2 sends this to Etsy automatically.">{(f) => <Input {...f} value={form.tracking_number} onChange={set("tracking_number")} maxLength={100} />}</Field>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/client-api";
 import { ShopTabs } from "@/components/admin/ShopTabs";
 import { Thumb } from "@/components/admin/etsy/ui";
+import { SupplierSelect } from "@/components/admin/SupplierSelect";
 import { dateTime, money } from "@/components/admin/charts/format";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
 import { Modal } from "@/components/admin/ui/Modal";
@@ -238,7 +239,7 @@ export default function EtsyProducts() {
               </ul>
             ) : null}
             {editing.url ? <a href={editing.url} target="_blank" rel="noopener noreferrer" className="text-sm text-accent underline">Open on Etsy (new tab)</a> : null}
-            <Field label="Default supplier">{(p) => <Input {...p} value={supplier} onChange={(e) => setSupplier(e.target.value)} maxLength={200} />}</Field>
+            <Field label="Default supplier">{(p) => <SupplierSelect {...p} value={supplier} onChange={setSupplier} />}</Field>
             <Field label="Default purchase cost per unit ($)" hint="New orders for this listing start with this cost.">
               {(p) => <Input {...p} inputMode="decimal" value={cost} onChange={(e) => setCost(e.target.value)} />}
             </Field>

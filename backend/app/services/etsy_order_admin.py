@@ -176,6 +176,13 @@ class EtsyOrderAdmin:
         unknown = set(patch) - set(EDITABLE)
         if unknown:
             raise ValidationFailedError(f"Not editable here: {', '.join(sorted(unknown))}")
+        if patch.get("supplier") is not None:
+            if patch["supplier"].strip().lower() == (o.supplier or "").lower():
+                patch = {**patch, "supplier": o.supplier}  # unchanged (even if that supplier was switched off since)
+            else:
+                from app.services.suppliers import SupplierDirectory
+
+                patch = {**patch, "supplier": await SupplierDirectory(self.session).resolve(patch["supplier"])}
         changed: dict[str, list[str]] = {"costs": [], "tracking": [], "note": []}
         for k, v in patch.items():
             if isinstance(v, str):
