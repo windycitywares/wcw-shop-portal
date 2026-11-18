@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain import etsy_dashboard as dash
 from app.domain.timeutil import DateRange, to_store_time
-from app.models.etsy import EtsyOrder, EtsyOrderItem
+from app.models.etsy import EtsyListing, EtsyOrder, EtsyOrderItem
 from app.services.reports.common import bucket_label, bucket_starts, kpi
 
 
@@ -60,17 +60,23 @@ class EtsyDashboard:
             s["label"] = bucket_label(date.fromisoformat(s["bucket"]), gran)
         t, p = out["totals"], out["previous"]
         out["kpis"] = [
-            kpi("orders", "Orders", t["orders"], p["orders"], help="Paid Etsy orders placed in the period (not cancelled)."),
-            kpi("items", "Items sold", t["units"], p["units"], help="What Etsy calls “sales”: items in orders that weren't cancelled."),
-            kpi("revenue", "Revenue", t["revenue"], p["revenue"], "money", "Items + shipping charged − discounts. Tax excluded."),
-            kpi("profit", "Net profit", t["profit"], p["profit"], "money", "Orders with a purchase cost only. Before Etsy fees (phase 2)."),
-            kpi("margin", "Margin", t["margin"], p["margin"], "percent", "Net profit ÷ revenue, orders with a cost only."),
+            kpi("orders", "Orders", t["orders"], p["orders"], help="Paid, not cancelled."),
+            kpi("items", "Items sold", t["units"], p["units"], help="What Etsy calls “sales”."),
+            kpi("revenue", "Revenue", t["revenue"], p["revenue"], "money", "After discounts, before tax."),
+            kpi("profit", "Net profit", t["profit"], p["profit"], "money", "Costed orders, before Etsy fees."),
+            kpi("margin", "Margin", t["margin"], p["margin"], "percent", "Of costed orders."),
             kpi("days_to_ship", "Days to ship", t["avg_days_to_ship"], p["avg_days_to_ship"], "decimal",
-                "Average days from payment to shipping.", better="down"),
+                "Payment to shipping.", better="down"),
         ]
         out["range"] = {"start": rng.start.isoformat(), "end": rng.end.isoformat(), "days": rng.days, "granularity": gran,
                         "previous_start": prev.start.isoformat(), "previous_end": prev.end.isoformat()}
         out["options"] = await self._options()
+        ids = [p["listing_id"] for p in out["top_products"] if p["listing_id"]]
+        if ids:
+            imgs = dict((await self.session.execute(
+                select(EtsyListing.etsy_listing_id, EtsyListing.images).where(EtsyListing.etsy_listing_id.in_(ids)))).all())
+            for p in out["top_products"]:
+                p["image"] = (imgs.get(p["listing_id"]) or [None])[0]
         return out
 
     async def _options(self) -> dict[str, Any]:
