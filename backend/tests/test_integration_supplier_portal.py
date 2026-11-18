@@ -32,6 +32,7 @@ class SupplierPortalTests(unittest.TestCase):
         # Etsy connected, so the supplier's allowed shop is live.
         w.put("/admin/etsy/credentials", {"client_id": "k", "client_secret": "s"}, w.admin)
         w.sql("UPDATE etsy_connection SET access_token='x', refresh_token='y', etsy_shop_id=5, token_expires_at=now()+interval '1 day'")
+        w.supplier(self.mine)
         self.email = f"supplier-{key}@example.com".lower()
         r = w.post("/admin/supplier-logins", {"email": self.email, "password": "supplier-pass-1", "full_name": "Sue Supplier",
                                               "supplier_name": f"  {self.mine} ", "channels": ["etsy"]}, w.admin)

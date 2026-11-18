@@ -50,6 +50,8 @@ export const NAV: NavGroup[] = [
           { href: "/admin/etsy/payments", label: "Supplier payments" },
         ],
       },
+      // Suppliers serve every marketplace, so they sit beside the shops rather than inside one.
+      { href: "/admin/suppliers", label: "Suppliers", icon: "users", permission: "etsy:manage" },
       {
         // What a supplier login sees instead (role supplier): only their own orders and payments.
         href: "/admin/supplier/etsy", label: "Etsy", icon: "truck", permission: "supplier:portal", channel: "etsy",

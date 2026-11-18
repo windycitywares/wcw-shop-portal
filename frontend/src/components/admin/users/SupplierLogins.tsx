@@ -10,6 +10,7 @@ import { Pill } from "@/components/admin/ui/Pill";
 import { useToast } from "@/components/admin/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
+import { SupplierSelect } from "@/components/admin/SupplierSelect";
 
 /** The external shops a supplier can be given (backend: app/domain/channels.py). */
 const SHOPS: { id: string; label: string }[] = [{ id: "etsy", label: "Etsy" }];
@@ -25,7 +26,6 @@ const errorText = (e: unknown) => (e instanceof Error ? e.message : "Something w
 export function SupplierLogins() {
   const { push } = useToast();
   const [rows, setRows] = useState<User[] | null>(null);
-  const [known, setKnown] = useState<string[]>([]);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -34,8 +34,6 @@ export function SupplierLogins() {
   }, []);
   useEffect(() => {
     load();
-    // Supplier names already on Etsy orders, to pick from (any name can still be typed).
-    apiFetch<{ options: { suppliers: string[] } }>("/admin/etsy/supplier-payments/overview").then((r) => setKnown(r.options.suppliers), () => undefined);
   }, [load]);
 
   const save = async () => {
@@ -92,7 +90,7 @@ export function SupplierLogins() {
         open={!!draft}
         onClose={() => setDraft(null)}
         title={draft?.id ? "Supplier access" : "Add supplier login"}
-        description="The supplier name must match the Supplier field on orders (it isn't case-sensitive)."
+        description="Pick the supplier from your list (External shops → Suppliers)."
         footer={
           <>
             <Button variant="secondary" onClick={() => setDraft(null)}>Cancel</Button>
@@ -103,13 +101,8 @@ export function SupplierLogins() {
         {draft ? (
           <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <Field label="Supplier name" hint={known.length ? "Pick one used on orders, or type a new one." : undefined}>
-                {(p) => (
-                  <>
-                    <Input {...p} list="supplier-names" value={draft.supplier_name} onChange={(e) => setDraft({ ...draft, supplier_name: e.target.value })} maxLength={200} required />
-                    <datalist id="supplier-names">{known.map((k) => <option key={k} value={k} />)}</datalist>
-                  </>
-                )}
+              <Field label="Supplier" hint="They will see the orders that have this supplier.">
+                {(p) => <SupplierSelect {...p} value={draft.supplier_name} onChange={(v) => setDraft({ ...draft, supplier_name: v })} />}
               </Field>
             </div>
             {!draft.id ? (

@@ -45,7 +45,8 @@ class EtsyOrderAdminTests(unittest.TestCase):
         self.assertIn("cost_missing", row["attention"])
         self.assertIn(self.id, [r["id"] for r in w.get("/admin/etsy/orders", w.publisher, attention="true", page_size=100, q=str(self.rid)).json()["items"]])
 
-        r = w.client.patch(w.url(self.url()), json={"purchase_cost": "12.00", "supplier": "Acme", "supplier_order_number": "AC-1"},
+        w.supplier("Acme")
+        r = w.client.patch(w.url(self.url()), json={"purchase_cost": "12.00", "supplier": "acme", "supplier_order_number": "AC-1"},
                            headers=w.publisher)
         self.assertEqual(r.status_code, 200, r.text)
         d = r.json()
@@ -89,7 +90,9 @@ class EtsyOrderAdminTests(unittest.TestCase):
 
     def test_filters(self):
         w = self.w
+        w.supplier(f"Sup {self.w.sfx}")
         w.client.patch(w.url(self.url()), json={"supplier": f"Sup {self.w.sfx}"}, headers=w.publisher)
+        self.assertEqual(w.client.patch(w.url(self.url()), json={"supplier": "Nobody Ltd"}, headers=w.publisher).status_code, 422)
         self.assertEqual(w.get("/admin/etsy/orders", w.publisher, supplier=f"sup {self.w.sfx}").json()["total"], 1)
         self.assertGreaterEqual(w.get("/admin/etsy/orders", w.publisher, q="MUG-B").json()["total"], 1)
         self.assertGreaterEqual(w.get("/admin/etsy/orders", w.publisher, listing_id=4242).json()["total"], 1)

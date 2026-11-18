@@ -44,6 +44,7 @@ class EtsyListingTests(unittest.TestCase):
 
         rows = w.get("/admin/etsy/listings", w.publisher, q="Mug").json()["items"]
         mug = next(r for r in rows if r["etsy_listing_id"] == base)
+        w.supplier("Acme")
         patched = w.client.patch(w.url(f"/admin/etsy/listings/{mug['id']}"),
                                  json={"internal_supplier": "Acme", "internal_purchase_cost": "6.50"}, headers=w.publisher)
         self.assertEqual(patched.status_code, 200, patched.text)

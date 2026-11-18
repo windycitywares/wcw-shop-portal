@@ -96,6 +96,14 @@ the payment: date, amount, reference, who). Cancelled orders are *not due* unles
 - Export: CSV (opens in Excel), Excel (.xlsx, money formatted), and a printable statement (Print or save PDF).
 - Migration 0026 adds `supplier_paid_at`, `supplier_paid_amount`, `supplier_payment_ref`, `supplier_paid_by`.
 
+## Suppliers (External shops → Suppliers)
+
+The supplier list (migration 0028, `app/services/suppliers.py`), shared by every marketplace: name, contact, email,
+phone, notes, active. Listings' default supplier, orders' supplier and supplier logins are **picked** from it (the API
+refuses a name that isn't listed or is switched off; an unchanged value is always accepted). Names already in use were
+added when the list was created. Renaming a supplier renames it on its orders, listings and login. Suppliers are switched
+off, not deleted.
+
 ## Supplier logins (Team → Supplier logins)
 
 An admin adds a login per supplier: email + password, the **supplier name** (must match the Supplier field on orders;

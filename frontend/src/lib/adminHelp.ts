@@ -117,6 +117,14 @@ const HELP: Record<string, HelpEntry> = {
       "Export CSV or Excel for your books, or Print or save PDF for a statement. Exports follow the tab and filters you have chosen.",
     ],
   },
+  "/admin/suppliers": {
+    title: "Suppliers",
+    body: [
+      "Everyone you buy from, for every marketplace. Listings (default supplier), orders and supplier logins pick a supplier from this list, so a name is never misspelt.",
+      "Renaming a supplier updates it on its listings, orders and login. Switch a supplier off instead of deleting it: past orders keep their supplier.",
+      "Owed is what you haven't paid them yet; pay it under External shops → Etsy → Supplier payments.",
+    ],
+  },
   "/admin/supplier/etsy": {
     title: "Your orders",
     body: [

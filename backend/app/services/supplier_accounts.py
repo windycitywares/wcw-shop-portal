@@ -42,7 +42,9 @@ class SupplierAccounts:
 
     async def create(self, actor: User, *, email: str, password: str, full_name: str | None, supplier_name: str,
                      channels: list[str]) -> User:
-        name, shops = _name(supplier_name), _channels(channels)
+        from app.services.suppliers import SupplierDirectory
+
+        name, shops = await SupplierDirectory(self.session).resolve(_name(supplier_name)), _channels(channels)
         user = await UserService(self.session).create(
             UserCreate(email=email, password=password, full_name=full_name, role=UserRole.SUPPLIER))
         user.supplier_name, user.supplier_channels = name, shops
@@ -57,7 +59,9 @@ class SupplierAccounts:
         if user is None or user.role != UserRole.SUPPLIER:
             raise NotFoundError("Supplier login not found")
         if supplier_name is not None:
-            user.supplier_name = _name(supplier_name)
+            from app.services.suppliers import SupplierDirectory
+
+            user.supplier_name = await SupplierDirectory(self.session).resolve(_name(supplier_name))
         if channels is not None:
             user.supplier_channels = _channels(channels)
         audit.record(self.session, actor, "supplier_login.update", "user", user.id,
