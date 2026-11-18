@@ -39,6 +39,7 @@ longer returns becomes `removed` (kept, so old orders still link). "Sync from Et
   prices, shipping charged, discounts, tax, gift message, buyer note, ship-by date. Buyer email only if Etsy gives it;
   phone is typed in by the team.
 - First run reads 180 days back; later runs re-read 45 days so changes on older orders (shipped, cancelled) arrive.
+- **Default cost:** one per listing (owner's decision 2026-11-17, not per size).
 - **Prefill:** purchase cost = Σ listing default cost × quantity (only when every item has one; flagged
   `costs_prefilled` until someone edits it); supplier when all items share one.
 - Team fields: purchase cost, supplier, supplier order #, actual shipping cost, carrier, tracking, notes, buyer phone.
@@ -67,7 +68,8 @@ Missing figures count as zero and are listed as missing — never estimated. Ets
 ### Needs attention (`app/domain/etsy_attention.py`, mirrored in SQL for the filter)
 
 Paid > 24 h and not purchased · past ship-by and not shipped · purchase cost missing · shipping cost missing once shipped ·
-negative profit. Cancelled orders never need attention. Phase 3 adds tracking failures, unanswered messages, connection
+negative profit. Cancelled orders never need attention, and neither do **past orders** — ones that were already shipped
+or cancelled when they first came in from Etsy (`past_order`; owner's decision 2026-11-17). Costs can still be added. Phase 3 adds tracking failures, unanswered messages, connection
 problems and the email alerts.
 
 ## Who can do what

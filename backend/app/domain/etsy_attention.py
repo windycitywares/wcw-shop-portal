@@ -33,10 +33,11 @@ class OrderFacts:
     items_total: Decimal
     shipping_charged: Decimal
     discounts: Decimal
+    past_order: bool = False  # already shipped when it arrived from Etsy (kept for history, never flagged)
 
 
 def reasons(o: OrderFacts, now: datetime) -> list[str]:
-    if o.status == "cancelled":
+    if o.status == "cancelled" or o.past_order:
         return []
     out = []
     if o.status == "new" and o.paid_at and now - o.paid_at > NOT_PURCHASED_AFTER:

@@ -98,6 +98,17 @@ class EtsyOrderSyncTests(unittest.TestCase):
         self.assertIn(("status", "etsy"), kinds)
         self.assertIn(("tracking", "etsy"), kinds)
 
+    def test_order_already_shipped_when_it_arrives_is_a_past_order(self):
+        rid = self.base + 6
+        self.sync([receipt(rid, None, is_shipped=True)])
+        self.assertTrue(self.order(rid)["past_order"])
+        listed = self.w.get("/admin/etsy/orders", self.w.publisher, q=str(rid)).json()["items"][0]
+        self.assertEqual(listed["attention"], [])
+        self.assertEqual(self.w.get("/admin/etsy/orders", self.w.publisher, q=str(rid), attention="true").json()["total"], 0)
+        fresh = self.base + 7
+        self.sync([receipt(fresh, None)])
+        self.assertFalse(self.order(fresh)["past_order"])
+
     def test_etsy_never_moves_an_order_back_or_off_a_team_status(self):
         rid = self.base + 4
         self.sync([receipt(rid, None)])

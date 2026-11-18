@@ -31,7 +31,8 @@ LABEL = {
 def facts(o: EtsyOrder) -> etsy_attention.OrderFacts:
     return etsy_attention.OrderFacts(
         status=o.status, paid_at=o.paid_at, ship_by=o.ship_by, purchase_cost=o.purchase_cost, shipping_cost=o.shipping_cost,
-        etsy_fees=o.etsy_fees, items_total=o.items_total, shipping_charged=o.shipping_charged, discounts=o.discounts)
+        etsy_fees=o.etsy_fees, items_total=o.items_total, shipping_charged=o.shipping_charged, discounts=o.discounts,
+        past_order=o.past_order)
 
 
 def profit(o: EtsyOrder) -> dict[str, Any]:
@@ -45,7 +46,7 @@ def _attention_sql(now: datetime):
     revenue = EtsyOrder.items_total + EtsyOrder.shipping_charged - EtsyOrder.discounts
     cost = (func.coalesce(EtsyOrder.purchase_cost, 0) + func.coalesce(EtsyOrder.shipping_cost, 0)
             + func.coalesce(EtsyOrder.etsy_fees, 0))
-    return and_(EtsyOrder.status != "cancelled", or_(
+    return and_(EtsyOrder.status != "cancelled", EtsyOrder.past_order.is_(False), or_(
         and_(EtsyOrder.status == "new", EtsyOrder.paid_at < now - etsy_attention.NOT_PURCHASED_AFTER),
         and_(EtsyOrder.status.in_(etsy_attention.WAITING), EtsyOrder.ship_by < now),
         EtsyOrder.purchase_cost.is_(None),
@@ -114,7 +115,7 @@ class EtsyOrderAdmin:
         return {
             "id": o.id, "etsy_receipt_id": o.etsy_receipt_id, "status": o.status, "ordered_at": o.ordered_at,
             "paid_at": o.paid_at, "ship_by": o.ship_by, "buyer_name": o.buyer_name, "supplier": o.supplier,
-            "currency": o.currency, "tracking_number": o.tracking_number,
+            "currency": o.currency, "tracking_number": o.tracking_number, "past_order": o.past_order,
             "items": [{"title": i.title, "quantity": i.quantity} for i in items],
             "profit": profit(o), "attention": etsy_attention.reasons(facts(o), now),
         }
