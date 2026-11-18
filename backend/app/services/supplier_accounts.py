@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.enums import UserRole
 from app.core.exceptions import NotFoundError, ValidationFailedError
-from app.domain import channels as ch
+from app.domain import shop_channels as ch
 from app.models.user import User
 from app.services import audit
 from app.services.auth import UserService

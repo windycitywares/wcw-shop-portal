@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.enums import UserRole
 from app.core.exceptions import NotFoundError, PermissionDeniedError, ValidationFailedError
-from app.domain import channels as ch
+from app.domain import shop_channels as ch
 from app.domain import etsy_payments, etsy_status
 from app.models.etsy import EtsyOrder, EtsyOrderEvent, EtsyOrderItem
 from app.models.user import User
