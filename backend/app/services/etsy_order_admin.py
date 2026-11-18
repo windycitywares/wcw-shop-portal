@@ -83,8 +83,10 @@ class EtsyOrderAdmin:
             cond.append(EtsyOrder.status == status)
         if attention:
             cond.append(_attention_sql(now))
-        if supplier:
-            cond.append(func.lower(func.coalesce(EtsyOrder.supplier, "")).like(f"%{escape_like(supplier.lower())}%", escape="\\"))
+        if supplier == "__none__":
+            cond.append(EtsyOrder.supplier.is_(None))
+        elif supplier:  # picked from the supplier list, so an exact (case-blind) match
+            cond.append(func.lower(EtsyOrder.supplier) == supplier.strip().lower())
         if listing_id:
             cond.append(exists().where(EtsyOrderItem.order_id == EtsyOrder.id, EtsyOrderItem.etsy_listing_id == listing_id))
         if date_from:

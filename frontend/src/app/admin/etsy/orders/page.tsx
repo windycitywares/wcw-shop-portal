@@ -5,6 +5,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/client-api";
 import { ShopTabs } from "@/components/admin/ShopTabs";
 import { Stat, Thumb } from "@/components/admin/etsy/ui";
+import { SupplierFilter, useSupplierFilter } from "@/components/admin/etsy/SupplierFilter";
 import { dateTime, fmtInt, money } from "@/components/admin/charts/format";
 import { ATTENTION_LABEL, EXCEPTIONS, MAIN_PATH, STATUS_LABEL, STATUS_TONE, type OrderSummary } from "@/components/admin/etsy/orders";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
@@ -33,10 +34,10 @@ export default function EtsyOrders() {
   const [view, setView] = useState<View>("open");
   const [status, setStatus] = useState("");
   const [q, setQ] = useState("");
-  const [supplier, setSupplier] = useState("");
+  const [supplier, setSupplier] = useSupplierFilter();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [applied, setApplied] = useState({ q: "", supplier: "", from: "", to: "" });
+  const [applied, setApplied] = useState({ q: "", from: "", to: "" });
   const [page, setPage] = useState(1);
   const [data, setData] = useState<Page | null>(null);
   const [loading, setLoading] = useState(false);
@@ -50,7 +51,7 @@ export default function EtsyOrders() {
       else if (view === "open") p.set("status", "open");
       if (view === "attention") p.set("attention", "true");
       if (applied.q) p.set("q", applied.q);
-      if (applied.supplier) p.set("supplier", applied.supplier);
+      if (supplier) p.set("supplier", supplier);
       if (applied.from) p.set("date_from", applied.from);
       if (applied.to) p.set("date_to", applied.to);
       setData(await apiFetch<Page>(`/admin/etsy/orders?${p}`));
@@ -60,7 +61,7 @@ export default function EtsyOrders() {
     } finally {
       setLoading(false);
     }
-  }, [page, view, status, applied]);
+  }, [page, view, status, applied, supplier]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -152,7 +153,7 @@ export default function EtsyOrders() {
           onSubmit={(e) => {
             e.preventDefault();
             setPage(1);
-            setApplied({ q: q.trim(), supplier: supplier.trim(), from, to });
+            setApplied({ q: q.trim(), from, to });
           }}
         >
           <Field label="Search">{(p) => <Input {...p} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Order #, buyer, item, SKU, tracking" />}</Field>
@@ -165,7 +166,7 @@ export default function EtsyOrders() {
               </Select>
             )}
           </Field>
-          <Field label="Supplier">{(p) => <Input {...p} value={supplier} onChange={(e) => setSupplier(e.target.value)} />}</Field>
+          <SupplierFilter value={supplier} onChange={(v) => { setSupplier(v); setPage(1); }} className="" />
           <Field label="From">{(p) => <Input {...p} type="date" value={from} onChange={(e) => setFrom(e.target.value)} />}</Field>
           <Field label="To">{(p) => <Input {...p} type="date" value={to} onChange={(e) => setTo(e.target.value)} />}</Field>
           <Button type="submit">Filter</Button>

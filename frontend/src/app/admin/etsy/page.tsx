@@ -11,6 +11,7 @@ import { LineChart, lineTable } from "@/components/admin/charts/LineChart";
 import { fmtInt, money, pct } from "@/components/admin/charts/format";
 import { STATUS_LABEL } from "@/components/admin/etsy/orders";
 import { Stat, Thumb, shortTitles } from "@/components/admin/etsy/ui";
+import { SupplierFilter, useSupplierFilter } from "@/components/admin/etsy/SupplierFilter";
 import type { Kpi } from "@/components/admin/reports";
 import { ShopTabs } from "@/components/admin/ShopTabs";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
@@ -62,7 +63,7 @@ const errorText = (e: unknown) => (e instanceof Error ? e.message : "Something w
 export default function EtsyDashboard() {
   const [range, setRange] = useDateRange("30d");
   const [listing, setListing] = useState("");
-  const [supplier, setSupplier] = useState("");
+  const [supplier, setSupplier] = useSupplierFilter();
   const [data, setData] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -134,15 +135,7 @@ export default function EtsyDashboard() {
             </Select>
           )}
         </Field>
-        <Field label="Supplier" className="w-full sm:w-56">
-          {(p) => (
-            <Select {...p} value={supplier} onChange={(e) => setSupplier(e.target.value)}>
-              <option value="">All suppliers</option>
-              <option value="__none__">Supplier not set</option>
-              {data?.options.suppliers.map((s) => <option key={s} value={s}>{s}</option>)}
-            </Select>
-          )}
-        </Field>
+        <SupplierFilter value={supplier} onChange={setSupplier} />
         {filtered ? <Button variant="ghost" size="sm" onClick={() => { setListing(""); setSupplier(""); }}>Clear filters</Button> : null}
         <span className="ml-auto self-center text-xs text-muted">Compared with the {data ? `${data.range.days} days before` : "period before"}</span>
       </div>

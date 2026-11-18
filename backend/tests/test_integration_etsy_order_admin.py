@@ -94,6 +94,7 @@ class EtsyOrderAdminTests(unittest.TestCase):
         w.client.patch(w.url(self.url()), json={"supplier": f"Sup {self.w.sfx}"}, headers=w.publisher)
         self.assertEqual(w.client.patch(w.url(self.url()), json={"supplier": "Nobody Ltd"}, headers=w.publisher).status_code, 422)
         self.assertEqual(w.get("/admin/etsy/orders", w.publisher, supplier=f"sup {self.w.sfx}").json()["total"], 1)
+        self.assertEqual(w.get("/admin/etsy/orders", w.publisher, supplier="sup").json()["total"], 0)  # exact, not "contains"
         self.assertGreaterEqual(w.get("/admin/etsy/orders", w.publisher, q="MUG-B").json()["total"], 1)
         self.assertGreaterEqual(w.get("/admin/etsy/orders", w.publisher, listing_id=4242).json()["total"], 1)
         self.assertEqual(w.get("/admin/etsy/orders", w.publisher, q=str(self.rid), status="shipped").json()["total"], 0)

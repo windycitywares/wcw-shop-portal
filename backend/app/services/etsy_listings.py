@@ -80,8 +80,13 @@ class EtsyListingSync:
         return len(rows)
 
 
-async def search(session: AsyncSession, q: str | None, state: str | None, page: int, page_size: int) -> tuple[list[EtsyListing], int]:
+async def search(session: AsyncSession, q: str | None, state: str | None, page: int, page_size: int,
+                 supplier: str | None = None) -> tuple[list[EtsyListing], int]:
     cond = []
+    if supplier == "__none__":
+        cond.append(EtsyListing.internal_supplier.is_(None))
+    elif supplier:
+        cond.append(func.lower(EtsyListing.internal_supplier) == supplier.strip().lower())
     if q:
         like = f"%{q.strip().lower()}%"
         cond.append(or_(func.lower(EtsyListing.title).like(like), func.lower(cast(EtsyListing.skus, Text)).like(like)))

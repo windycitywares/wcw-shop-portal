@@ -54,6 +54,9 @@ class EtsyListingTests(unittest.TestCase):
         self.assertEqual(second["removed"] >= 1, True)
         mug2 = next(r for r in w.get("/admin/etsy/listings", w.publisher, q="Mug v2").json()["items"] if r["etsy_listing_id"] == base)
         self.assertEqual(mug2["internal_supplier"], "Acme")
+        by_supplier = [r["etsy_listing_id"] for r in w.get("/admin/etsy/listings", w.publisher, supplier="acme", page_size=100).json()["items"]]
+        self.assertIn(base, by_supplier)
+        self.assertNotIn(base + 1, by_supplier)
         self.assertEqual(str(mug2["internal_purchase_cost"]), "6.50")
         tee = next(r for r in w.get("/admin/etsy/listings", w.publisher, q="Tee").json()["items"] if r["etsy_listing_id"] == base + 1)
         self.assertEqual(tee["state"], "removed")

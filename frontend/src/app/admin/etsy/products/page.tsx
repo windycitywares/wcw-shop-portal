@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/client-api";
 import { ShopTabs } from "@/components/admin/ShopTabs";
 import { Thumb } from "@/components/admin/etsy/ui";
 import { SupplierSelect } from "@/components/admin/SupplierSelect";
+import { SupplierFilter, useSupplierFilter } from "@/components/admin/etsy/SupplierFilter";
 import { dateTime, money } from "@/components/admin/charts/format";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
 import { Modal } from "@/components/admin/ui/Modal";
@@ -73,6 +74,7 @@ export default function EtsyProducts() {
   const [q, setQ] = useState("");
   const [query, setQuery] = useState("");
   const [state, setState] = useState("");
+  const [supplierFilter, setSupplierFilter] = useSupplierFilter();
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -88,6 +90,7 @@ export default function EtsyProducts() {
       const p = new URLSearchParams({ page: String(page), page_size: String(PAGE_SIZE) });
       if (query) p.set("q", query);
       if (state) p.set("state", state);
+      if (supplierFilter) p.set("supplier", supplierFilter);
       setData(await apiFetch<Page>(`/admin/etsy/listings?${p}`));
       setError(null);
     } catch (e) {
@@ -95,7 +98,7 @@ export default function EtsyProducts() {
     } finally {
       setLoading(false);
     }
-  }, [page, query, state]);
+  }, [page, query, state, supplierFilter]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -193,6 +196,7 @@ export default function EtsyProducts() {
               </Select>
             )}
           </Field>
+          <SupplierFilter value={supplierFilter} onChange={(v) => { setPage(1); setSupplierFilter(v); }} />
           <Button type="submit">Search</Button>
         </form>
         <DataTable
