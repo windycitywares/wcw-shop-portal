@@ -144,7 +144,7 @@ export default function EtsyDashboard() {
         </Alert>
       ) : null}
 
-      <KpiStrip kpis={data?.kpis} placeholders={["Orders", "Revenue", "Net profit", "Margin", "Average order", "Days to ship"]} />
+      <KpiStrip kpis={data?.kpis} placeholders={["Orders", "Items sold", "Revenue", "Net profit", "Margin", "Days to ship"]} />
 
       <Panel>
         <PanelBody>
@@ -222,7 +222,7 @@ export default function EtsyDashboard() {
             {[
               ["Average days to ship", t?.avg_days_to_ship == null ? "—" : t.avg_days_to_ship.toFixed(1)],
               ["Shipped by Etsy's date", rate(t?.on_time_rate)],
-              ["Units sold", t ? fmtInt(t.units) : "—"],
+              ["Average order", m(t?.aov)],
               ["Cancelled", t ? `${fmtInt(t.cancelled)} (${rate(t.cancel_rate)})` : "—"],
             ].map(([label, value]) => (
               <div key={label}>
