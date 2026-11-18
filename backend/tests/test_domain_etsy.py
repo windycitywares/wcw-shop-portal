@@ -200,3 +200,4 @@ class AttentionTests(unittest.TestCase):
         self.assertEqual(reasons(self.facts(status="shipped"), self.NOW), ["shipping_cost_missing"])
         self.assertEqual(reasons(self.facts(purchase_cost=Decimal("25")), self.NOW), ["negative_profit"])
         self.assertEqual(reasons(self.facts(status="cancelled", purchase_cost=None), self.NOW), [])
+        self.assertEqual(reasons(self.facts(status="shipped", purchase_cost=None, past_order=True), self.NOW), [])

@@ -107,6 +107,7 @@ class EtsyOrderSync:
         row = EtsyOrder(
             **{k: v for k, v in o.items() if k not in ("paid_at",)}, paid_at=o["paid_at"], status=implied, synced_at=now,
             purchase_cost=cost, costs_prefilled=cost is not None, supplier=supplier,
+            past_order=implied in (etsy_status.SHIPPED, etsy_status.DELIVERED, etsy_status.CANCELLED),
             tracking_number=etsy_track, carrier=etsy_carrier, tracking_sent_at=now if etsy_track else None,
             shipped_at=shipped_at if implied in (etsy_status.SHIPPED, etsy_status.DELIVERED) else None,
             delivered_at=now if implied == etsy_status.DELIVERED else None,

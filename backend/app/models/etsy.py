@@ -88,6 +88,7 @@ class EtsyOrder(Base):
     etsy_fees_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     purchase_cost: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     costs_prefilled: Mapped[bool] = mapped_column(Boolean, default=False)
+    past_order: Mapped[bool] = mapped_column(Boolean, default=False)  # already shipped when it first arrived: never needs attention
     supplier: Mapped[str | None] = mapped_column(String(200))
     supplier_order_number: Mapped[str | None] = mapped_column(String(100))
     shipping_cost: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))

@@ -23,6 +23,8 @@ export interface OrderSummary {
   items: { title: string; quantity: number }[];
   profit: Profit;
   attention: string[];
+  /** Already shipped when it first came in from Etsy: kept for history, never flagged. */
+  past_order: boolean;
 }
 export interface HistoryLine {
   id: number;

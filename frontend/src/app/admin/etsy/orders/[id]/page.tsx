@@ -96,6 +96,9 @@ export default function EtsyOrderPage() {
           </a>
         }
       />
+      {order.past_order ? (
+        <Alert>This order was already shipped when Etsy was connected. It is kept for history and reports and is never flagged; you can still add its costs.</Alert>
+      ) : null}
       {order.attention.length > 0 ? (
         <Alert tone="danger">Needs attention: {order.attention.map((a) => ATTENTION_LABEL[a] ?? a).join(" · ")}</Alert>
       ) : null}
