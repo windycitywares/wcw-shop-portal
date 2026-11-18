@@ -40,6 +40,12 @@ def ship_by(r: dict[str, Any]) -> datetime | None:
     return min(dates) if dates else None
 
 
+def _shipment_time(r: dict[str, Any]) -> datetime | None:
+    found = [when(s.get("shipment_notification_timestamp")) for s in r.get("shipments") or []]
+    found = [d for d in found if d]
+    return min(found) if found else None
+
+
 def tracking(r: dict[str, Any]) -> tuple[str | None, str | None]:
     """(tracking number, carrier) from the newest shipment Etsy knows about."""
     for s in reversed(r.get("shipments") or []):
@@ -48,13 +54,22 @@ def tracking(r: dict[str, Any]) -> tuple[str | None, str | None]:
     return None, None
 
 
+def _first(r: dict[str, Any], key: str) -> datetime | None:
+    found = [when(t.get(key)) for t in r.get("transactions") or [] if t.get(key)]
+    found = [d for d in found if d]
+    return min(found) if found else None
+
+
 def is_paid(r: dict[str, Any]) -> bool:
     return bool(r.get("is_paid")) or (r.get("status") or "").lower() in ("paid", "completed")
 
 
 def parse(r: dict[str, Any]) -> dict[str, Any]:
-    canceled = (r.get("status") or "").lower() in ("canceled", "cancelled", "fully refunded")
-    delivered = (r.get("status") or "").lower() == "delivered"
+    # Only cancelled / shipped / delivered move an order on their own (the brief). A refund on Etsy is recorded by the
+    # team (phase 3), so "Fully refunded" does not cancel anything here.
+    state = (r.get("status") or "").lower()
+    canceled = state in ("canceled", "cancelled")
+    delivered = state == "delivered" or any(s.get("is_delivered") for s in r.get("shipments") or [])
     items = _items(r)
     items_total = sum((i["unit_price"] * i["quantity"] for i in items), Decimal("0.00"))
     track, carrier = tracking(r)
@@ -62,7 +77,8 @@ def parse(r: dict[str, Any]) -> dict[str, Any]:
         "etsy_receipt_id": int(r["receipt_id"]),
         "etsy_state": r.get("status"),
         "ordered_at": when(r.get("created_timestamp") or r.get("create_timestamp")),
-        "paid_at": when(r.get("created_timestamp") or r.get("create_timestamp")) if is_paid(r) else None,
+        "paid_at": (_first(r, "paid_timestamp") or when(r.get("created_timestamp") or r.get("create_timestamp"))) if is_paid(r) else None,
+        "etsy_shipped_at": _first(r, "shipped_timestamp") or _shipment_time(r),
         "ship_by": ship_by(r),
         "buyer_name": (r.get("name") or None),
         "etsy_buyer_id": r.get("buyer_user_id"),

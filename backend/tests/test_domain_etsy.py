@@ -153,6 +153,19 @@ class ReceiptParseTests(unittest.TestCase):
         self.assertEqual(o["implied_status"], "shipped")
         self.assertEqual((o["etsy_tracking"], o["etsy_carrier"]), ("9400", "usps"))
 
+    def test_refund_on_etsy_does_not_cancel(self):
+        from app.domain import etsy_receipt as r
+
+        self.assertEqual(r.parse({**self.RAW, "status": "Fully Refunded"})["order"]["implied_status"], "new")
+
+    def test_paid_and_shipped_times_come_from_etsy(self):
+        from app.domain import etsy_receipt as r
+
+        t = dict(self.RAW["transactions"][0], paid_timestamp=1760000100, shipped_timestamp=1760200000)
+        o = r.parse({**self.RAW, "transactions": [t]})["order"]
+        self.assertEqual(int(o["paid_at"].timestamp()), 1760000100)
+        self.assertEqual(int(o["etsy_shipped_at"].timestamp()), 1760200000)
+
     def test_canceled(self):
         from app.domain import etsy_receipt as r
 

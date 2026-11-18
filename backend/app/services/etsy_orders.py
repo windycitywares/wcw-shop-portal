@@ -75,12 +75,13 @@ class EtsyOrderSync:
     async def _apply(self, parsed: dict[str, Any], now: datetime) -> str | None:
         o, items = dict(parsed["order"]), parsed["items"]
         implied, etsy_track, etsy_carrier = o.pop("implied_status"), o.pop("etsy_tracking"), o.pop("etsy_carrier")
+        etsy_shipped = o.pop("etsy_shipped_at")
         row = (await self.session.execute(
             select(EtsyOrder).where(EtsyOrder.etsy_receipt_id == o["etsy_receipt_id"]))).scalar_one_or_none()
         if row is None:
             if not o["paid_at"] or not o["ordered_at"]:
                 return None  # not paid (yet): an order starts when Etsy says it is paid
-            return await self._create(o, items, implied, etsy_track, etsy_carrier, now)
+            return await self._create(o, items, implied, etsy_track, etsy_carrier, etsy_shipped or now)
         for k in ETSY_FIELDS:
             setattr(row, k, o[k])
         row.synced_at = now
@@ -90,24 +91,24 @@ class EtsyOrderSync:
         if target != row.status:
             self.session.add(_event(row.id, "status", f"Etsy: {etsy_status.LABELS[row.status]} → {etsy_status.LABELS[target]}", row.status, target))
             row.status = target
-            if target == etsy_status.SHIPPED and not row.shipped_at:
-                row.shipped_at = now
+            if target in (etsy_status.SHIPPED, etsy_status.DELIVERED):
+                row.shipped_at = row.shipped_at or etsy_shipped or now
             if target == etsy_status.DELIVERED:
                 row.delivered_at = row.delivered_at or now
-                row.shipped_at = row.shipped_at or now
         if etsy_track and not row.tracking_number:
             row.tracking_number, row.carrier, row.tracking_sent_at = etsy_track, etsy_carrier, now  # Etsy already has it
             self.session.add(_event(row.id, "tracking", f"Etsy has tracking {etsy_track}"))
         await self._add_missing_items(row.id, items)
         return "updated"
 
-    async def _create(self, o, items, implied, etsy_track, etsy_carrier, now) -> str:
+    async def _create(self, o, items, implied, etsy_track, etsy_carrier, shipped_at) -> str:
+        now = datetime.now(timezone.utc)
         cost, supplier = await self._defaults(items)
         row = EtsyOrder(
             **{k: v for k, v in o.items() if k not in ("paid_at",)}, paid_at=o["paid_at"], status=implied, synced_at=now,
             purchase_cost=cost, costs_prefilled=cost is not None, supplier=supplier,
             tracking_number=etsy_track, carrier=etsy_carrier, tracking_sent_at=now if etsy_track else None,
-            shipped_at=now if implied in (etsy_status.SHIPPED, etsy_status.DELIVERED) else None,
+            shipped_at=shipped_at if implied in (etsy_status.SHIPPED, etsy_status.DELIVERED) else None,
             delivered_at=now if implied == etsy_status.DELIVERED else None,
         )
         self.session.add(row)
