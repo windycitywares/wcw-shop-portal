@@ -14,6 +14,7 @@ export const ADMIN_ROUTES: { path: string; heading: RegExp; name: string }[] = [
   { path: "/admin/analytics/catalog", heading: /^Catalog health$/, name: "analytics-catalog" },
   { path: "/admin/notifications", heading: /^Activity$/, name: "notifications" },
   { path: "/admin/notifications/settings", heading: /^Notification settings$/, name: "notification-settings" },
+  { path: "/admin/etsy", heading: /^Etsy dashboard$/, name: "etsy-dashboard" },
   { path: "/admin/etsy/orders", heading: /^Etsy orders$/, name: "etsy-orders" },
   { path: "/admin/etsy/products", heading: /^Etsy listings$/, name: "etsy-products" },
   { path: "/admin/orders", heading: /^Orders$/, name: "orders" },

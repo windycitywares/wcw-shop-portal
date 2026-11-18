@@ -91,6 +91,14 @@ const HELP: Record<string, HelpEntry> = {
       "Campaigns respect each subscriber's unsubscribe choice.",
     ],
   },
+  "/admin/etsy": {
+    title: "Etsy dashboard",
+    body: [
+      "How the Etsy shop is doing over the dates you pick, compared with the period just before: orders, revenue, profit, margin, average order and days to ship.",
+      "Narrow it to one product or one supplier with the filters. 'Show as table' under each chart gives the exact numbers.",
+      "Profit and margin only count orders that have a purchase cost, and don't include Etsy fees yet (phase 2). The note at the top says how many orders are counted.",
+    ],
+  },
   "/admin/etsy/orders": {
     title: "Etsy orders",
     body: [

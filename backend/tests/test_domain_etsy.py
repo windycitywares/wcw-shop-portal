@@ -201,3 +201,68 @@ class AttentionTests(unittest.TestCase):
         self.assertEqual(reasons(self.facts(purchase_cost=Decimal("25")), self.NOW), ["negative_profit"])
         self.assertEqual(reasons(self.facts(status="cancelled", purchase_cost=None), self.NOW), [])
         self.assertEqual(reasons(self.facts(status="shipped", purchase_cost=None, past_order=True), self.NOW), [])
+
+
+class DashboardTests(unittest.TestCase):
+    def order(self, day, **over):
+        from app.domain.etsy_dashboard import Item, Order
+
+        t = datetime(2026, 11, day, 15, tzinfo=timezone.utc)
+        base = dict(status="shipped", ordered_at=t, paid_at=t, shipped_at=None, ship_by=None,
+                    items_total=Decimal("30"), shipping_charged=Decimal("5"), discounts=Decimal("0"),
+                    purchase_cost=None, shipping_cost=None, etsy_fees=None, supplier=None, state="IL", country="US",
+                    items=(Item(77, "Mug", 2, Decimal("30")),))
+        base.update(over)
+        return Order(**base)
+
+    def build(self, orders, previous=()):
+        from datetime import date
+
+        from app.domain.etsy_dashboard import build
+
+        buckets = [date(2026, 11, d) for d in range(1, 4)]
+        return build(orders, previous, buckets, lambda m: m.date())
+
+    def test_profit_only_counts_orders_with_a_cost(self):
+        out = self.build([
+            self.order(1, purchase_cost=Decimal("10"), shipping_cost=Decimal("5"), supplier="Acme"),
+            self.order(2),  # no cost yet: revenue counts, profit does not
+            self.order(2, status="cancelled"),
+        ])
+        t = out["totals"]
+        self.assertEqual((t["orders"], t["cancelled"], t["units"]), (2, 1, 4))
+        self.assertEqual(t["revenue"], 70.0)
+        self.assertEqual(t["profit"], 20.0)
+        self.assertEqual(t["margin"], round(20 / 35, 6))
+        self.assertEqual(t["cost_coverage"], 0.5)
+        self.assertEqual(t["cancel_rate"], round(1 / 3, 6))
+        self.assertEqual([s["orders"] for s in out["series"]], [1, 1, 0])
+        self.assertIsNone(out["series"][1]["profit"])
+        self.assertEqual(out["statuses"], {"shipped": 2, "cancelled": 1})
+        self.assertEqual(out["top_products"][0]["units"], 4)
+        self.assertEqual({s["supplier"] for s in out["suppliers"]}, {"Acme", None})
+        self.assertEqual(out["places"][0]["label"], "IL")
+
+    def test_shipping_speed_and_on_time(self):
+        from datetime import timedelta
+
+        o = self.order(1)
+        late = self.order(1, shipped_at=o.paid_at + timedelta(days=4), ship_by=o.paid_at + timedelta(days=2))
+        quick = self.order(1, shipped_at=o.paid_at + timedelta(days=1), ship_by=o.paid_at + timedelta(days=2))
+        t = self.build([late, quick])["totals"]
+        self.assertEqual(t["avg_days_to_ship"], 2.5)
+        self.assertEqual(t["on_time_rate"], 0.5)
+
+    def test_profit_split_over_items_by_price(self):
+        from app.domain.etsy_dashboard import Item
+
+        o = self.order(1, purchase_cost=Decimal("15"), items=(Item(1, "Big", 1, Decimal("20")), Item(2, "Small", 1, Decimal("10"))))
+        products = {p["title"]: p for p in self.build([o])["top_products"]}
+        self.assertEqual(products["Big"]["profit"], 13.33)
+        self.assertEqual(products["Small"]["profit"], 6.67)
+
+    def test_empty_period(self):
+        out = self.build([])
+        self.assertIsNone(out["totals"]["profit"])
+        self.assertIsNone(out["totals"]["aov"])
+        self.assertEqual(len(out["series"]), 3)

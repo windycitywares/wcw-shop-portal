@@ -74,6 +74,14 @@ negative profit. Cancelled orders never need attention, and neither do **past or
 or cancelled when they first came in from Etsy (`past_order`; owner's decision 2026-11-17). Costs can still be added. Phase 3 adds tracking failures, unanswered messages, connection
 problems and the email alerts.
 
+## Dashboard (External shops → Etsy → Dashboard, `GET /admin/etsy/dashboard`)
+
+Filters: date range (compared with the period just before), product, supplier. KPIs: orders, revenue, net profit,
+margin, average order, days to ship. Charts: revenue / profit / costs over time, orders per period, orders by status,
+best sellers (profit of a multi-item order shared by item price), where buyers are, suppliers table, shipping speed,
+on-time rate and cancellations. Profit and margin only count orders with a purchase cost; the page says how many.
+Rules: `app/domain/etsy_dashboard.py` (tested in `tests/test_domain_etsy.py`).
+
 ## Who can do what
 
 Admin: everything, including Settings → External shops. Staff (the Publisher role): orders, listings, costs, status.
