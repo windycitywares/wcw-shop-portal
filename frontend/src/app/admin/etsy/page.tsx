@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/client-api";
@@ -109,6 +110,13 @@ function EtsyPage() {
       {outcome === "connected" ? <Alert tone="success">Etsy is connected{params.get("shop") ? `: ${params.get("shop")}` : ""}.</Alert> : null}
       {outcome === "failed" ? <Alert tone="danger">Etsy was not connected. {params.get("reason")}</Alert> : null}
       {error ? <Alert tone="danger">{error}</Alert> : null}
+
+      <Panel>
+        <PanelHeader title="Etsy listings" description="Your Etsy products, read-only, with room for your own supplier and cost." />
+        <PanelBody>
+          <Link href="/admin/etsy/products" className="text-sm font-medium text-accent underline">Open Etsy listings</Link>
+        </PanelBody>
+      </Panel>
 
       <Panel>
         <PanelHeader title="Connection" />
