@@ -8,6 +8,7 @@ class UserRole(StrEnum):
     PUBLISHER = "publisher"
     AUTHOR = "author"
     CUSTOMER = "customer"
+    SUPPLIER = "supplier"  # sees and ships only their own orders on the external shops they are allowed (0027)
 
 
 class ContentStatus(StrEnum):

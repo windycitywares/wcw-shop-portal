@@ -22,6 +22,7 @@ const ROLE_HELP: Record<Role, string> = {
   publisher: "Reviews and publishes products.",
   author: "Drafts and edits their own products.",
   customer: "Shops, and sees their own orders and addresses.",
+  supplier: "Sees and ships only their own orders on the shops you allow (set under Supplier logins).",
 };
 
 /** A change waiting for "are you sure?": a new role, or switching the account on or off. */
@@ -438,7 +439,7 @@ export function AccountsAdmin({ scope, embedded = false, initialQuery = "" }: { 
           <Field label="Role" hint={editing?.id === me?.id ? "You can't change your own role." : ROLE_HELP[editRole]}>
             {(p) => (
               <Select {...p} value={editRole} disabled={editing?.id === me?.id} onChange={(e) => setEditRole(e.target.value as Role)} className="capitalize">
-                {ROLES.filter((r) => (scope === "team" ? r !== "customer" : true) || r === editRole).map((r) => (
+                {(editRole === "supplier" ? [...ROLES, "supplier" as Role] : ROLES).filter((r) => (scope === "team" ? r !== "customer" : true) || r === editRole).map((r) => (
                   <option key={r} value={r}>
                     {r}
                   </option>

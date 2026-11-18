@@ -130,16 +130,21 @@ function Crumbs() {
 /** The external shops that are connected (Settings → External shops). Fetched once; a failure just hides their groups. */
 function useConnectedChannels(): string[] {
   const { can } = useAuth();
-  const allowed = can("etsy:manage");
+  const team = can("etsy:manage");
+  const supplier = can("supplier:portal");
   const [channels, setChannels] = useState<string[]>([]);
   useEffect(() => {
-    if (!allowed) return;
+    if (!team && !supplier) return;
     let live = true;
-    apiFetch<{ connected: string[] }>("/admin/channels").then((r) => live && setChannels(r.connected), () => undefined);
+    // A supplier sees the shops they're allowed that are connected; the team sees every connected shop.
+    const load = supplier
+      ? apiFetch<{ channels: string[] }>("/supplier/me").then((r) => r.channels)
+      : apiFetch<{ connected: string[] }>("/admin/channels").then((r) => r.connected);
+    load.then((c) => live && setChannels(c), () => undefined);
     return () => {
       live = false;
     };
-  }, [allowed]);
+  }, [team, supplier]);
   return channels;
 }
 
@@ -157,8 +162,13 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
   return (
     <nav aria-label="Admin" className={cn("flex-1 overflow-y-auto pb-6 pt-2", collapsed ? "px-2" : "px-4")}>
       {NAV.map((group, gi) => {
+        const supplierOnly = can("supplier:portal");
         const items = group.items.filter(
-          (i) => !i.hidden && (!i.permission || can(i.permission)) && (!i.channel || channels.includes(i.channel)),
+          (i) =>
+            !i.hidden &&
+            // A supplier login sees only its own entries, never the shop's general pages.
+            (supplierOnly ? i.permission === "supplier:portal" : !i.permission || can(i.permission)) &&
+            (!i.channel || channels.includes(i.channel)),
         );
         if (items.length === 0) return null;
         return (
@@ -230,11 +240,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const supplier = !!user?.permissions.includes("supplier:portal");
   useEffect(() => {
     if (loading) return;
     if (!user) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
     else if (!isStaff(user)) router.replace("/account");
-  }, [loading, user, router, pathname]);
+    // Supplier logins only have their own pages.
+    else if (supplier && !pathname.startsWith("/admin/supplier")) router.replace("/admin/supplier/etsy");
+  }, [loading, user, router, pathname, supplier]);
 
   useEffect(() => setDrawer(false), [pathname]);
   useEffect(() => {
@@ -300,7 +313,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               </Dialog.Portal>
             </Dialog.Root>
 
-            <form
+            {!supplier && <form
               role="search"
               className="ml-2 hidden max-w-[26rem] flex-1 sm:flex"
               onSubmit={(e) => {
@@ -323,10 +336,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   className="w-full rounded-full border border-line bg-canvas py-2 pl-10 pr-4 text-sm text-ink placeholder:text-muted focus:border-accent focus:outline-none"
                 />
               </div>
-            </form>
+            </form>}
 
             <div className="ml-auto flex items-center gap-2">
-              <NotificationBell />
+              {!supplier && <NotificationBell />}
               <ThemeSwitcher />
               <Popover
                 label="Account menu"

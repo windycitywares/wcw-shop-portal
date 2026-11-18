@@ -6,9 +6,9 @@ import { NAV, activeSection } from "@/components/admin/nav";
 import { cn } from "@/lib/utils";
 
 /** The sections of one external shop (Orders | Listings …), from its menu entry in nav.ts. */
-export function ShopTabs({ shop }: { shop: string }) {
+export function ShopTabs({ shop, permission = "etsy:manage" }: { shop: string; permission?: string }) {
   const pathname = usePathname();
-  const item = NAV.flatMap((g) => g.items).find((i) => i.channel === shop);
+  const item = NAV.flatMap((g) => g.items).find((i) => i.channel === shop && i.permission === permission);
   if (!item?.sections) return null;
   const current = activeSection(item, pathname);
   return (

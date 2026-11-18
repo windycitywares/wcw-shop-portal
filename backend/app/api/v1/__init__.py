@@ -13,6 +13,7 @@ from app.api.v1 import (
     admin_etsy,
     admin_etsy_orders,
     admin_etsy_payments,
+    supplier_portal,
     admin_live,
     admin_notifications,
     admin_orders,
@@ -55,6 +56,8 @@ api_router.include_router(admin_backups.router)
 api_router.include_router(admin_deploy.router)
 api_router.include_router(admin_live.router)
 api_router.include_router(admin_etsy_payments.router)
+api_router.include_router(supplier_portal.router)
+api_router.include_router(supplier_portal.admin_router)
 api_router.include_router(admin_etsy_orders.router)
 api_router.include_router(admin_etsy_orders.dashboard_router)
 api_router.include_router(admin_etsy.router)

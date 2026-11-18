@@ -32,6 +32,7 @@ class Permission(StrEnum):
     BACKUPS_MANAGE = "backups:manage"  # database backups
     ETSY_MANAGE = "etsy:manage"  # Etsy orders, costs, tracking, listings (Admin and Staff)
     ETSY_PAYMENTS = "etsy:payments"  # record and undo supplier payments (Admin only)
+    SUPPLIER_PORTAL = "supplier:portal"  # a supplier's own orders and payments (role supplier only)
     ETSY_SETTINGS = "etsy:settings"  # connect / reconnect the Etsy shop, alert settings (Admin only)
 
 
@@ -52,10 +53,12 @@ _PUBLISHER = _AUTHOR | {
 }
 
 ROLE_PERMISSIONS: dict[UserRole, frozenset[Permission]] = {
-    UserRole.ADMIN: frozenset(Permission),
+    UserRole.ADMIN: frozenset(Permission) - {Permission.SUPPLIER_PORTAL},
     UserRole.PUBLISHER: frozenset(_PUBLISHER),
     UserRole.AUTHOR: frozenset(_AUTHOR),
     UserRole.CUSTOMER: frozenset(),
+    # Only their own work: never the rest of the admin. Admins don't get it either (they use the full screens).
+    UserRole.SUPPLIER: frozenset({Permission.SUPPLIER_PORTAL}),
 }
 
 STAFF_ROLES = frozenset({UserRole.ADMIN, UserRole.PUBLISHER, UserRole.AUTHOR})
