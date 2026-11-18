@@ -11,6 +11,8 @@ from app.api.deps import SessionDep, require
 from app.core.permissions import Permission
 from app.domain import etsy_attention, etsy_status
 from app.models.user import User
+from app.domain.timeutil import resolve_range
+from app.services.etsy_dashboard import EtsyDashboard
 from app.services.etsy_order_admin import EtsyOrderAdmin
 
 router = APIRouter(prefix="/admin/etsy/orders", tags=["admin: etsy orders"])
@@ -76,3 +78,18 @@ async def update_order(order_id: int, body: OrderPatchIn, session: SessionDep, u
 @router.post("/{order_id}/status")
 async def change_status(order_id: int, body: StatusIn, session: SessionDep, user: Team) -> dict[str, Any]:
     return await EtsyOrderAdmin(session).set_status(order_id, user, body.status, body.note)
+
+
+dashboard_router = APIRouter(prefix="/admin/etsy/dashboard", tags=["admin: etsy orders"])
+
+
+@dashboard_router.get("")
+async def dashboard(
+    response: Response, session: SessionDep, user: Team,
+    start: date | None = None, end: date | None = None,
+    listing_id: int | None = None,
+    supplier: Annotated[str | None, Query(max_length=200)] = None,
+) -> dict[str, Any]:
+    """Sales, costs, profit and fulfilment for the period, with the previous period of the same length to compare."""
+    response.headers["Cache-Control"] = "no-store"
+    return await EtsyDashboard(session).build(resolve_range(start, end, default_days=30), listing_id, supplier)

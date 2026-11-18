@@ -43,7 +43,11 @@ export const NAV: NavGroup[] = [
     items: [
       {
         href: "/admin/etsy", label: "Etsy", icon: "truck", permission: "etsy:manage", channel: "etsy",
-        sections: [{ href: "/admin/etsy/orders", label: "Orders" }, { href: "/admin/etsy/products", label: "Listings" }],
+        sections: [
+          { href: "/admin/etsy", label: "Dashboard" },
+          { href: "/admin/etsy/orders", label: "Orders" },
+          { href: "/admin/etsy/products", label: "Listings" },
+        ],
       },
     ],
   },
@@ -121,6 +125,12 @@ export function activeHref(pathname: string): string | undefined {
     }
   }
   return best?.href;
+}
+
+/** The section of a menu item this page belongs to: the longest matching href (so /admin/etsy/orders is "Orders",
+ *  not the shop's own Dashboard at /admin/etsy). */
+export function activeSection(item: NavItem, pathname: string): { href: string; label: string } | undefined {
+  return (item.sections ?? []).filter((x) => matches(pathname, x.href)).sort((a, b) => b.href.length - a.href.length)[0];
 }
 
 export function isActive(pathname: string, href: string): boolean {
@@ -206,7 +216,7 @@ export function crumbsFor(pathname: string, tab: string | null): Crumb[] {
     const group = NAV.find((g) => g.label && g.items.some((i) => i.href === href));
     if (group?.label) crumbs.push({ label: group.label });
   }
-  const section = item?.sections?.find((x) => matches(pathname, x.href));
+  const section = item ? activeSection(item, pathname) : undefined;
   if (item && section) {
     crumbs.push({ label: item.label, href: item.sections![0].href });
     const deeper = pathname.startsWith(`${section.href}/`);
