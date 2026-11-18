@@ -170,3 +170,33 @@ class ReceiptParseTests(unittest.TestCase):
         from app.domain import etsy_receipt as r
 
         self.assertEqual(r.parse({**self.RAW, "status": "Canceled"})["order"]["implied_status"], "cancelled")
+
+
+class AttentionTests(unittest.TestCase):
+    NOW = datetime(2026, 11, 10, 12, tzinfo=timezone.utc)
+
+    def facts(self, **over):
+        from app.domain.etsy_attention import OrderFacts
+
+        base = dict(status="new", paid_at=self.NOW, ship_by=None, purchase_cost=Decimal("5"), shipping_cost=None,
+                    etsy_fees=None, items_total=Decimal("20"), shipping_charged=Decimal("0"), discounts=Decimal("0"))
+        base.update(over)
+        return OrderFacts(**base)
+
+    def test_fresh_order_with_cost_is_fine(self):
+        from app.domain.etsy_attention import reasons
+
+        self.assertEqual(reasons(self.facts(), self.NOW), [])
+
+    def test_each_reason(self):
+        from datetime import timedelta
+
+        from app.domain.etsy_attention import reasons
+
+        day = timedelta(days=1)
+        self.assertEqual(reasons(self.facts(paid_at=self.NOW - 2 * day), self.NOW), ["not_purchased"])
+        self.assertIn("late", reasons(self.facts(status="purchased", ship_by=self.NOW - day), self.NOW))
+        self.assertEqual(reasons(self.facts(purchase_cost=None), self.NOW), ["cost_missing"])
+        self.assertEqual(reasons(self.facts(status="shipped"), self.NOW), ["shipping_cost_missing"])
+        self.assertEqual(reasons(self.facts(purchase_cost=Decimal("25")), self.NOW), ["negative_profit"])
+        self.assertEqual(reasons(self.facts(status="cancelled", purchase_cost=None), self.NOW), [])

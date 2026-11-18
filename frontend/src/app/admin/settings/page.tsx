@@ -20,7 +20,7 @@ import { SocialAdmin, type SocialRow } from "@/components/admin/settings/SocialA
 import { PaymentModeToggle } from "@/components/admin/settings/PaymentModeToggle";
 import { ShopLinksAdmin, type ShopLinkRow } from "@/components/admin/settings/ShopLinksAdmin";
 import { TrackingCode, type Snippet } from "@/components/admin/settings/TrackingCode";
-import { EtsyConnection } from "@/components/admin/settings/EtsyConnection";
+import { ExternalShops } from "@/components/admin/settings/ExternalShops";
 
 type Value = string | number | boolean | null | string[] | Record<string, string>;
 type Settings = Record<string, Record<string, Value>>;
@@ -413,7 +413,7 @@ function SettingsInner() {
       {group ? (
         <div className="max-w-4xl">
           {group.id === "external_shops" ? (
-            <EtsyConnection />
+            <ExternalShops />
           ) : data && group.id === "shop_links" ? (
             <ShopLinksAdmin
               initial={((data.settings.shop_links as unknown as { links?: ShopLinkRow[] })?.links ?? [])}
