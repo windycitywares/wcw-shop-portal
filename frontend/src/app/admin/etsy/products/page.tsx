@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/client-api";
+import { ShopTabs } from "@/components/admin/ShopTabs";
 import { dateTime, money } from "@/components/admin/charts/format";
 import { DataTable, type Column } from "@/components/admin/ui/DataTable";
 import { Modal } from "@/components/admin/ui/Modal";
@@ -165,6 +166,7 @@ export default function EtsyProducts() {
           </div>
         }
       />
+      <ShopTabs shop="etsy" />
       {error ? <Alert tone="danger">{error}</Alert> : null}
       <Panel>
         <form
