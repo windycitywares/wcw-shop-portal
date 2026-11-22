@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel, EmailStr, Field
 
 from app.api.deps import SessionDep, require
+from app.core.config import get_settings
 from app.core.permissions import Permission
 from app.models.user import User
 from app.services.suppliers import SupplierDirectory
@@ -34,6 +35,14 @@ class SupplierPatch(BaseModel):
 
 def _out(s) -> dict[str, Any]:
     return {k: getattr(s, k) for k in ("id", "name", "contact_name", "email", "phone", "notes", "is_active")}
+
+
+@router.get("/meta")
+async def meta(response: Response, session: SessionDep, user: Team) -> dict[str, Any]:
+    """Whether the CRM manages the list (then it's read-only here) and where to manage it."""
+    response.headers["Cache-Control"] = "no-store"
+    return {"managed_by_crm": await SupplierDirectory(session).managed_by_crm(),
+            "crm_url": get_settings().crm_web_url.rstrip("/") + "/suppliers"}
 
 
 @router.get("")

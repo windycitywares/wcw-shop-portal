@@ -210,10 +210,10 @@ class World:
         return self.sql("SELECT stock_quantity, stock_status::text AS status, units_sold FROM products WHERE id = :id", id=product["id"])[0]
 
     def supplier(self, name: str) -> str:
-        """Make sure `name` is in the supplier list (listings, orders and supplier logins pick from it)."""
-        r = self.client.post(self.url("/admin/suppliers"), json={"name": name}, headers=self.admin)
-        if r.status_code not in (201, 409):
-            raise AssertionError(f"could not add supplier: {r.status_code} {r.text}")
+        """Make sure `name` is in the supplier list (listings, orders and supplier logins pick from it). Written
+        directly: once the CRM manages the list, the admin screen no longer adds suppliers."""
+        self.sql("INSERT INTO suppliers (name) SELECT :n WHERE NOT EXISTS (SELECT 1 FROM suppliers WHERE lower(name) = lower(:n))", n=name)
+        self.sql("UPDATE suppliers SET is_active = TRUE WHERE lower(name) = lower(:n)", n=name)
         return name
 
     def mails_to(self, email: str, subject_part: str | None = None) -> list[Any]:

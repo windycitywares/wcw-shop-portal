@@ -130,6 +130,8 @@ class Settings(BaseSettings):
     # Lets the CRM read customers, orders and newsletter consent (backfill, order history): a long random value
     # also saved in CRM → Administration → Integrations → Shop API token. Unset = the read API answers 404.
     crm_api_token: str | None = None
+    # The CRM's web address, for "Manage in the CRM" links (suppliers are managed there once it sends them).
+    crm_web_url: str = "https://crm.windycitywares.com"
 
     @property
     def crm_sync_enabled(self) -> bool:

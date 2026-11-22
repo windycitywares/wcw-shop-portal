@@ -104,6 +104,12 @@ refuses a name that isn't listed or is switched off; an unchanged value is alway
 added when the list was created. Renaming a supplier renames it on its orders, listings and login. Suppliers are switched
 off, not deleted.
 
+**Since 2026-11-22 the CRM owns the supplier list** (owner's decision): suppliers are added and edited in the CRM, which
+sends them to the shop (docs/CRM_SYNC.md → "Suppliers"); once the first one arrives, the shop's Suppliers page is
+read-only with a "Manage in the CRM" link. The CRM supplier page shows the shop's figures for that supplier. Etsy
+orders, costs, payments and supplier logins stay in the shop; Etsy buyers are never sent to the CRM (Etsy allows buyer
+data only for fulfilling the order).
+
 ## Supplier logins (Team → Supplier logins)
 
 An admin adds a login per supplier: email + password, the **supplier name** (must match the Supplier field on orders;

@@ -26,6 +26,11 @@ export default function SuppliersPage() {
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
+  const [meta, setMeta] = useState<{ managed_by_crm: boolean; crm_url: string } | null>(null);
+  useEffect(() => {
+    apiFetch<{ managed_by_crm: boolean; crm_url: string }>("/admin/suppliers/meta").then(setMeta, () => undefined);
+  }, []);
+  const fromCrm = !!meta?.managed_by_crm;
 
   const load = useCallback(() => {
     loadSuppliers(true).then((r) => { setRows(r); setError(null); }, (e) => setError(errorText(e)));
@@ -53,12 +58,21 @@ export default function SuppliersPage() {
     {
       key: "n",
       header: "Supplier",
-      cell: (s) => (
-        <button type="button" className="text-left font-medium text-accent hover:underline" onClick={() => setDraft({ id: s.id, name: s.name, contact_name: s.contact_name ?? "", email: s.email ?? "", phone: s.phone ?? "", notes: s.notes ?? "", is_active: s.is_active })}>
-          {s.name}
-          <span className="block text-xs font-normal text-muted">{[s.contact_name, s.email, s.phone].filter(Boolean).join(" · ") || "No contact details"}</span>
-        </button>
-      ),
+      cell: (s) => {
+        const body = (
+          <>
+            {s.name}
+            <span className="block text-xs font-normal text-muted">{[s.contact_name, s.email, s.phone].filter(Boolean).join(" · ") || "No contact details"}</span>
+          </>
+        );
+        return fromCrm ? (
+          <span className="font-medium">{body}</span>
+        ) : (
+          <button type="button" className="text-left font-medium text-accent hover:underline" onClick={() => setDraft({ id: s.id, name: s.name, contact_name: s.contact_name ?? "", email: s.email ?? "", phone: s.phone ?? "", notes: s.notes ?? "", is_active: s.is_active })}>
+            {body}
+          </button>
+        );
+      },
     },
     { key: "l", header: "Listings", align: "right", hide: "sm", cell: (s) => fmtInt(s.listings) },
     { key: "o", header: "Open orders", align: "right", cell: (s) => fmtInt(s.open_orders) },
@@ -72,8 +86,22 @@ export default function SuppliersPage() {
       <PageHeader
         title="Suppliers"
         description="Who you buy from, for every marketplace. Listings, orders and supplier logins pick a supplier from this list."
-        actions={<Button onClick={() => setDraft({ ...blank })}>Add supplier</Button>}
+        actions={
+          fromCrm ? (
+            <a href={meta!.crm_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-on-accent hover:opacity-90">
+              Manage in the CRM
+            </a>
+          ) : (
+            <Button onClick={() => setDraft({ ...blank })}>Add supplier</Button>
+          )
+        }
       />
+      {fromCrm ? (
+        <Alert>
+          Suppliers are managed in the CRM: add, rename or switch them off there and the change reaches the shop within minutes.
+          This list is a read-only copy; the figures (listings, open orders, owed) are the shop's own.
+        </Alert>
+      ) : null}
       {error ? <Alert tone="danger">{error}</Alert> : null}
       <Panel>
         <DataTable columns={columns} rows={rows} rowKey={(s) => s.id} caption="Suppliers" empty="No suppliers yet. Add the first one." />

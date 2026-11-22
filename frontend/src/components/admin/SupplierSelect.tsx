@@ -13,6 +13,7 @@ export interface SupplierRow {
   phone: string | null;
   notes: string | null;
   is_active: boolean;
+  crm_id?: number | null;
   listings: number;
   open_orders: number;
   owed: string;
