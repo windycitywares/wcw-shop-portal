@@ -212,7 +212,8 @@ class World:
     def supplier(self, name: str) -> str:
         """Make sure `name` is in the supplier list (listings, orders and supplier logins pick from it). Written
         directly: once the CRM manages the list, the admin screen no longer adds suppliers."""
-        self.sql("INSERT INTO suppliers (name) SELECT :n WHERE NOT EXISTS (SELECT 1 FROM suppliers WHERE lower(name) = lower(:n))", n=name)
+        self.sql("INSERT INTO suppliers (name) SELECT CAST(:n AS VARCHAR) WHERE NOT EXISTS "
+                 "(SELECT 1 FROM suppliers WHERE lower(name) = lower(CAST(:n AS VARCHAR)))", n=name)
         self.sql("UPDATE suppliers SET is_active = TRUE WHERE lower(name) = lower(:n)", n=name)
         return name
 
