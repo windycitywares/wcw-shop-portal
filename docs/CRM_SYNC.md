@@ -87,3 +87,22 @@ so test clicks never unsubscribe a real person on the live data.
 language, offer code or token, and kept as an `erased` row: it is never listed, never mailed and never sent to the CRM,
 and staff cannot add that address back by hand (only the person can sign up again, from the form). The same happens
 when staff delete a subscriber in Admin → Subscribers. No database change.
+
+
+## Suppliers (the CRM owns the list)
+
+Suppliers are managed in the CRM (contacts, terms, what they supply). The shop keeps a read-only copy that its screens
+pick from (Etsy listings, Etsy orders, supplier logins). Same bearer token as the read API:
+
+- `GET  /integrations/crm/suppliers` — every shop supplier (`id`, `name`, `crm_id`, `is_active`, contact fields, notes),
+  for the CRM's first import: names the shop already used become CRM suppliers.
+- `POST /integrations/crm/suppliers` `{crm_id, name, is_active, contact_name?, email?, phone?}` — one supplier added or
+  changed in the CRM. Matched by `crm_id`, else by name (case-insensitive, then linked), else created. A rename reaches
+  the shop's Etsy orders, listings and supplier logins. Answers `{"result": "created" | "linked" | "updated"}`; 409 when the
+  name belongs to another linked supplier.
+- `GET  /integrations/crm/suppliers/stats?name=` — the supplier's shop figures for the CRM supplier page: listings, orders,
+  open / to ship / late, owed (orders with a cost, not yet paid) and paid, average days to ship and on-time rate over 90
+  days, last order.
+
+Once any supplier carries a `crm_id`, Admin → External shops → Suppliers is read-only with a "Manage in the CRM" link
+(`CRM_WEB_URL`, default https://crm.windycitywares.com).
