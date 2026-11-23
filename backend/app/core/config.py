@@ -69,7 +69,6 @@ class Settings(BaseSettings):
     # Public storefront URL, used for links in emails (password reset).
     site_url: str = "http://localhost:3000"
     # Where Etsy sends the browser back after "Allow access"; must be registered on the Etsy app exactly as written.
-    etsy_redirect_uri: str = "https://shop-api.windycitywares.com/api/v1/integrations/etsy/callback"
     # Extra addresses allowed to say which visitor they act for (X-Forwarded-For), comma-separated. This machine's
     # own addresses and private networks are always allowed; see app/core/client_ip.py.
     trusted_proxies: str = ""

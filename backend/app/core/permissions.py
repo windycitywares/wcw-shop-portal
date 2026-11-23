@@ -30,10 +30,7 @@ class Permission(StrEnum):
     MESSAGES_MANAGE = "messages:manage"  # the contact inbox
     ENVIRONMENT_MANAGE = "environment:manage"  # switch between live and test data
     BACKUPS_MANAGE = "backups:manage"  # database backups
-    ETSY_MANAGE = "etsy:manage"  # Etsy orders, costs, tracking, listings (Admin and Staff)
-    ETSY_PAYMENTS = "etsy:payments"  # record and undo supplier payments (Admin only)
-    SUPPLIER_PORTAL = "supplier:portal"  # a supplier's own orders and payments (role supplier only)
-    ETSY_SETTINGS = "etsy:settings"  # connect / reconnect the Etsy shop, alert settings (Admin only)
+    # Etsy, suppliers and supplier logins moved to the CRM (crm.windycitywares.com) in Nov 2026.
 
 
 _AUTHOR = {
@@ -49,16 +46,15 @@ _PUBLISHER = _AUTHOR | {
     Permission.CATALOG_DELETE,
     Permission.CATEGORY_MANAGE,
     Permission.REVIEWS_MODERATE,
-    Permission.ETSY_MANAGE,
 }
 
 ROLE_PERMISSIONS: dict[UserRole, frozenset[Permission]] = {
-    UserRole.ADMIN: frozenset(Permission) - {Permission.SUPPLIER_PORTAL},
+    UserRole.ADMIN: frozenset(Permission),
     UserRole.PUBLISHER: frozenset(_PUBLISHER),
     UserRole.AUTHOR: frozenset(_AUTHOR),
     UserRole.CUSTOMER: frozenset(),
-    # Only their own work: never the rest of the admin. Admins don't get it either (they use the full screens).
-    UserRole.SUPPLIER: frozenset({Permission.SUPPLIER_PORTAL}),
+    # Supplier logins live in the CRM now; a leftover shop login of this role can do nothing here.
+    UserRole.SUPPLIER: frozenset(),
 }
 
 STAFF_ROLES = frozenset({UserRole.ADMIN, UserRole.PUBLISHER, UserRole.AUTHOR})

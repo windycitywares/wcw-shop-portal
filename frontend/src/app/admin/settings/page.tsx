@@ -20,7 +20,6 @@ import { SocialAdmin, type SocialRow } from "@/components/admin/settings/SocialA
 import { PaymentModeToggle } from "@/components/admin/settings/PaymentModeToggle";
 import { ShopLinksAdmin, type ShopLinkRow } from "@/components/admin/settings/ShopLinksAdmin";
 import { TrackingCode, type Snippet } from "@/components/admin/settings/TrackingCode";
-import { ExternalShops } from "@/components/admin/settings/ExternalShops";
 
 type Value = string | number | boolean | null | string[] | Record<string, string>;
 type Settings = Record<string, Record<string, Value>>;
@@ -46,7 +45,7 @@ const GROUPS: Group[] = [
   {
     id: "external_shops",
     label: "External shops",
-    description: "Connect the marketplaces you sell on (Etsy now; more can be added here later). Orders and listings are read from them.",
+    description: "Etsy orders, listings, suppliers, supplier payments and supplier logins are worked in the CRM now.",
     fields: [],
   },
   {
@@ -413,7 +412,13 @@ function SettingsInner() {
       {group ? (
         <div className="max-w-4xl">
           {group.id === "external_shops" ? (
-            <ExternalShops />
+            <Panel>
+              <PanelBody className="grid gap-3 text-sm">
+                <p>Etsy, suppliers and supplier logins moved to the CRM in November 2026. Connect Etsy and see its orders,
+                  listings, dashboard and supplier payments there; suppliers are supplier accounts in the CRM.</p>
+                <a href="https://crm.windycitywares.com/channels/etsy" className="font-medium text-accent underline">Open Etsy in the CRM</a>
+              </PanelBody>
+            </Panel>
           ) : data && group.id === "shop_links" ? (
             <ShopLinksAdmin
               initial={((data.settings.shop_links as unknown as { links?: ShopLinkRow[] })?.links ?? [])}

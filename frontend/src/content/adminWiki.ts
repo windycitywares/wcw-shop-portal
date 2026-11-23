@@ -27,11 +27,9 @@ export const ADMIN_WIKI: WikiArticle[] = [
   {
     "id": "etsy",
     "title": "Etsy (external shops)",
-    "summary": "Etsy sales and listings in one place, with your costs and profit.",
+    "summary": "Etsy work now lives in the CRM.",
     "paragraphs": [
-      "Connect Etsy once in Settings → External shops → Etsy (admins only). After that Etsy appears in the left menu under External shops, with its Orders and Listings; other marketplaces will appear there the same way (Amazon, Walmart…), each with its own tab in Settings.",
-      "Etsy is the source of truth: listings and orders are read from Etsy and can't be edited here. Your team adds what Etsy doesn't know: purchase cost, supplier, supplier order number, shipping cost, carrier, tracking, phone and notes.",
-      "Profit = items + shipping charged − discounts, minus purchase cost, shipping cost and Etsy fees. Sales tax is not revenue. Real Etsy fees arrive in phase 2; until then they are listed as not included.",
+      "Etsy, suppliers, supplier payments and supplier logins moved to the CRM in November 2026 (crm.windycitywares.com → External shops → Etsy). Connect Etsy, enter costs and suppliers, and settle supplier payments there.",
       "Buyer details are for fulfilling the order only, as Etsy requires. Never contact a buyer outside Etsy."
     ]
   },

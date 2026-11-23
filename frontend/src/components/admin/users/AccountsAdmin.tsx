@@ -22,7 +22,7 @@ const ROLE_HELP: Record<Role, string> = {
   publisher: "Reviews and publishes products.",
   author: "Drafts and edits their own products.",
   customer: "Shops, and sees their own orders and addresses.",
-  supplier: "Sees and ships only their own orders on the shops you allow (set under Supplier logins).",
+  supplier: "Supplier logins moved to the CRM; this login can do nothing in the shop.",
 };
 
 /** A change waiting for "are you sure?": a new role, or switching the account on or off. */
