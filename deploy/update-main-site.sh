@@ -30,6 +30,18 @@ SELECTOR=$(command -v cloudlinux-selector || ls /usr/sbin/cloudlinux-selector /u
 # dropping the Passenger lines that send windycitywares.com to this app — the site then shows a bare
 # "Index of /" listing. Stopping and starting the app makes cPanel write those lines back (the PHP
 # lines stay). Runs on every call, before the "anything new?" check.
+
+# Empty the app folder (keeping cPanel's tmp/ and the given names). The running Node server can still be writing
+# into .next/cache, so `rm -rf` on it can fail with "Directory not empty": move everything aside first (a rename
+# can't be raced) and delete the moved copy afterwards, quietly, retrying once; a leftover is cleared next run.
+clear_app() {
+  local junk="$DEST.old.$$"
+  rm -rf "$DEST".old.* 2>/dev/null || true
+  mkdir -p "$junk"
+  find "$DEST" -mindepth 1 -maxdepth 1 ! -name tmp ! -name .deployed_build "$@" -exec mv {} "$junk"/ \;
+  rm -rf "$junk" 2>/dev/null || { sleep 2; rm -rf "$junk" 2>/dev/null || echo "note: left $junk to be cleared next time"; }
+}
+
 if [ -f "$DEST/server.js" ] && [ -n "$SELECTOR" ] \
    && ! grep -q "PassengerAppRoot \"$DEST\"" "$DOCROOT/.htaccess" 2>/dev/null; then
   cp -p "$DOCROOT/.htaccess" "$HOME/.htaccess-before-repair" 2>/dev/null || true
@@ -82,7 +94,7 @@ cp -a "$CACHE/node_modules" "$MODULES.new"
 mv "$MODULES.new" "$MODULES"
 rm -rf "$MODULES.old"
 # App files: clear the app root (keeping cPanel's tmp/ and any symlinked node_modules) and unpack the build.
-find "$DEST" -mindepth 1 -maxdepth 1 ! -name tmp ! -name node_modules ! -name .deployed_build -exec rm -rf {} +
+clear_app ! -name node_modules
 tar -C "$CACHE" --exclude=./.git --exclude=./node_modules -cf - . | tar -C "$DEST" -xf -
 echo "$NEW" > "$DEST/.deployed_build"
 

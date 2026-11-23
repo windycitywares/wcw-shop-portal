@@ -35,12 +35,24 @@ restart_and_check() {
 }
 
 # --restore BUILD: put back a build kept in $ARCHIVE (the page's Restore button, via auto-deploy.sh).
+
+# Empty the app folder (keeping cPanel's tmp/ and the given names). The running Node server can still be writing
+# into .next/cache, so `rm -rf` on it can fail with "Directory not empty": move everything aside first (a rename
+# can't be raced) and delete the moved copy afterwards, quietly, retrying once; a leftover is cleared next run.
+clear_app() {
+  local junk="$DEST.old.$$"
+  rm -rf "$DEST".old.* 2>/dev/null || true
+  mkdir -p "$junk"
+  find "$DEST" -mindepth 1 -maxdepth 1 ! -name tmp ! -name .deployed_build "$@" -exec mv {} "$junk"/ \;
+  rm -rf "$junk" 2>/dev/null || { sleep 2; rm -rf "$junk" 2>/dev/null || echo "note: left $junk to be cleared next time"; }
+}
+
 if [ "${1:-}" = "--restore" ]; then
   BUILD="${2:?usage: update-storefront.sh --restore BUILD_SHA}"
   FILE=$(ls "$ARCHIVE/$BUILD"*.tgz 2>/dev/null | head -1)   # the database keeps the first 12 characters
   if [ -z "$FILE" ] || [ ! -f "$FILE" ]; then echo "storefront: no saved copy of build ${BUILD:0:7} — left as it is"; exit 3; fi
   echo "$(date '+%F %T') restoring storefront build ${BUILD:0:7}"
-  find "$DEST" -mindepth 1 -maxdepth 1 ! -name tmp ! -name .deployed_build -exec rm -rf {} +
+  clear_app
   tar -C "$DEST" -xzf "$FILE"
   echo "restored-$BUILD" > "$DEST/.deployed_build"   # differs from any published build, so "Return to latest" reinstalls
   restart_and_check
@@ -69,7 +81,7 @@ cp -a "$CACHE/node_modules" "$MODULES.new"
 mv "$MODULES.new" "$MODULES"
 rm -rf "$MODULES.old"
 # App files: clear the app root (keeping cPanel's tmp/) and unpack the new build.
-find "$DEST" -mindepth 1 -maxdepth 1 ! -name tmp ! -name .deployed_build -exec rm -rf {} +
+clear_app
 tar -C "$CACHE" --exclude=./.git --exclude=./node_modules -cf - . | tar -C "$DEST" -xf -
 echo "$NEW" > "$DEST/.deployed_build"
 
