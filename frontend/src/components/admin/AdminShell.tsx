@@ -14,6 +14,7 @@ import { TestModeBanner } from "@/components/TestModeBanner";
 import { NotificationBell } from "./notifications/NotificationBell";
 import { NAV, SETTINGS_TABS, crumbsFor, inSettings, isActive, settingsPages, titleFor } from "./nav";
 import { Icon } from "./ui/Icon";
+import { NavAccordion, NavSection } from "./NavSection";
 import { Popover } from "@/components/ui/Popover";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
@@ -51,9 +52,9 @@ function SettingsNav({ onNavigate, collapsed }: { onNavigate?: () => void; colla
         <Icon name="chevronLeft" className="size-4 shrink-0" />
         {collapsed ? <span className="sr-only">Back to dashboard</span> : "Back to dashboard"}
       </Link>
+      <NavAccordion>
       {showStore && (
-        <div>
-          {collapsed ? <hr className="mx-2 mb-2 border-line" /> : <p className="font-admin px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-muted">Store settings</p>}
+        <NavSection label="Store settings" holdsCurrent={current !== null} collapsed={collapsed}>
           <ul className="space-y-0.5">
             <li>
               <Link href="/admin/settings" onClick={onNavigate} aria-current={current === "overview" ? "page" : undefined} title={collapsed ? "All settings" : undefined} className={linkClass(current === "overview", collapsed)}>
@@ -75,11 +76,10 @@ function SettingsNav({ onNavigate, collapsed }: { onNavigate?: () => void; colla
               );
             })}
           </ul>
-        </div>
+        </NavSection>
       )}
       {tools.length > 0 && (
-        <div className="mt-4">
-          {collapsed ? <hr className="mx-2 mb-2 border-line" /> : <p className="font-admin px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-muted">Admin</p>}
+        <NavSection label="Admin" className={collapsed ? "mt-2" : "mt-3"} holdsCurrent={tools.some((i) => isActive(pathname, i.href))} collapsed={collapsed}>
           <ul className="space-y-0.5">
             {tools.map((item) => {
               const active = isActive(pathname, item.href);
@@ -94,8 +94,9 @@ function SettingsNav({ onNavigate, collapsed }: { onNavigate?: () => void; colla
               );
             })}
           </ul>
-        </div>
+        </NavSection>
       )}
+      </NavAccordion>
     </nav>
   );
 }
@@ -139,17 +140,13 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
   }
   return (
     <nav aria-label="Admin" className={cn("flex-1 overflow-y-auto pb-6 pt-2", collapsed ? "px-2" : "px-4")}>
+      <NavAccordion>
       {NAV.map((group, gi) => {
         const items = group.items.filter((i) => !i.hidden && (!i.permission || can(i.permission)));
         if (items.length === 0) return null;
         return (
-          <div key={group.label ?? gi} className={gi > 0 ? "mt-4" : ""}>
-            {group.label &&
-              (collapsed ? (
-                <hr className="mx-2 mb-2 border-line" />
-              ) : (
-                <p className="font-admin px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-muted">{group.label}</p>
-              ))}
+          <NavSection key={group.label ?? gi} label={group.label} className={gi > 0 ? (collapsed ? "mt-2" : "mt-3") : ""}
+            holdsCurrent={items.some((i) => isActive(pathname, i.href))} collapsed={collapsed}>
             <ul className="space-y-0.5">
               {items.map((item) => {
                 const active = isActive(pathname, item.href);
@@ -175,9 +172,10 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
                 );
               })}
             </ul>
-          </div>
+          </NavSection>
         );
       })}
+      </NavAccordion>
     </nav>
   );
 }
