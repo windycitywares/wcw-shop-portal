@@ -1,0 +1,44 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/analytics/layout,_N_T_/admin/analytics/funnel/layout,_N_T_/admin/analytics/funnel/page,_N_T_/admin/analytics/funnel"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/analytics/funnel/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 96,
+                "slots": {
+                  "children": {
+                    "hints": 160,
+                    "slots": null
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/fac44d8f5eab31695f96a77a59125dcadbf2df6fe98e5f21b3f585339899ddbb/$/admin/analytics/funnel",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin/analytics/funnel/page"
+    },
+    "isFallback": false
+  }
+}

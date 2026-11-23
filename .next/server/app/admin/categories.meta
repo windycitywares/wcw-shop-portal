@@ -1,0 +1,39 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/categories/layout,_N_T_/admin/categories/page,_N_T_/admin/categories"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/categories/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 160,
+                "slots": null
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/531ddb3d55ff81104f0871aefbc39ef414b98a329f7120214182fb41219344e7/$/admin/categories",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin/categories/page"
+    },
+    "isFallback": false
+  }
+}

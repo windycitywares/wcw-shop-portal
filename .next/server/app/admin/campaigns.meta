@@ -1,0 +1,39 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/campaigns/layout,_N_T_/admin/campaigns/page,_N_T_/admin/campaigns"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/campaigns/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 160,
+                "slots": null
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/f0c669f679b07509bc78903aa8321e17b9058e856dfddcc39b20dffbaed648cd/$/admin/campaigns",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin/campaigns/page"
+    },
+    "isFallback": false
+  }
+}
