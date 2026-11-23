@@ -76,3 +76,64 @@ class CrmSupplierTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@skip_unless_db
+class CrmEtsyHandoverTests(unittest.TestCase):
+    """The one-time hand-over of the team's Etsy work to the CRM: read-only, token-only, team lines only."""
+
+    TOKEN = "e" * 40
+
+    def setUp(self):
+        from app.core.config import get_settings
+
+        reset_limits()
+        self.w = world()
+        self.cfg = get_settings()
+        self.cfg.crm_api_token = self.TOKEN
+        self.auth = {"Authorization": f"Bearer {self.TOKEN}"}
+
+    def tearDown(self):
+        self.cfg.crm_api_token = None
+        self.w.sql("UPDATE suppliers SET crm_id = NULL WHERE crm_id IS NOT NULL")
+
+    def get(self, path, **params):
+        return self.w.client.get(self.w.url(path), headers=self.auth, params=params)
+
+    def test_orders_listings_and_counts(self):
+        w = self.w
+        name = w.supplier(f"Handover {w.sfx}")
+        crm_id = 800_000 + abs(hash(w.sfx)) % 100_000
+        w.sql("UPDATE suppliers SET crm_id = :c WHERE name = :n", c=crm_id, n=name)
+        rid = 6_000_000 + abs(hash(w.sfx + "h")) % 1_000_000
+        paid = datetime.now(timezone.utc) - timedelta(days=3)
+        oid = w.sql("INSERT INTO etsy_orders (etsy_receipt_id, status, ordered_at, paid_at, items_total, shipping_charged, "
+                    "discounts, tax, grand_total, purchase_cost, supplier, notes) VALUES (:r, 'purchased', :p, :p, 30, 5, 0, 2, 37, "
+                    "9.50, :s, 'call first') RETURNING id", r=rid, p=paid, s=name)[0]["id"]
+        w.sql("INSERT INTO etsy_order_events (order_id, kind, message, source, actor_name) VALUES "
+              "(:o, 'costs', 'purchase cost: empty → $9.50', 'team', 'Ada'), (:o, 'status', 'Etsy: shipped', 'etsy', 'Etsy')", o=oid)
+        lid = 5_000_000 + abs(hash(w.sfx + "l")) % 1_000_000
+        w.sql("INSERT INTO etsy_listings (etsy_listing_id, title, internal_supplier, internal_purchase_cost) "
+              "VALUES (:l, 'Mug', :s, 4.25)", l=lid, s=name)
+
+        self.assertEqual(w.client.get(w.url("/integrations/crm/etsy/orders")).status_code, 401)
+        found, after = None, 0
+        while after is not None and found is None:
+            page = self.get("/integrations/crm/etsy/orders", after_id=after, limit=200).json()
+            found = next((o for o in page["items"] if o["etsy_receipt_id"] == rid), None)
+            after = page["next_after_id"]
+        self.assertIsNotNone(found)
+        self.assertEqual((found["supplier_crm_id"], found["purchase_cost"], found["notes"], found["status"]),
+                         (crm_id, "9.50", "call first", "purchased"))
+        self.assertEqual([e["kind"] for e in found["events"]], ["costs"])  # Etsy's own lines stay behind
+        self.assertNotIn("buyer_email", found)
+
+        listing, after = None, 0
+        while after is not None and listing is None:
+            page = self.get("/integrations/crm/etsy/listings", after_id=after, limit=500).json()
+            listing = next((x for x in page["items"] if x["etsy_listing_id"] == lid), None)
+            after = page["next_after_id"]
+        self.assertEqual((listing["supplier_crm_id"], listing["purchase_cost"]), (crm_id, "4.25"))
+        counts = self.get("/integrations/crm/etsy/counts").json()
+        self.assertGreaterEqual(counts["orders_with_cost"], 1)
+        self.assertGreaterEqual(counts["team_events"], 1)
