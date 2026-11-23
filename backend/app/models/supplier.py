@@ -1,4 +1,6 @@
-"""The supplier list (migration 0028). Orders, listings and supplier logins store the supplier's name."""
+"""Kept only so the table stays put: suppliers moved to the CRM in Nov 2026; nothing here uses it any more.
+
+The supplier list (migration 0028). Orders, listings and supplier logins store the supplier's name."""
 
 from datetime import datetime
 

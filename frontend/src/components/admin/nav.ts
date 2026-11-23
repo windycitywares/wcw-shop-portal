@@ -37,32 +37,6 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
-    // Marketplaces you also sell on, one entry each, shown once connected in Settings → External shops.
-    // A new marketplace = one item here (with its channel) + its pages + its tab in Settings.
-    label: "External shops",
-    items: [
-      {
-        href: "/admin/etsy", label: "Etsy", icon: "truck", permission: "etsy:manage", channel: "etsy",
-        sections: [
-          { href: "/admin/etsy", label: "Dashboard" },
-          { href: "/admin/etsy/orders", label: "Orders" },
-          { href: "/admin/etsy/products", label: "Listings" },
-          { href: "/admin/etsy/payments", label: "Supplier payments" },
-        ],
-      },
-      // Suppliers serve every marketplace, so they sit beside the shops rather than inside one.
-      { href: "/admin/suppliers", label: "Suppliers", icon: "users", permission: "etsy:manage" },
-      {
-        // What a supplier login sees instead (role supplier): only their own orders and payments.
-        href: "/admin/supplier/etsy", label: "Etsy", icon: "truck", permission: "supplier:portal", channel: "etsy",
-        sections: [
-          { href: "/admin/supplier/etsy", label: "My orders" },
-          { href: "/admin/supplier/etsy/payments", label: "My payments" },
-        ],
-      },
-    ],
-  },
-  {
     // Reports, grouped by the question each answers; the tabs inside the page list that group's reports.
     label: "Analytics",
     items: [
@@ -156,7 +130,7 @@ export function titleFor(pathname: string): string {
 
 /** The store settings sections (each is /admin/settings?tab=<id>). */
 export const SETTINGS_TABS: { id: string; label: string; about: string }[] = [
-  { id: "external_shops", label: "External shops", about: "Connect Etsy (and later other marketplaces) so their listings and orders come into the shop." },
+  { id: "external_shops", label: "External shops", about: "Etsy orders, listings, suppliers and supplier logins are worked in the CRM now." },
   { id: "shipping", label: "Shipping", about: "What shipping costs, free shipping, and how many days it takes." },
   { id: "tax", label: "Sales tax", about: "Whether you collect sales tax, the rate and the states." },
   { id: "payments", label: "Payments", about: "Card payments and what customers see when an order is waiting for money." },

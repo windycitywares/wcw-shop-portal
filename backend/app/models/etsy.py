@@ -1,4 +1,7 @@
-"""Etsy → shop: see migrations/sql/0023_etsy.sql and docs/ETSY.md. Separate from the storefront's products and orders."""
+"""Kept only so the tables (and their data) stay put: Etsy moved to the CRM in Nov 2026 and nothing here reads or
+writes them any more. Drop in a later clean-up once the owner is sure.
+
+Etsy → shop: see migrations/sql/0023_etsy.sql and docs/ETSY.md. Separate from the storefront's products and orders."""
 
 from datetime import datetime
 from decimal import Decimal

@@ -91,56 +91,12 @@ const HELP: Record<string, HelpEntry> = {
       "Campaigns respect each subscriber's unsubscribe choice.",
     ],
   },
-  "/admin/etsy": {
-    title: "Etsy dashboard",
-    body: [
-      "How the Etsy shop is doing over the dates you pick, compared with the period just before: orders, revenue, profit, margin, average order and days to ship.",
-      "Narrow it to one product or one supplier with the filters. 'Show as table' under each chart gives the exact numbers.",
-      "Profit and margin only count orders that have a purchase cost, and don't include Etsy fees yet (phase 2). The note at the top says how many orders are counted.",
-    ],
-  },
-  "/admin/etsy/orders": {
-    title: "Etsy orders",
-    body: [
-      "Every paid Etsy order arrives here by itself within about five minutes. Etsy's details (items, prices, address) can't be changed here.",
-      "Open an order to enter what you paid, the supplier, the shipping cost and tracking. Profit is worked out from those; anything missing is listed under Profit.",
-      "Needs attention lists orders that are waiting too long, late for Etsy's ship-by date, missing a cost, or losing money.",
-      "Etsy sets New, Cancelled, Shipped and Delivered by itself and never moves an order backwards. Everything else (Purchased, Issue reported, Return requested…) is yours. Every change is kept in the order's History.",
-    ],
-  },
-  "/admin/etsy/payments": {
-    title: "Supplier payments",
-    body: [
-      "What you owe each supplier for Etsy orders: purchase cost + shipping cost. An order is Pending once its purchase cost is entered, and Settled when an admin marks it paid.",
-      "Tick several pending orders and press Mark paid to settle a whole supplier invoice at once (one date and reference). For one order you can enter a different amount.",
-      "A payment never changes the order's costs. Undo puts it back to Pending; both are kept in the order's history.",
-      "Export CSV or Excel for your books, or Print or save PDF for a statement. Exports follow the tab and filters you have chosen.",
-    ],
-  },
-  "/admin/suppliers": {
-    title: "Suppliers",
-    body: [
-      "Everyone you buy from, for every marketplace. Listings (default supplier), orders and supplier logins pick a supplier from this list, so a name is never misspelt.",
-      "Renaming a supplier updates it on its listings, orders and login. Switch a supplier off instead of deleting it: past orders keep their supplier.",
-      "Owed is what you haven't paid them yet; pay it under External shops → Etsy → Supplier payments.",
-    ],
-  },
-  "/admin/supplier/etsy": {
-    title: "Your orders",
-    body: [
-      "These are the Etsy orders the shop placed with you. 'To ship' lists the oldest ship-by date first; late ones are marked.",
-      "Open an order to see exactly what to make (with any personalisation) and where to send it. Add your carrier and tracking number, then press Mark shipped.",
-      "'Owed to you' shows what the shop hasn't paid yet. Your payments tab lists every payment and can be exported.",
-    ],
-  },
-  "/admin/etsy/products": {
-    title: "Etsy listings",
-    body: [
-      "Your Etsy listings, read from Etsy every 15 minutes. Change listings on Etsy itself; this list follows.",
-      "Click a listing to add your default supplier, purchase cost and notes. New orders start with that cost, so profit is right from day one.",
-      "A listing that disappears from Etsy is marked “Removed from Etsy”, not deleted, so old orders still make sense.",
-    ],
-  },
+
+
+
+
+
+
   "/admin/carts": {
     title: "Abandoned carts",
     body: [

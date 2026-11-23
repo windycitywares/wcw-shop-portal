@@ -1,4 +1,10 @@
-# Etsy → shop
+# Etsy → shop (retired)
+
+> **Moved to the CRM in November 2026.** Etsy orders, listings, the dashboard, suppliers, supplier payments and supplier
+> logins are now worked at crm.windycitywares.com (External shops → Etsy; CRM docs). The shop's Etsy pages, API,
+> sync jobs and supplier screens were removed; the tables (`etsy_*`, `suppliers`, `users.supplier_*`) are kept with
+> their data until the owner agrees to drop them. The text below describes how the shop's version worked.
+
 
 What it is: every Etsy listing and paid order appears in the shop admin automatically, so the team can record what each
 order cost, track it, and see the real profit. **Shop only** — nothing here goes to the CRM.
